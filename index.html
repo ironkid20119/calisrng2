@@ -313,7 +313,7 @@
             { min: 1e24, max: Infinity, name: "Colossal" }
         ];
 
-        const SECRET_RANKS = ["nil", "In im table ?!?!?", "cheese", "cali^2"];
+        const SECRET_RANKS = ["nil", "In im table ?!?!?", "cheese", "cali^2", "100", "r", "fish"];
         const TOTAL_RANKS = RANK_TIERS.length + SECRET_RANKS.length;
 
         function getVariant() {
@@ -334,11 +334,6 @@
             const luck = totalUpgrades * LUCK_PER_UPGRADE;
             const baseRoll = Math.pow(Math.random(), 3 / POWER_EXPONENT) * (1 + luck);
             
-            const variant = getVariant();
-            if (variant) {
-                return { value: baseRoll * variant.multiplier, variant: variant };
-            }
-            
             return { value: baseRoll, variant: null };
         }
 
@@ -346,8 +341,11 @@
             const secretLuckMultiplier = Math.min(1 + (totalUpgrades * SECRET_LUCK_PER_UPGRADE), MAX_SECRET_LUCK);
             const rand = Math.random();
             if (rand < (1/1e12) * secretLuckMultiplier) return "cali^2";
+            if (rand < (1/10000) * secretLuckMultiplier) return "100";
             if (rand < (1/10000) * secretLuckMultiplier) return "cheese";
+            if (rand < (1/7979) * secretLuckMultiplier) return "fish";
             if (rand < (1/7500) * secretLuckMultiplier) return "In im table ?!?!?";
+            if (rand < (1/6942) * secretLuckMultiplier) return "r";
             if (rand < (1/1000) * secretLuckMultiplier) return "nil";
             return rankName;
         }
@@ -359,6 +357,20 @@
                 }
             }
             return { name: "Unknown", value: value };
+        }
+
+        function getVariant(baseValue) {
+            const variantChanceMultiplier = Math.min(1 + (totalUpgrades * VARIANT_CHANCE_PER_UPGRADE), MAX_VARIANT_CHANCE_MULTIPLIER);
+            
+            // Check variants from rarest to most common
+            for (let i = VARIANTS.length - 1; i >= 0; i--) {
+                const variant = VARIANTS[i];
+                const adjustedChance = variant.chance * variantChanceMultiplier;
+                if (Math.random() < adjustedChance) {
+                    return { ...variant, modifiedValue: baseValue * variant.multiplier };
+                }
+            }
+            return null;
         }
 
         function getRankClass(value) {
@@ -423,10 +435,11 @@
                 inventoryContent.innerHTML = 'Empty';
             } else {
                 inventoryContent.innerHTML = inventory.map((item, idx) => {
-                    const rankClass = getRankClass(item.value);
+                    const rankClass = getRankClass(item.baseValue || item.value);
                     const variantText = item.variant ? `<span style="color: ${item.variant.color}; font-weight: bold;">[${item.variant.name}]</span> ` : '';
+                    const suffix = item.rank === "100" ? " * 💯" : "";
                     return `<div class="inventory-item" onclick="removeFromInventory(${idx})">
-                        #${item.index}: ${variantText}<span class="${rankClass}">${item.value.toFixed(6)} [${item.rank}]</span>
+                        #${item.index}: ${variantText}<span class="${rankClass}">${item.value.toFixed(6)} [${item.rank}]${suffix}</span>
                     </div>`;
                 }).join('');
             }
@@ -455,12 +468,12 @@
             indexContent.innerHTML = html;
         }
 
-        function addToInventory(value, rank, index, variant = null) {
+        function addToInventory(value, rank, index, variant = null, baseValue = null) {
             if (inventory.length >= maxInventory) {
                 addToTerminal('Inventory full! Buy upgrades to increase space.', true);
                 return false;
             }
-            inventory.push({ value, rank, index, variant });
+            inventory.push({ value, rank, index, variant, baseValue: baseValue || value });
             updateInventoryDisplay();
             updateStats();
             saveGame();
@@ -470,7 +483,8 @@
         function removeFromInventory(idx) {
             const item = inventory[idx];
             const variantText = item.variant ? `[${item.variant.name}] ` : '';
-            addToTerminal(`Removed from inventory: #${item.index} ${variantText}${item.value.toFixed(6)} [${item.rank}]`, true);
+            const suffix = item.rank === "100" ? " * 💯" : "";
+            addToTerminal(`Removed from inventory: #${item.index} ${variantText}${item.value.toFixed(6)} [${item.rank}]${suffix}`, true);
             
             acceptedRolls.delete(item.index);
             
@@ -482,6 +496,9 @@
                 if (item.variant) {
                     rollElement.setAttribute('data-variant', JSON.stringify(item.variant));
                 }
+                if (item.baseValue) {
+                    rollElement.setAttribute('data-basevalue', item.baseValue);
+                }
             }
             
             inventory.splice(idx, 1);
@@ -492,13 +509,22 @@
 
         function roll() {
             const rollResult = generateRoll();
-            const result = rollResult.value;
-            const variant = rollResult.variant;
-            const rankInfo = getRankInfo(result);
-            const rankNum = getRankNumber(result);
+            const baseValue = rollResult.value;
+            
+            // Get variant (affects display value but not rank)
+            const variant = getVariant(baseValue);
+            const displayValue = variant ? variant.modifiedValue : baseValue;
+            
+            // Get rank based on BASE value (not variant-modified)
+            const rankInfo = getRankInfo(baseValue);
+            const rankNum = getRankNumber(baseValue);
             const currencyGain = Math.pow(rankNum, 1.2);
-            const rankClass = getRankClass(result);
+            const rankClass = getRankClass(baseValue);
+            
+            // Apply secret rank to the rank name
             const displayName = applySecretRank(rankInfo.name);
+            const suffix = displayName === "100" ? " * 💯" : "";
+            
             const currentIndex = rollIndex++;
             
             // Add to discovered ranks
@@ -510,26 +536,27 @@
             
             currency += currencyGain;
             
-            if (result > highestRoll) {
-                highestRoll = result;
+            if (baseValue > highestRoll) {
+                highestRoll = baseValue;
             }
             
             // Check if should stop auto roll
             const isSecretRank = SECRET_RANKS.includes(displayName);
-            const shouldStopOnValue = autoStopThreshold > 0 && result >= autoStopThreshold;
+            const shouldStopOnValue = autoStopThreshold > 0 && displayValue >= autoStopThreshold;
             const shouldStopOnSecret = secretConfig && isSecretRank;
             
             if (autoRollInterval && (shouldStopOnValue || shouldStopOnSecret)) {
                 toggleAutoRoll();
-                const reason = shouldStopOnSecret ? `secret rank [${displayName}]` : `threshold (${result.toFixed(6)} ≥ ${autoStopThreshold})`;
+                const reason = shouldStopOnSecret ? `secret rank [${displayName}]` : `threshold (${displayValue.toFixed(6)} ≥ ${autoStopThreshold})`;
                 addToTerminal(`Auto-roll stopped: ${reason} detected!`, true);
             }
             
             const variantText = variant ? `<span style="color: ${variant.color}; font-weight: bold;">[${variant.name}]</span> ` : '';
             const variantDataAttr = variant ? `data-variant='${JSON.stringify(variant)}'` : '';
+            const baseValueAttr = `data-basevalue='${baseValue}'`;
             
             addToTerminal(
-                `#${currentIndex}: ${variantText}<span class="clickable-roll ${rankClass}" onclick="tryAddToInventory(${result}, '${displayName}', ${currentIndex}, this)" id="roll-${currentIndex}" ${variantDataAttr}>${result.toFixed(6)} [${displayName}]</span> (+${currencyGain.toFixed(2)} currency)`
+                `#${currentIndex}: ${variantText}<span class="clickable-roll ${rankClass}" onclick="tryAddToInventory(${displayValue}, '${displayName}', ${currentIndex}, this)" id="roll-${currentIndex}" ${variantDataAttr} ${baseValueAttr}>${displayValue.toFixed(6)} [${displayName}]${suffix}</span> (+${currencyGain.toFixed(2)} currency)`
             );
             
             updateStats();
@@ -543,18 +570,26 @@
             }
             
             let variant = null;
-            if (element && element.dataset && element.dataset.variant) {
-                try {
-                    variant = JSON.parse(element.dataset.variant);
-                } catch (e) {
-                    console.error('Error parsing variant:', e);
+            let baseValue = value;
+            
+            if (element && element.dataset) {
+                if (element.dataset.variant) {
+                    try {
+                        variant = JSON.parse(element.dataset.variant);
+                    } catch (e) {
+                        console.error('Error parsing variant:', e);
+                    }
+                }
+                if (element.dataset.basevalue) {
+                    baseValue = parseFloat(element.dataset.basevalue);
                 }
             }
             
-            if (addToInventory(value, rank, index, variant)) {
+            if (addToInventory(value, rank, index, variant, baseValue)) {
                 acceptedRolls.add(index);
                 const variantText = variant ? `[${variant.name}] ` : '';
-                addToTerminal(`Added to inventory: #${index} ${variantText}${value.toFixed(6)} [${rank}]`, true);
+                const suffix = rank === "100" ? " * 💯" : "";
+                addToTerminal(`Added to inventory: #${index} ${variantText}${value.toFixed(6)} [${rank}]${suffix}`, true);
                 
                 const rollElement = document.getElementById(`roll-${index}`);
                 if (rollElement) {
