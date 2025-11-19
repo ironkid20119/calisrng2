@@ -10,16 +10,16 @@
             background-color: #4a148c;
             color: #ffffff;
             padding: 20px;
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
         }
         h1 {
             text-align: center;
             color: #ffffff;
         }
-        .container {
+        .main-container {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: 1fr 1fr 1fr;
             gap: 20px;
         }
         #terminal {
@@ -79,7 +79,7 @@
             background-color: #ff69b4;
             color: #000;
         }
-        #inventory {
+        #inventory, #index {
             background-color: #2d0051;
             border: 2px solid #ff69b4;
             border-radius: 5px;
@@ -101,10 +101,11 @@
             background-color: #5a1a9c;
             transform: translateX(5px);
         }
-        .inventory-header {
+        .section-header {
             font-size: 18px;
             margin-bottom: 10px;
             color: #ff69b4;
+            font-weight: bold;
         }
         .clickable-roll {
             cursor: pointer;
@@ -114,6 +115,20 @@
         .clickable-roll:hover {
             transform: scale(1.05);
             text-shadow: 0 0 10px currentColor;
+        }
+        .index-item {
+            background-color: #4a148c;
+            border: 1px solid #ff69b4;
+            padding: 8px;
+            margin: 5px 0;
+            border-radius: 3px;
+        }
+        .index-item.discovered {
+            border-color: #00ff00;
+        }
+        .index-item.locked {
+            opacity: 0.5;
+            border-color: #666;
         }
         
         /* Rank colors */
@@ -140,8 +155,14 @@
             100% { background-position: 200% 50%; }
         }
 
+        @media (max-width: 1200px) {
+            .main-container {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
         @media (max-width: 768px) {
-            .container {
+            .main-container {
                 grid-template-columns: 1fr;
             }
         }
@@ -157,6 +178,7 @@
         <div class="stat-item">Next Upgrade Cost: <span id="upgradeCost">50.00</span></div>
         <div class="stat-item">Inventory: <span id="inventoryCount">0</span>/<span id="inventoryMax">10</span></div>
         <div class="stat-item">Rarest Roll: <span id="rarest">None yet</span></div>
+        <div class="stat-item">Ranks Discovered: <span id="ranksDiscovered">0</span>/<span id="totalRanks">25</span></div>
     </div>
 
     <div class="controls">
@@ -168,14 +190,20 @@
         <button onclick="saveGame()">Save Game</button>
     </div>
 
-    <div class="container">
+    <div class="main-container">
         <div>
             <div id="terminal"></div>
         </div>
         <div>
             <div id="inventory">
-                <div class="inventory-header">Inventory</div>
+                <div class="section-header">Inventory</div>
                 <div id="inventoryContent">Empty</div>
+            </div>
+        </div>
+        <div>
+            <div id="index">
+                <div class="section-header">Index (Ranks Discovered)</div>
+                <div id="indexContent">Roll to discover ranks!</div>
             </div>
         </div>
     </div>
@@ -195,6 +223,8 @@
         let maxInventory = 10;
         let inventory = [];
         let rollIndex = 1;
+        let acceptedRolls = new Set();
+        let discoveredRanks = new Set();
 
         const RANK_TIERS = [
             { min: 1, max: 5, name: "Common" },
@@ -220,6 +250,9 @@
             { min: 1e24, max: Infinity, name: "Colossal" }
         ];
 
+        const SECRET_RANKS = ["nil", "In im table ?!?!?", "cheese", "cali^2"];
+        const TOTAL_RANKS = RANK_TIERS.length + SECRET_RANKS.length;
+
         function generateRoll() {
             const luck = totalUpgrades * LUCK_PER_UPGRADE;
             return Math.pow(Math.random(), 3 / POWER_EXPONENT) * (1 + luck);
@@ -227,6 +260,7 @@
 
         function applySecretRank(rankName) {
             const rand = Math.random();
+            if (rand < 1/1e12) return "cali^2";
             if (rand < 1/10000) return "cheese";
             if (rand < 1/7500) return "In im table ?!?!?";
             if (rand < 1/1000) return "nil";
@@ -282,6 +316,8 @@
             document.getElementById('upgradeCost').textContent = upgradeCost.toFixed(2);
             document.getElementById('inventoryCount').textContent = inventory.length;
             document.getElementById('inventoryMax').textContent = maxInventory;
+            document.getElementById('ranksDiscovered').textContent = discoveredRanks.size;
+            document.getElementById('totalRanks').textContent = TOTAL_RANKS;
             
             if (highestRoll > 0) {
                 const rankInfo = getRankInfo(highestRoll);
@@ -306,6 +342,29 @@
             }
         }
 
+        function updateIndexDisplay() {
+            const indexContent = document.getElementById('indexContent');
+            let html = '<div style="margin-bottom: 15px;"><strong>Normal Ranks:</strong></div>';
+            
+            RANK_TIERS.forEach(tier => {
+                const discovered = discoveredRanks.has(tier.name);
+                const rankClass = getRankClass((tier.min + tier.max) / 2);
+                html += `<div class="index-item ${discovered ? 'discovered' : 'locked'}">
+                    ${discovered ? `<span class="${rankClass}">${tier.name}</span>` : '???'}
+                </div>`;
+            });
+            
+            html += '<div style="margin: 15px 0;"><strong>Secret Ranks:</strong></div>';
+            SECRET_RANKS.forEach(rank => {
+                const discovered = discoveredRanks.has(rank);
+                html += `<div class="index-item ${discovered ? 'discovered' : 'locked'}">
+                    ${discovered ? `<span style="color: #ff69b4;">${rank}</span>` : '???'}
+                </div>`;
+            });
+            
+            indexContent.innerHTML = html;
+        }
+
         function addToInventory(value, rank, index) {
             if (inventory.length >= maxInventory) {
                 addToTerminal('Inventory full! Buy upgrades to increase space.', true);
@@ -321,6 +380,16 @@
         function removeFromInventory(idx) {
             const item = inventory[idx];
             addToTerminal(`Removed from inventory: #${item.index} ${item.value.toFixed(6)} [${item.rank}]`, true);
+            
+            acceptedRolls.delete(item.index);
+            
+            const rollElement = document.getElementById(`roll-${item.index}`);
+            if (rollElement) {
+                rollElement.style.opacity = '1';
+                rollElement.style.cursor = 'pointer';
+                rollElement.onclick = function() { tryAddToInventory(item.value, item.rank, item.index); };
+            }
+            
             inventory.splice(idx, 1);
             updateInventoryDisplay();
             updateStats();
@@ -336,6 +405,13 @@
             const displayName = applySecretRank(rankInfo.name);
             const currentIndex = rollIndex++;
             
+            // Add to discovered ranks
+            if (!discoveredRanks.has(displayName)) {
+                discoveredRanks.add(displayName);
+                addToTerminal(`🎉 NEW RANK DISCOVERED: ${displayName}!`, true);
+                updateIndexDisplay();
+            }
+            
             currency += currencyGain;
             
             if (result > highestRoll) {
@@ -343,7 +419,7 @@
             }
             
             addToTerminal(
-                `#${currentIndex}: <span class="clickable-roll ${rankClass}" onclick="tryAddToInventory(${result}, '${displayName}', ${currentIndex})">${result.toFixed(6)} [${displayName}]</span> (+${currencyGain.toFixed(2)} currency)`
+                `#${currentIndex}: <span class="clickable-roll ${rankClass}" onclick="tryAddToInventory(${result}, '${displayName}', ${currentIndex})" id="roll-${currentIndex}">${result.toFixed(6)} [${displayName}]</span> (+${currencyGain.toFixed(2)} currency)`
             );
             
             updateStats();
@@ -351,8 +427,23 @@
         }
 
         function tryAddToInventory(value, rank, index) {
+            if (acceptedRolls.has(index)) {
+                addToTerminal(`Roll #${index} has already been accepted!`, true);
+                return;
+            }
+            
             if (addToInventory(value, rank, index)) {
+                acceptedRolls.add(index);
                 addToTerminal(`Added to inventory: #${index} ${value.toFixed(6)} [${rank}]`, true);
+                
+                const rollElement = document.getElementById(`roll-${index}`);
+                if (rollElement) {
+                    rollElement.style.opacity = '0.5';
+                    rollElement.style.cursor = 'not-allowed';
+                    rollElement.onclick = null;
+                }
+                
+                saveGame();
             }
         }
 
@@ -428,7 +519,9 @@
                 highestRoll,
                 maxInventory,
                 inventory,
-                rollIndex
+                rollIndex,
+                acceptedRolls: Array.from(acceptedRolls),
+                discoveredRanks: Array.from(discoveredRanks)
             };
             localStorage.setItem('calisRNGGame', JSON.stringify(gameState));
         }
@@ -445,9 +538,12 @@
                     maxInventory = gameState.maxInventory || 10;
                     inventory = gameState.inventory || [];
                     rollIndex = gameState.rollIndex || 1;
+                    acceptedRolls = new Set(gameState.acceptedRolls || []);
+                    discoveredRanks = new Set(gameState.discoveredRanks || []);
                     
                     updateStats();
                     updateInventoryDisplay();
+                    updateIndexDisplay();
                     addToTerminal('Game loaded!', true);
                 } catch (e) {
                     console.error('Error loading game:', e);
@@ -455,7 +551,6 @@
             }
         }
 
-        // Keyboard shortcuts
         document.addEventListener('keydown', function(e) {
             if (e.key === 'r' && e.target.tagName !== 'INPUT') {
                 e.preventDefault();
@@ -463,15 +558,14 @@
             }
         });
 
-        // Initial message
         const welcomeLine = document.createElement('div');
         welcomeLine.className = 'output-line welcome-message';
         welcomeLine.textContent = 'Welcome to calis RNG game!';
         document.getElementById('terminal').appendChild(welcomeLine);
         addToTerminal('Click rolls to add them to your inventory!');
         
-        // Load saved game
         loadGame();
+        updateIndexDisplay();
     </script>
 </body>
 </html>
