@@ -313,8 +313,12 @@
             { min: 1e24, max: Infinity, name: "Colossal" }
         ];
 
-        const SECRET_RANKS = ["nil", "In im table ?!?!?", "cheese", "cali^2", "100", "r", "fish", "[Title Label Missing]", "?!? unknown ?!?", "Minimal", ":[{(absolute zero)}]:"];
+        const SECRET_RANKS = ["nil", "In im table ?!?!?", "cheese", "cali^2", "100", "r", "fish", "[Title Label Missing]", "?!? unknown ?!?", "Minimal", ":[{(absolute zero)}]:", "Interminable", "Grand"];
         const TOTAL_RANKS = RANK_TIERS.length + SECRET_RANKS.length;
+
+        function formatNumber(num) {
+            return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
 
         function getVariant() {
             const variantChanceMultiplier = Math.min(1 + (totalUpgrades * VARIANT_CHANCE_PER_UPGRADE), MAX_VARIANT_CHANCE_MULTIPLIER);
@@ -342,10 +346,12 @@
             const rand = Math.random();
             if (rand < (1/1e12) * secretLuckMultiplier) return "cali^2";
             if (rand < (1/1e6) * secretLuckMultiplier) return ":[{(absolute zero)}]:";
+            if (rand < (1/1e6) * secretLuckMultiplier) return "Grand";
             if (rand < (1/15000) * secretLuckMultiplier) return "Minimal";
             if (rand < (1/10000) * secretLuckMultiplier) return "100";
             if (rand < (1/10000) * secretLuckMultiplier) return "cheese";
             if (rand < (1/7979) * secretLuckMultiplier) return "fish";
+            if (rand < (1/7777) * secretLuckMultiplier) return "Interminable";
             if (rand < (1/7500) * secretLuckMultiplier) return "In im table ?!?!?";
             if (rand < (1/6942) * secretLuckMultiplier) return "r";
             if (rand < (1/6666.666) * secretLuckMultiplier) return "?!? unknown ?!?";
@@ -429,7 +435,7 @@
                 const rankClass = getRankClass(highestRoll);
                 const displayName = applySecretRank(rankInfo.name);
                 document.getElementById('rarest').innerHTML = 
-                    `<span class="${rankClass}">${highestRoll.toFixed(6)} [${displayName}]</span>`;
+                    `<span class="${rankClass}">${formatNumber(highestRoll)} [${displayName}]</span>`;
             }
         }
 
@@ -445,7 +451,7 @@
                     if (item.rank === "100") suffix = " * 💯";
                     if (item.rank === ":[{(absolute zero)}]:") suffix = " * 0";
                     return `<div class="inventory-item" onclick="removeFromInventory(${idx})">
-                        #${item.index}: ${variantText}<span class="${rankClass}">${item.value.toFixed(6)} [${item.rank}]${suffix}</span>
+                        #${item.index}: ${variantText}<span class="${rankClass}">${formatNumber(item.value)} [${item.rank}]${suffix}</span>
                     </div>`;
                 }).join('');
             }
@@ -492,7 +498,7 @@
             let suffix = "";
             if (item.rank === "100") suffix = " * 💯";
             if (item.rank === ":[{(absolute zero)}]:") suffix = " * 0";
-            addToTerminal(`Removed from inventory: #${item.index} ${variantText}${item.value.toFixed(6)} [${item.rank}]${suffix}`, true);
+            addToTerminal(`Removed from inventory: #${item.index} ${variantText}${formatNumber(item.value)} [${item.rank}]${suffix}`, true);
             
             acceptedRolls.delete(item.index);
             
@@ -557,7 +563,7 @@
             
             if (autoRollInterval && (shouldStopOnValue || shouldStopOnSecret)) {
                 toggleAutoRoll();
-                const reason = shouldStopOnSecret ? `secret rank [${displayName}]` : `threshold (${displayValue.toFixed(6)} ≥ ${autoStopThreshold})`;
+                const reason = shouldStopOnSecret ? `secret rank [${displayName}]` : `threshold (${formatNumber(displayValue)} ≥ ${autoStopThreshold})`;
                 addToTerminal(`Auto-roll stopped: ${reason} detected!`, true);
             }
             
@@ -566,7 +572,7 @@
             const baseValueAttr = `data-basevalue='${baseValue}'`;
             
             addToTerminal(
-                `#${currentIndex}: ${variantText}<span class="clickable-roll ${rankClass}" onclick="tryAddToInventory(${displayValue}, '${displayName}', ${currentIndex}, this)" id="roll-${currentIndex}" ${variantDataAttr} ${baseValueAttr}>${displayValue.toFixed(6)} [${displayName}]${suffix}</span> (+${currencyGain.toFixed(2)} currency)`
+                `#${currentIndex}: ${variantText}<span class="clickable-roll ${rankClass}" onclick="tryAddToInventory(${displayValue}, '${displayName}', ${currentIndex}, this)" id="roll-${currentIndex}" ${variantDataAttr} ${baseValueAttr}>${formatNumber(displayValue)} [${displayName}]${suffix}</span> (+${currencyGain.toFixed(2)} currency)`
             );
             
             updateStats();
@@ -601,7 +607,7 @@
                 let suffix = "";
                 if (rank === "100") suffix = " * 💯";
                 if (rank === ":[{(absolute zero)}]:") suffix = " * 0";
-                addToTerminal(`Added to inventory: #${index} ${variantText}${value.toFixed(6)} [${rank}]${suffix}`, true);
+                addToTerminal(`Added to inventory: #${index} ${variantText}${formatNumber(value)} [${rank}]${suffix}`, true);
                 
                 const rollElement = document.getElementById(`roll-${index}`);
                 if (rollElement) {
@@ -673,7 +679,7 @@
                 const rankClass = getRankClass(highestRoll);
                 const displayName = applySecretRank(rankInfo.name);
                 addToTerminal(
-                    `Rarest roll: <span class="${rankClass}">${highestRoll.toFixed(6)} [${displayName}]</span>`,
+                    `Rarest roll: <span class="${rankClass}">${formatNumber(highestRoll)} [${displayName}]</span>`,
                     true
                 );
             }
