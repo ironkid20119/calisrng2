@@ -175,6 +175,7 @@
         <div class="stat-item">Currency: <span id="currency">0.00</span></div>
         <div class="stat-item">Total Upgrades: <span id="upgrades">0</span></div>
         <div class="stat-item">Luck: +<span id="luck">0.000</span></div>
+        <div class="stat-item">Variant Chance: <span id="variantChance">1.00</span>x</div>
         <div class="stat-item">Next Upgrade Cost: <span id="upgradeCost">50.00</span></div>
         <div class="stat-item">Inventory: <span id="inventoryCount">0</span>/<span id="inventoryMax">10</span></div>
         <div class="stat-item">Rarest Roll: <span id="rarest">None yet</span></div>
@@ -214,6 +215,16 @@
         const UPGRADE_COST_MULTIPLIER = 1.365;
         const LUCK_PER_UPGRADE = 0.777;
         const INVENTORY_PER_UPGRADE = 5;
+        const VARIANT_CHANCE_PER_UPGRADE = 0.05;
+        const MAX_VARIANT_CHANCE_MULTIPLIER = 2.5;
+
+        const VARIANTS = [
+            { name: "Shiny", chance: 1/100, multiplier: 25, color: "#FFD700" },
+            { name: "Gilded", chance: 1/500, multiplier: 125, color: "#FFA500" },
+            { name: "Spectral", chance: 1/2500, multiplier: 625, color: "#9400D3" },
+            { name: "Extraordinary", chance: 1/5000, multiplier: 1250, color: "#FF1493" },
+            { name: "Myriad", chance: 1/10000, multiplier: 2500, color: "#00FFFF" }
+        ];
 
         let currency = 0;
         let totalUpgrades = 0;
@@ -253,9 +264,30 @@
         const SECRET_RANKS = ["nil", "In im table ?!?!?", "cheese", "cali^2"];
         const TOTAL_RANKS = RANK_TIERS.length + SECRET_RANKS.length;
 
+        function getVariant() {
+            const variantChanceMultiplier = Math.min(1 + (totalUpgrades * VARIANT_CHANCE_PER_UPGRADE), MAX_VARIANT_CHANCE_MULTIPLIER);
+            
+            // Check variants from rarest to most common
+            for (let i = VARIANTS.length - 1; i >= 0; i--) {
+                const variant = VARIANTS[i];
+                const adjustedChance = variant.chance * variantChanceMultiplier;
+                if (Math.random() < adjustedChance) {
+                    return variant;
+                }
+            }
+            return null;
+        }
+
         function generateRoll() {
             const luck = totalUpgrades * LUCK_PER_UPGRADE;
-            return Math.pow(Math.random(), 3 / POWER_EXPONENT) * (1 + luck);
+            const baseRoll = Math.pow(Math.random(), 3 / POWER_EXPONENT) * (1 + luck);
+            
+            const variant = getVariant();
+            if (variant) {
+                return { value: baseRoll * variant.multiplier, variant: variant };
+            }
+            
+            return { value: baseRoll, variant: null };
         }
 
         function applySecretRank(rankName) {
@@ -313,6 +345,8 @@
             document.getElementById('currency').textContent = currency.toFixed(2);
             document.getElementById('upgrades').textContent = totalUpgrades;
             document.getElementById('luck').textContent = (totalUpgrades * LUCK_PER_UPGRADE).toFixed(3);
+            const variantChanceMultiplier = Math.min(1 + (totalUpgrades * VARIANT_CHANCE_PER_UPGRADE), MAX_VARIANT_CHANCE_MULTIPLIER);
+            document.getElementById('variantChance').textContent = variantChanceMultiplier.toFixed(2);
             document.getElementById('upgradeCost').textContent = upgradeCost.toFixed(2);
             document.getElementById('inventoryCount').textContent = inventory.length;
             document.getElementById('inventoryMax').textContent = maxInventory;
@@ -335,8 +369,9 @@
             } else {
                 inventoryContent.innerHTML = inventory.map((item, idx) => {
                     const rankClass = getRankClass(item.value);
+                    const variantText = item.variant ? `<span style="color: ${item.variant.color}; font-weight: bold;">[${item.variant.name}]</span> ` : '';
                     return `<div class="inventory-item" onclick="removeFromInventory(${idx})">
-                        #${item.index}: <span class="${rankClass}">${item.value.toFixed(6)} [${item.rank}]</span>
+                        #${item.index}: ${variantText}<span class="${rankClass}">${item.value.toFixed(6)} [${item.rank}]</span>
                     </div>`;
                 }).join('');
             }
@@ -365,12 +400,12 @@
             indexContent.innerHTML = html;
         }
 
-        function addToInventory(value, rank, index) {
+        function addToInventory(value, rank, index, variant = null) {
             if (inventory.length >= maxInventory) {
                 addToTerminal('Inventory full! Buy upgrades to increase space.', true);
                 return false;
             }
-            inventory.push({ value, rank, index });
+            inventory.push({ value, rank, index, variant });
             updateInventoryDisplay();
             updateStats();
             saveGame();
@@ -379,7 +414,8 @@
 
         function removeFromInventory(idx) {
             const item = inventory[idx];
-            addToTerminal(`Removed from inventory: #${item.index} ${item.value.toFixed(6)} [${item.rank}]`, true);
+            const variantText = item.variant ? `[${item.variant.name}] ` : '';
+            addToTerminal(`Removed from inventory: #${item.index} ${variantText}${item.value.toFixed(6)} [${item.rank}]`, true);
             
             acceptedRolls.delete(item.index);
             
@@ -387,7 +423,7 @@
             if (rollElement) {
                 rollElement.style.opacity = '1';
                 rollElement.style.cursor = 'pointer';
-                rollElement.onclick = function() { tryAddToInventory(item.value, item.rank, item.index); };
+                rollElement.onclick = function() { tryAddToInventory(item.value, item.rank, item.index, item.variant); };
             }
             
             inventory.splice(idx, 1);
@@ -397,10 +433,12 @@
         }
 
         function roll() {
-            const result = generateRoll();
+            const rollResult = generateRoll();
+            const result = rollResult.value;
+            const variant = rollResult.variant;
             const rankInfo = getRankInfo(result);
             const rankNum = getRankNumber(result);
-            const currencyGain = Math.pow(rankNum, 0.625);
+            const currencyGain = Math.pow(rankNum, 0.5);
             const rankClass = getRankClass(result);
             const displayName = applySecretRank(rankInfo.name);
             const currentIndex = rollIndex++;
@@ -418,23 +456,27 @@
                 highestRoll = result;
             }
             
+            const variantText = variant ? `<span style="color: ${variant.color}; font-weight: bold;">[${variant.name}]</span> ` : '';
+            const variantData = variant ? `'${JSON.stringify(variant).replace(/'/g, "\\'")}' ` : 'null';
+            
             addToTerminal(
-                `#${currentIndex}: <span class="clickable-roll ${rankClass}" onclick="tryAddToInventory(${result}, '${displayName}', ${currentIndex})" id="roll-${currentIndex}">${result.toFixed(6)} [${displayName}]</span> (+${currencyGain.toFixed(2)} currency)`
+                `#${currentIndex}: ${variantText}<span class="clickable-roll ${rankClass}" onclick="tryAddToInventory(${result}, '${displayName}', ${currentIndex}, ${variantData})" id="roll-${currentIndex}">${result.toFixed(6)} [${displayName}]</span> (+${currencyGain.toFixed(2)} currency)`
             );
             
             updateStats();
             saveGame();
         }
 
-        function tryAddToInventory(value, rank, index) {
+        function tryAddToInventory(value, rank, index, variant = null) {
             if (acceptedRolls.has(index)) {
                 addToTerminal(`Roll #${index} has already been accepted!`, true);
                 return;
             }
             
-            if (addToInventory(value, rank, index)) {
+            if (addToInventory(value, rank, index, variant)) {
                 acceptedRolls.add(index);
-                addToTerminal(`Added to inventory: #${index} ${value.toFixed(6)} [${rank}]`, true);
+                const variantText = variant ? `[${variant.name}] ` : '';
+                addToTerminal(`Added to inventory: #${index} ${variantText}${value.toFixed(6)} [${rank}]`, true);
                 
                 const rollElement = document.getElementById(`roll-${index}`);
                 if (rollElement) {
