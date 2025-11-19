@@ -131,6 +131,41 @@
             border-color: #666;
         }
         
+        .autoroll-settings {
+            background-color: #2d0051;
+            border: 2px solid #ff69b4;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        
+        .autoroll-setting-item {
+            margin: 10px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .autoroll-setting-item label {
+            flex-shrink: 0;
+        }
+        
+        .autoroll-setting-item input[type="number"] {
+            background-color: #4a148c;
+            color: #ffffff;
+            border: 1px solid #ff69b4;
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            width: 150px;
+        }
+        
+        .autoroll-setting-item input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+        
         /* Rank colors */
         .rank-1-1000 { color: #ffffff; }
         .rank-1000-10000 { color: #ffff00; }
@@ -175,11 +210,24 @@
         <div class="stat-item">Currency: <span id="currency">0.00</span></div>
         <div class="stat-item">Total Upgrades: <span id="upgrades">0</span></div>
         <div class="stat-item">Luck: +<span id="luck">0.000</span></div>
+        <div class="stat-item">Secret Luck: <span id="secretLuck">1.00</span>x</div>
         <div class="stat-item">Variant Chance: <span id="variantChance">1.00</span>x</div>
         <div class="stat-item">Next Upgrade Cost: <span id="upgradeCost">50.00</span></div>
         <div class="stat-item">Inventory: <span id="inventoryCount">0</span>/<span id="inventoryMax">10</span></div>
         <div class="stat-item">Rarest Roll: <span id="rarest">None yet</span></div>
         <div class="stat-item">Ranks Discovered: <span id="ranksDiscovered">0</span>/<span id="totalRanks">25</span></div>
+    </div>
+
+    <div class="autoroll-settings">
+        <div class="section-header">Auto Roll Settings</div>
+        <div class="autoroll-setting-item">
+            <label>Stop on rank ≥:</label>
+            <input type="number" id="autoStopThreshold" value="0" step="0.000001" placeholder="Enter minimum value">
+        </div>
+        <div class="autoroll-setting-item">
+            <input type="checkbox" id="secretConfig">
+            <label for="secretConfig">Secret Config (stop on secret ranks)</label>
+        </div>
     </div>
 
     <div class="controls">
@@ -217,6 +265,8 @@
         const INVENTORY_PER_UPGRADE = 5;
         const VARIANT_CHANCE_PER_UPGRADE = 0.05;
         const MAX_VARIANT_CHANCE_MULTIPLIER = 2.5;
+        const SECRET_LUCK_PER_UPGRADE = 0.25;
+        const MAX_SECRET_LUCK = 3;
 
         const VARIANTS = [
             { name: "Shiny", chance: 1/100, multiplier: 25, color: "#FFD700" },
@@ -236,6 +286,8 @@
         let rollIndex = 1;
         let acceptedRolls = new Set();
         let discoveredRanks = new Set();
+        let autoStopThreshold = 0;
+        let secretConfig = false;
 
         const RANK_TIERS = [
             { min: 1, max: 5, name: "Common" },
@@ -291,11 +343,12 @@
         }
 
         function applySecretRank(rankName) {
+            const secretLuckMultiplier = Math.min(1 + (totalUpgrades * SECRET_LUCK_PER_UPGRADE), MAX_SECRET_LUCK);
             const rand = Math.random();
-            if (rand < 1/1e12) return "cali^2";
-            if (rand < 1/10000) return "cheese";
-            if (rand < 1/7500) return "In im table ?!?!?";
-            if (rand < 1/1000) return "nil";
+            if (rand < (1/1e12) * secretLuckMultiplier) return "cali^2";
+            if (rand < (1/10000) * secretLuckMultiplier) return "cheese";
+            if (rand < (1/7500) * secretLuckMultiplier) return "In im table ?!?!?";
+            if (rand < (1/1000) * secretLuckMultiplier) return "nil";
             return rankName;
         }
 
@@ -345,6 +398,8 @@
             document.getElementById('currency').textContent = currency.toFixed(2);
             document.getElementById('upgrades').textContent = totalUpgrades;
             document.getElementById('luck').textContent = (totalUpgrades * LUCK_PER_UPGRADE).toFixed(3);
+            const secretLuckMultiplier = Math.min(1 + (totalUpgrades * SECRET_LUCK_PER_UPGRADE), MAX_SECRET_LUCK);
+            document.getElementById('secretLuck').textContent = secretLuckMultiplier.toFixed(2);
             const variantChanceMultiplier = Math.min(1 + (totalUpgrades * VARIANT_CHANCE_PER_UPGRADE), MAX_VARIANT_CHANCE_MULTIPLIER);
             document.getElementById('variantChance').textContent = variantChanceMultiplier.toFixed(2);
             document.getElementById('upgradeCost').textContent = upgradeCost.toFixed(2);
@@ -423,7 +478,10 @@
             if (rollElement) {
                 rollElement.style.opacity = '1';
                 rollElement.style.cursor = 'pointer';
-                rollElement.onclick = function() { tryAddToInventory(item.value, item.rank, item.index, item.variant); };
+                rollElement.onclick = function() { tryAddToInventory(item.value, item.rank, item.index, rollElement); };
+                if (item.variant) {
+                    rollElement.setAttribute('data-variant', JSON.stringify(item.variant));
+                }
             }
             
             inventory.splice(idx, 1);
@@ -456,21 +514,41 @@
                 highestRoll = result;
             }
             
+            // Check if should stop auto roll
+            const isSecretRank = SECRET_RANKS.includes(displayName);
+            const shouldStopOnValue = autoStopThreshold > 0 && result >= autoStopThreshold;
+            const shouldStopOnSecret = secretConfig && isSecretRank;
+            
+            if (autoRollInterval && (shouldStopOnValue || shouldStopOnSecret)) {
+                toggleAutoRoll();
+                const reason = shouldStopOnSecret ? `secret rank [${displayName}]` : `threshold (${result.toFixed(6)} ≥ ${autoStopThreshold})`;
+                addToTerminal(`Auto-roll stopped: ${reason} detected!`, true);
+            }
+            
             const variantText = variant ? `<span style="color: ${variant.color}; font-weight: bold;">[${variant.name}]</span> ` : '';
-            const variantData = variant ? `'${JSON.stringify(variant).replace(/'/g, "\\'")}' ` : 'null';
+            const variantDataAttr = variant ? `data-variant='${JSON.stringify(variant)}'` : '';
             
             addToTerminal(
-                `#${currentIndex}: ${variantText}<span class="clickable-roll ${rankClass}" onclick="tryAddToInventory(${result}, '${displayName}', ${currentIndex}, ${variantData})" id="roll-${currentIndex}">${result.toFixed(6)} [${displayName}]</span> (+${currencyGain.toFixed(2)} currency)`
+                `#${currentIndex}: ${variantText}<span class="clickable-roll ${rankClass}" onclick="tryAddToInventory(${result}, '${displayName}', ${currentIndex}, this)" id="roll-${currentIndex}" ${variantDataAttr}>${result.toFixed(6)} [${displayName}]</span> (+${currencyGain.toFixed(2)} currency)`
             );
             
             updateStats();
             saveGame();
         }
 
-        function tryAddToInventory(value, rank, index, variant = null) {
+        function tryAddToInventory(value, rank, index, element) {
             if (acceptedRolls.has(index)) {
                 addToTerminal(`Roll #${index} has already been accepted!`, true);
                 return;
+            }
+            
+            let variant = null;
+            if (element && element.dataset && element.dataset.variant) {
+                try {
+                    variant = JSON.parse(element.dataset.variant);
+                } catch (e) {
+                    console.error('Error parsing variant:', e);
+                }
             }
             
             if (addToInventory(value, rank, index, variant)) {
@@ -498,10 +576,19 @@
                 btn.classList.remove('active');
                 addToTerminal('Auto-rolling stopped.', true);
             } else {
+                autoStopThreshold = parseFloat(document.getElementById('autoStopThreshold').value) || 0;
+                secretConfig = document.getElementById('secretConfig').checked;
                 autoRollInterval = setInterval(roll, AUTO_ROLL_DELAY_MS);
                 btn.textContent = 'Stop Auto Roll';
                 btn.classList.add('active');
-                addToTerminal('Auto-rolling started...', true);
+                let message = 'Auto-rolling started...';
+                if (autoStopThreshold > 0) {
+                    message += ` (stop at ≥${autoStopThreshold})`;
+                }
+                if (secretConfig) {
+                    message += ` (stop on secret ranks)`;
+                }
+                addToTerminal(message, true);
             }
         }
 
@@ -511,9 +598,10 @@
                 totalUpgrades++;
                 maxInventory += INVENTORY_PER_UPGRADE;
                 const currentLuck = totalUpgrades * LUCK_PER_UPGRADE;
+                const secretLuckMultiplier = Math.min(1 + (totalUpgrades * SECRET_LUCK_PER_UPGRADE), MAX_SECRET_LUCK);
                 
                 addToTerminal(
-                    `Upgrade purchased! Total upgrades: ${totalUpgrades} | Luck: +${currentLuck.toFixed(3)} | Inventory space: ${maxInventory} | Currency: ${currency.toFixed(2)}`,
+                    `Upgrade purchased! Total upgrades: ${totalUpgrades} | Luck: +${currentLuck.toFixed(3)} | Secret Luck: ${secretLuckMultiplier.toFixed(2)}x | Inventory space: ${maxInventory} | Currency: ${currency.toFixed(2)}`,
                     true
                 );
                 
