@@ -438,7 +438,7 @@
             const variant = rollResult.variant;
             const rankInfo = getRankInfo(result);
             const rankNum = getRankNumber(result);
-            const currencyGain = Math.pow(rankNum, 0.5);
+            const currencyGain = Math.pow(rankNum, 1.2);
             const rankClass = getRankClass(result);
             const displayName = applySecretRank(rankInfo.name);
             const currentIndex = rollIndex++;
