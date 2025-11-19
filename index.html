@@ -313,7 +313,7 @@
             { min: 1e24, max: Infinity, name: "Colossal" }
         ];
 
-        const SECRET_RANKS = ["nil", "In im table ?!?!?", "cheese", "cali^2", "100", "r", "fish"];
+        const SECRET_RANKS = ["nil", "In im table ?!?!?", "cheese", "cali^2", "100", "r", "fish", "[Title Label Missing]", "?!? unknown ?!?", "Minimal", ":[{(absolute zero)}]:"];
         const TOTAL_RANKS = RANK_TIERS.length + SECRET_RANKS.length;
 
         function getVariant() {
@@ -341,11 +341,15 @@
             const secretLuckMultiplier = Math.min(1 + (totalUpgrades * SECRET_LUCK_PER_UPGRADE), MAX_SECRET_LUCK);
             const rand = Math.random();
             if (rand < (1/1e12) * secretLuckMultiplier) return "cali^2";
+            if (rand < (1/1e6) * secretLuckMultiplier) return ":[{(absolute zero)}]:";
+            if (rand < (1/15000) * secretLuckMultiplier) return "Minimal";
             if (rand < (1/10000) * secretLuckMultiplier) return "100";
             if (rand < (1/10000) * secretLuckMultiplier) return "cheese";
             if (rand < (1/7979) * secretLuckMultiplier) return "fish";
             if (rand < (1/7500) * secretLuckMultiplier) return "In im table ?!?!?";
             if (rand < (1/6942) * secretLuckMultiplier) return "r";
+            if (rand < (1/6666.666) * secretLuckMultiplier) return "?!? unknown ?!?";
+            if (rand < (1/4040.404) * secretLuckMultiplier) return "[Title Label Missing]";
             if (rand < (1/1000) * secretLuckMultiplier) return "nil";
             return rankName;
         }
@@ -437,7 +441,9 @@
                 inventoryContent.innerHTML = inventory.map((item, idx) => {
                     const rankClass = getRankClass(item.baseValue || item.value);
                     const variantText = item.variant ? `<span style="color: ${item.variant.color}; font-weight: bold;">[${item.variant.name}]</span> ` : '';
-                    const suffix = item.rank === "100" ? " * 💯" : "";
+                    let suffix = "";
+                    if (item.rank === "100") suffix = " * 💯";
+                    if (item.rank === ":[{(absolute zero)}]:") suffix = " * 0";
                     return `<div class="inventory-item" onclick="removeFromInventory(${idx})">
                         #${item.index}: ${variantText}<span class="${rankClass}">${item.value.toFixed(6)} [${item.rank}]${suffix}</span>
                     </div>`;
@@ -483,7 +489,9 @@
         function removeFromInventory(idx) {
             const item = inventory[idx];
             const variantText = item.variant ? `[${item.variant.name}] ` : '';
-            const suffix = item.rank === "100" ? " * 💯" : "";
+            let suffix = "";
+            if (item.rank === "100") suffix = " * 💯";
+            if (item.rank === ":[{(absolute zero)}]:") suffix = " * 0";
             addToTerminal(`Removed from inventory: #${item.index} ${variantText}${item.value.toFixed(6)} [${item.rank}]${suffix}`, true);
             
             acceptedRolls.delete(item.index);
@@ -523,7 +531,9 @@
             
             // Apply secret rank to the rank name
             const displayName = applySecretRank(rankInfo.name);
-            const suffix = displayName === "100" ? " * 💯" : "";
+            let suffix = "";
+            if (displayName === "100") suffix = " * 💯";
+            if (displayName === ":[{(absolute zero)}]:") suffix = " * 0";
             
             const currentIndex = rollIndex++;
             
@@ -588,7 +598,9 @@
             if (addToInventory(value, rank, index, variant, baseValue)) {
                 acceptedRolls.add(index);
                 const variantText = variant ? `[${variant.name}] ` : '';
-                const suffix = rank === "100" ? " * 💯" : "";
+                let suffix = "";
+                if (rank === "100") suffix = " * 💯";
+                if (rank === ":[{(absolute zero)}]:") suffix = " * 0";
                 addToTerminal(`Added to inventory: #${index} ${variantText}${value.toFixed(6)} [${rank}]${suffix}`, true);
                 
                 const rollElement = document.getElementById(`roll-${index}`);
