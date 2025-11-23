@@ -313,7 +313,7 @@
             { min: 1e24, max: Infinity, name: "Colossal" }
         ];
 
-        const SECRET_RANKS = ["nil", "In im table ?!?!?", "cheese", "cali^2", "100", "r", "fish", "[Title Label Missing]", "?!? unknown ?!?", "Minimal", ":[{(absolute zero)}]:", "Interminable", "Grand"];
+        const SECRET_RANKS = ["nil", "In im table ?!?!?", "cheese", "cali^2", "100", "r", "fish", "Title Label Missing", "?!? unknown ?!?", "Minimal", ":[{(absolute zero)}]:", "Interminable", "Grand"];
         const TOTAL_RANKS = RANK_TIERS.length + SECRET_RANKS.length;
 
         function formatNumber(num) {
@@ -355,7 +355,7 @@
             if (rand < (1/7500) * secretLuckMultiplier) return "In im table ?!?!?";
             if (rand < (1/6942) * secretLuckMultiplier) return "r";
             if (rand < (1/6666.666) * secretLuckMultiplier) return "?!? unknown ?!?";
-            if (rand < (1/4040.404) * secretLuckMultiplier) return "[Title Label Missing]";
+            if (rand < (1/4040.404) * secretLuckMultiplier) return "Title Label Missing";
             if (rand < (1/1000) * secretLuckMultiplier) return "nil";
             return rankName;
         }
