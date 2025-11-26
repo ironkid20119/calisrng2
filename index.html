@@ -264,6 +264,10 @@
         <div>
             <div id="inventory">
                 <div class="section-header">Inventory</div>
+                <div class="controls" style="grid-template-columns: 1fr 1fr; margin-bottom: 10px;">
+                    <button onclick="sortInventory('leastRarest')">Least Rarest</button>
+                    <button onclick="sortInventory('mostRarest')">Most Rarest</button>
+                </div>
                 <div id="inventoryContent">Empty</div>
             </div>
         </div>
@@ -379,6 +383,21 @@
 
         function formatNumber(num) {
             return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+        
+        // --- NEW INVENTORY SORTING FUNCTION ---
+        function sortInventory(type) {
+            if (type === 'leastRarest') {
+                // Sorts ascending: smallest base value (least rarest) at the top
+                inventory.sort((a, b) => (a.baseValue || a.value) - (b.baseValue || b.value));
+            } else if (type === 'mostRarest') {
+                // Sorts descending: largest base value (most rarest) at the top
+                inventory.sort((a, b) => (b.baseValue || b.value) - (a.baseValue || a.value));
+            }
+            // Refresh the display to show the newly sorted list
+            updateInventoryDisplay();
+            addToTerminal(`Inventory sorted by ${type === 'mostRarest' ? 'most rarest' : 'least rarest'}.`, true);
+            saveGame();
         }
 
         // OPTIMIZATION: Centralized function to calculate multipliers after upgrades
