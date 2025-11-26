@@ -180,8 +180,11 @@
         .rank-100000-1000000 { color: #0000cd; }
         .rank-1000000-100000000 { color: #ff0000; }
         .rank-100000000-1000000000 { color: #8b0000; }
-        .rank-1000000000-100000000000 { color: #00ff00; }
-        .rank-100000000000-1000000000000 { color: #00ff00; }
+        .rank-1000000000-10000000000 { color: #00ff00; }
+        /* NEW: Rank 10^10 to 10^11 (Pink) */
+        .rank-10000000000-100000000000 { color: #ffc0cb; } 
+        /* NEW: Rank 10^11 to 10^12 (Gray) */
+        .rank-100000000000-1000000000000 { color: #a9a9a9; } 
         .rank-1000000000000-100000000000000 { color: #ff69b4; }
         /* Improbable Rank Color */
         .rank-improbable { color: #008080; }
@@ -248,16 +251,26 @@
             background-color: currentColor; 
         }
         
-        /* 4-point star for 1e9+ */
+        /* 4-point star for 1e9+ (Normal) */
         .star-4 {
-            /* FIX: Corrected degenerate polygon to a robust 4-pointed star shape (8 points) */
             clip-path: polygon(50% 0%, 61% 39%, 100% 50%, 61% 61%, 50% 100%, 39% 61%, 0% 50%, 39% 39%);
         }
         
-        /* 8-point star for 1e12+ */
+        /* NEW: 6-point star for Secret 1e9+ */
+        .star-6 {
+            clip-path: polygon(50% 0%, 65% 20%, 100% 30%, 80% 50%, 100% 70%, 65% 80%, 50% 100%, 35% 80%, 0% 70%, 20% 50%, 0% 30%, 35% 20%);
+        }
+        
+        /* 8-point star for Normal 1e12+ */
         .star-8 {
             clip-path: polygon(50% 0%, 58% 30%, 100% 30%, 66% 50%, 100% 70%, 58% 70%, 50% 100%, 42% 70%, 0% 70%, 34% 50%, 0% 30%, 42% 30%);
         }
+        
+        /* NEW: 12-point star for Secret 1e12+ */
+        .star-12 {
+            clip-path: polygon(50% 0%, 55% 15%, 70% 15%, 75% 0%, 80% 15%, 95% 15%, 100% 30%, 95% 45%, 100% 70%, 95% 85%, 80% 85%, 75% 100%, 70% 85%, 55% 85%, 50% 100%, 45% 85%, 30% 85%, 25% 100%, 20% 85%, 5% 85%, 0% 70%, 5% 45%, 0% 30%, 5% 15%, 20% 15%, 25% 0%, 30% 15%, 45% 15%);
+        }
+
         /* --- END CUTSCENE STYLES --- */
 
         @media (max-width: 1200px) {
@@ -395,18 +408,24 @@
 
         // UPDATED VARIANTS ARRAY
         const VARIANTS = [
-            { name: "Shiny", chance: 1/25, multiplier: 25, color: "#FFD700" },
+            // MODIFIED: Shiny chance from 1/25 to 1/75 (multiplier remains 25)
+            { name: "Shiny", chance: 1/75, multiplier: 25, color: "#FFD700" },
             { name: "Gilded", chance: 1/125, multiplier: 125, color: "#FFA500" },
             { name: "Spectral", chance: 1/625, multiplier: 625, color: "#9400D3" },
             { name: "Extraordinary", chance: 1/1250, multiplier: 1250, color: "#FF1493" },
             { name: "Myriad", chance: 1/2500, multiplier: 2500, color: "#00FFFF" },
             { name: "Charred", chance: 1/4000, multiplier: 4000, color: "#FF4500" },
             { name: "Expert", chance: 1/7500, multiplier: 7500, color: "#00BFFF" },
+            // NEW: Wind variant
+            { name: "Wind", chance: 1/12500, multiplier: 12500, color: "#ADD8E6" }, 
+            // NEW: Mega variant
+            { name: "Mega", chance: 1/25000, multiplier: 25000, color: "#FF00FF" }, 
             { name: "ETERNAL DAWN", chance: 1/77777, multiplier: 77777, color: "#FFFFFF" },
             { name: ">Finale<", chance: 1/100000, multiplier: 100000, color: "#D2691E" }
         ];
 
         // NEW RANK TIER: Improbable
+        // Total ranks increase due to adding 1e10-1e11 and 1e11-1e12 tiers (22 -> 24 normal tiers)
         const RANK_TIERS = [
             { min: 1, max: 5, name: "Common" },
             { min: 5, max: 25, name: "Natural" },
@@ -423,7 +442,10 @@
             { min: 1e7, max: 5e7, name: "Unattainable" },
             { min: 5e7, max: 1e9, name: "Gigantic" },
             { min: 1e9, max: 1e10, name: "Infinitude" },
-            { min: 1e10, max: 1e12, name: "Unseeable" },
+            // NEW TIER: Pink
+            { min: 1e10, max: 1e11, name: "Unseeable" }, 
+            // NEW TIER: Gray
+            { min: 1e11, max: 1e12, name: "Impassive" }, 
             { min: 1e12, max: 1e15, name: "Unrollable" },
             { min: 1e15, max: 1e18, name: "Imaginary" },
             { min: 1e18, max: 1e21, name: "Impossible" },
@@ -433,27 +455,28 @@
         ];
 
         // NEW SECRET RANKS ADDED
+        // Storing the original chance (rarity) to be used as a multiplier
         const SECRET_RANKS_CHANCES = [
-            { name: "nil", chance: 1/10000 }, 
-            { name: "Title Label Missing", chance: 1/4040.404 },
-            { name: "?!? unknown ?!?", chance: 1/6666.666 },
-            { name: "r", chance: 1/6942 },
-            { name: "In im table ?!?!?", chance: 1/7500 },
-            { name: "Interminable", chance: 1/7777 },
-            { name: "fish", chance: 1/7979 },
-            { name: "cheese", chance: 1/10000 },
-            { name: "100", chance: 1/10000 },
-            { name: "Minimal", chance: 1/15000 },
-            { name: "Seize", chance: 1/97525 }, 
-            { name: "~Nonavacious~", chance: 1/575630 }, 
-            { name: "Insanity", chance: 1/666666 }, 
-            { name: "Grand", chance: 1/1e6 },
-            { name: ":[{(absolute zero)}]:", chance: 1/1e6 },
-            { name: "cali^2", chance: 1/1e12 }
+            { name: "nil", chance: 1/10000, rarity: 10000 }, 
+            { name: "Title Label Missing", chance: 1/4040.404, rarity: 4040.404 },
+            { name: "?!? unknown ?!?", chance: 1/6666.666, rarity: 6666.666 },
+            { name: "r", chance: 1/6942, rarity: 6942 },
+            { name: "In im table ?!?!?", chance: 1/7500, rarity: 7500 },
+            { name: "Interminable", chance: 1/7777, rarity: 7777 },
+            { name: "fish", chance: 1/7979, rarity: 7979 },
+            { name: "cheese", chance: 1/10000, rarity: 10000 },
+            { name: "100", chance: 1/10000, rarity: 10000 },
+            { name: "Minimal", chance: 1/15000, rarity: 15000 },
+            { name: "Seize", chance: 1/97525, rarity: 97525 }, 
+            { name: "~Nonavacious~", chance: 1/575630, rarity: 575630 }, 
+            { name: "Insanity", chance: 1/666666, rarity: 666666 }, 
+            { name: "Grand", chance: 1/1e6, rarity: 1e6 },
+            { name: ":[{(absolute zero)}]:", chance: 1/1e6, rarity: 1e6 },
+            { name: "cali^2", chance: 1/1e12, rarity: 1e12 }
         ];
 
-        // CALCULATED TOTAL RANKS (22 normal + 16 secret)
-        const TOTAL_RANKS = RANK_TIERS.length + SECRET_RANKS_CHANCES.length; // 22 + 16 = 38
+        // CALCULATED TOTAL RANKS (24 normal + 16 secret)
+        const TOTAL_RANKS = RANK_TIERS.length + SECRET_RANKS_CHANCES.length; // 24 + 16 = 40
 
         // --- GAME STATE VARIABLES ---
         let currency = 0;
@@ -464,7 +487,8 @@
             value: 0,
             baseValue: 0,
             rank: 'None yet',
-            variants: []
+            variants: [],
+            isSecret: false // New field to track if the rarest roll was a secret
         };
         let autoRollInterval = null;
         let maxInventory = 10;
@@ -489,7 +513,7 @@
         let secretLuckMultiplier = 1;
         let variantChanceMultiplier = 1;
 
-        // --- NEW EVENT FUNCTIONS ---
+        // --- NEW EVENT FUNCTIONS (Unchanged from original) ---
 
         function startEvent(event) {
             // If an event is already running, end it first to prevent overlap
@@ -620,8 +644,8 @@
             return { value: baseRoll, variant: null };
         }
         
-        // MODIFIED: Simplified Secret Rank Application using the new array structure
-        function applySecretRank(rankName) {
+        // MODIFIED: Returns the secret rank object if hit, or null
+        function getSecretRank(rankName) {
             const rand = Math.random();
             
             for (const secret of SECRET_RANKS_CHANCES) {
@@ -634,10 +658,10 @@
                 
                 // Use pre-calculated global secret luck multiplier and event multiplier
                 if (rand < secret.chance * secretLuckMultiplier * chanceMultiplier) {
-                    return secret.name;
+                    return secret; // Return the full secret object
                 }
             }
-            return rankName;
+            return null;
         }
 
         // OPTIMIZATION: Merged getRankNumber logic here
@@ -670,7 +694,10 @@
             if (value >= 1e30) { className = "rank-improbable"; color = "#008080"; } // NEW RANK
             else if (value >= 1e15) { className = "rank-rainbow"; color = "#ff7f00"; } // Rainbow is multi-colored, picking orange as a default
             else if (value >= 1e12) { className = "rank-1000000000000-100000000000000"; color = "#ff69b4"; } // Pink
-            else if (value >= 1e10) { className = "rank-10000000000-1000000000000"; color = "#00ff00"; } // Bright Green (for Unseeable)
+            // NEW: Gray for 1e11 - 1e12
+            else if (value >= 1e11) { className = "rank-100000000000-1000000000000"; color = "#a9a9a9"; } 
+            // NEW: Pink for 1e10 - 1e11
+            else if (value >= 1e10) { className = "rank-10000000000-100000000000"; color = "#ffc0cb"; } 
             else if (value >= 1e9) { className = "rank-1000000000-10000000000"; color = "#00ff00"; } // Bright Green (for Infinitude)
             else if (value >= 1e8) { className = "rank-100000000-1000000000"; color = "#8b0000"; } // Dark Red
             else if (value >= 1e6) { className = "rank-1000000-100000000"; color = "#ff0000"; } // Red
@@ -842,7 +869,9 @@
                 return false;
             }
             // value is the final, variant-modified value. baseValue is the original roll.
-            inventory.push({ value, rank, index, variants, baseValue: baseValue || value });
+            // Also store isSecret to maintain the rarest roll info correctly
+            const isSecret = SECRET_RANKS_CHANCES.map(r => r.name).includes(rank);
+            inventory.push({ value, rank, index, variants, baseValue: baseValue || value, isSecret });
             updateInventoryDisplay();
             updateStats();
             saveGame();
@@ -882,8 +911,8 @@
             saveGame();
         }
 
-        // MODIFIED: Cutscene Handler to include a white flash
-        function playCutscene(rollValue) {
+        // MODIFIED: Cutscene Handler to include logic for 6-point and 12-point stars for secrets
+        function playCutscene(rollValue, isSecret = false) {
             return new Promise(resolve => {
                 // If in auto-roll, stop it temporarily
                 const wasAutoRolling = autoRollInterval !== null;
@@ -904,9 +933,13 @@
                 starElement.style.color = color;
                 
                 let starShapeClass = 'star-4'; 
-                if (rollValue >= 1e12) {
+                if (rollValue >= 1e12 && isSecret) {
+                    starShapeClass = 'star-12';
+                } else if (rollValue >= 1e9 && isSecret) {
+                    starShapeClass = 'star-6';
+                } else if (rollValue >= 1e12) {
                     starShapeClass = 'star-8';
-                }
+                } // else 'star-4' (default)
                 
                 starElement.className = starShapeClass;
                 starElement.style.transform = 'translate(-50%, -50%) rotate(0deg) scale(1)'; 
@@ -982,31 +1015,47 @@
             
             const rollResults = [];
             let maxRollValueInBulk = 0;
+            let isMaxRollSecret = false;
             
             // Collect all rolls first
             for (let i = 0; i < (bulkRollLevel + 1); i++) {
                 const rollResult = generateRoll();
                 const baseValue = rollResult.value;
                 const variantResult = getVariants(baseValue);
-                const displayValue = variantResult ? variantResult.modifiedValue : baseValue;
+                let displayValue = variantResult ? variantResult.modifiedValue : baseValue;
                 const variants = variantResult ? variantResult.variants : [];
                 
-                rollResults.push({ baseValue, displayValue, variants });
-                maxRollValueInBulk = Math.max(maxRollValueInBulk, displayValue);
+                const secretResult = getSecretRank(); // Check for secret rank hit
+                const displayName = secretResult ? secretResult.name : getRankInfo(baseValue).name;
+                const isSecret = !!secretResult;
+                
+                let secretRarityMultiplier = 1;
+                // NEW LOGIC: Apply secret rank rarity as a multiplier
+                if (isSecret) {
+                    secretRarityMultiplier = secretResult.rarity;
+                    displayValue *= secretRarityMultiplier;
+                }
+                
+                rollResults.push({ baseValue, displayValue, variants, displayName, isSecret, secretRarityMultiplier });
+                
+                // Track the highest roll in the bulk set, and whether it was a secret
+                if (displayValue > maxRollValueInBulk) {
+                    maxRollValueInBulk = displayValue;
+                    isMaxRollSecret = isSecret;
+                }
             }
             
             // Check for cutscene condition in all collected rolls
-            // This check now reliably uses the final, variant-modified value (maxRollValueInBulk)
             if (maxRollValueInBulk >= 1e9) {
-                // Pass the highest final value to playCutscene to ensure correct color/shape
-                await playCutscene(maxRollValueInBulk);
+                // Pass the highest final value and whether it was a secret to playCutscene
+                await playCutscene(maxRollValueInBulk, isMaxRollSecret);
             }
             
             // Process and display all rolls
             for (const rollData of rollResults) {
-                const { baseValue, displayValue, variants } = rollData;
+                const { baseValue, displayValue, variants, displayName, isSecret, secretRarityMultiplier } = rollData;
                 
-                // NOTE: Rank name is based on BASE roll, but multipliers are applied to chance via applySecretRank
+                // Currency gain is still based on the *base* rank number (before secret multiplier)
                 const rankInfo = getRankInfo(baseValue); 
                 const currencyGain = Math.pow(rankInfo.rankNum, 3);
                 
@@ -1016,10 +1065,13 @@
                 let rankClass = rankClassBase;
                 let rollColor = rollColorBase;
 
-                const displayName = applySecretRank(rankInfo.name);
                 let suffix = "";
-                if (displayName === "100") suffix = " * 💯";
-                if (displayName === ":[{(absolute zero)}]:") suffix = " * 0";
+                if (displayName === "100") suffix = ` * 💯`;
+                if (displayName === ":[{(absolute zero)}]:") suffix = ` * 0`;
+                
+                // Show the secret multiplier if applicable
+                const secretMultiplierText = isSecret ? ` (x${formatNumber(secretRarityMultiplier)})` : '';
+
 
                 // Only add the class for potential styling (like a glow), but let rarity determine the color.
                 if (displayName === "~Nonavacious~") {
@@ -1047,11 +1099,12 @@
                         value: displayValue,
                         baseValue: baseValue,
                         rank: displayName,
-                        variants: variants
+                        variants: variants,
+                        isSecret: isSecret // Store if it was a secret rank
                     };
                 }
                 
-                const isSecretRank = SECRET_RANKS_CHANCES.map(r => r.name).includes(displayName);
+                const isSecretRank = isSecret; // Already determined
                 const shouldStopOnValue = autoStopThreshold > 0 && displayValue >= autoStopThreshold;
                 const shouldStopOnSecret = secretConfig && isSecretRank;
                 
@@ -1064,7 +1117,7 @@
                 // The roll element will use the final value (displayValue) for inventory storage
                 // MODIFIED: Use rollColor for the clickable-roll style
                 addToTerminal(
-                    `#${currentIndex}: ${variantText}<span class="clickable-roll ${rankClass}" style="color: ${rollColor};" onclick="tryAddToInventory(${displayValue}, '${displayName}', ${currentIndex}, this)" id="roll-${currentIndex}" ${variantDataAttr} ${baseValueAttr}>${formatNumber(displayValue)} [${displayName}]${suffix}</span> (+${currencyGain.toFixed(2)} currency)`
+                    `#${currentIndex}: ${variantText}<span class="clickable-roll ${rankClass}" style="color: ${rollColor};" onclick="tryAddToInventory(${displayValue}, '${displayName}', ${currentIndex}, this)" id="roll-${currentIndex}" ${variantDataAttr} ${baseValueAttr}>${formatNumber(displayValue)} [${displayName}]${secretMultiplierText}${suffix}</span> (+${currencyGain.toFixed(2)} currency)`
                 );
 
                 if (autoRollInterval && (shouldStopOnValue || shouldStopOnSecret)) {
@@ -1086,7 +1139,7 @@
             saveGame();
         }
 
-        // MODIFIED: To retrieve and store stacked variants
+        // MODIFIED: To retrieve and store stacked variants and isSecret status
         function tryAddToInventory(value, rank, index, element) {
             if (acceptedRolls.has(index)) {
                 addToTerminal(`Roll #${index} has already been accepted!`, true);
@@ -1292,6 +1345,10 @@
                     // Handle transition from highestRoll (base value) to highestFinalRoll (full object)
                     if (gameState.highestFinalRoll) {
                         highestFinalRoll = gameState.highestFinalRoll;
+                        // Ensure isSecret flag is present for cutscene logic
+                        if (typeof highestFinalRoll.isSecret === 'undefined') {
+                             highestFinalRoll.isSecret = SECRET_RANKS_CHANCES.map(r => r.name).includes(highestFinalRoll.rank);
+                        }
                     } else {
                         // For old save files, initialize highestFinalRoll from highestRoll (base)
                         const baseRoll = gameState.highestRoll || 0;
@@ -1300,7 +1357,8 @@
                             value: baseRoll,
                             baseValue: baseRoll,
                             rank: rankInfo.name,
-                            variants: []
+                            variants: [],
+                            isSecret: false
                         };
                     }
                     
@@ -1308,7 +1366,7 @@
 
                     maxInventory = gameState.maxInventory || 10;
                     
-                    // Handle inventory compatibility with new 'variants' array
+                    // Handle inventory compatibility with new 'variants' array and 'isSecret'
                     inventory = (gameState.inventory || []).map(item => {
                         // Ensure 'variants' is an array, falling back or cleaning up old fields
                         if (item.variant && !item.variants) {
@@ -1320,6 +1378,10 @@
                         // Ensure 'baseValue' is present
                         if (!item.baseValue) {
                             item.baseValue = item.value;
+                        }
+                        // Ensure 'isSecret' is present
+                         if (typeof item.isSecret === 'undefined') {
+                            item.isSecret = SECRET_RANKS_CHANCES.map(r => r.name).includes(item.rank);
                         }
                         return item;
                     });
