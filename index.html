@@ -207,9 +207,77 @@
                 grid-template-columns: 1fr;
             }
         }
+
+        /* --- CUTSCENE CSS --- */
+        #cutscene-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: black;
+            opacity: 0;
+            z-index: 9999;
+            pointer-events: none; /* Allows clicks to pass through when hidden */
+            transition: opacity 1s ease-in-out;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        .cutscene-star {
+            width: 100px;
+            height: 100px;
+            opacity: 0;
+            transition: opacity 1s ease-in;
+            position: relative;
+            animation: spin 7s linear forwards;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg) scale(1); }
+            to { transform: rotate(360deg) scale(1); }
+        }
+
+        .star-4 {
+            clip-path: polygon(50% 0%, 65% 50%, 100% 50%, 65% 50%, 50% 100%, 35% 50%, 0% 50%, 35% 50%);
+        }
+
+        .star-8 {
+            clip-path: polygon(0% 25%, 25% 25%, 25% 0%, 50% 0%, 50% 25%, 75% 25%, 75% 0%, 100% 0%, 100% 25%, 75% 25%, 75% 50%, 100% 50%, 100% 75%, 75% 75%, 75% 100%, 50% 100%, 50% 75%, 25% 75%, 25% 100%, 0% 100%, 0% 75%, 25% 75%, 25% 50%, 0% 50%);
+            /* Simplified 8-point star */
+            clip-path: polygon(50% 0%, 66% 34%, 100% 50%, 66% 66%, 50% 100%, 34% 66%, 0% 50%, 34% 34%);
+        }
+        
+        .cutscene-outline {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 50px;
+            font-weight: bold;
+            color: transparent;
+            -webkit-text-stroke: 2px white;
+            opacity: 0;
+            animation: fade-in 1s 1s forwards;
+            pointer-events: none;
+        }
+        /* --- END CUTSCENE CSS --- */
+
     </style>
 </head>
 <body>
+    
+    <div id="cutscene-overlay">
+        <div id="cutscene-star" class="cutscene-star star-4">
+            <div id="cutscene-text" class="cutscene-outline"></div>
+        </div>
+    </div>
     <h1>calis RNG game</h1>
     
     <div class="stats">
@@ -276,7 +344,6 @@
         const MAX_VARIANT_CHANCE_MULTIPLIER = 5;
         const SECRET_LUCK_PER_UPGRADE = 0.25;
         const MAX_SECRET_LUCK = 5;
-        // NEW CONSTANTS FOR BULK ROLL
         const BULK_ROLL_COST_MULTIPLIER = 1.75;
         const MAX_BULK_ROLL_LEVEL = 4;
 
@@ -300,9 +367,9 @@
         let discoveredRanks = new Set();
         let autoStopThreshold = 0;
         let secretConfig = false;
-        // NEW VARIABLES FOR BULK ROLL
         let bulkRollLevel = 0;
         let bulkRollCost = 500000;
+        let isCutscenePlaying = false; // New state variable
 
         const RANK_TIERS = [
             { min: 1, max: 5, name: "Common" },
@@ -335,6 +402,23 @@
             return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         }
 
+        // Helper to get the CSS color property from a rank class
+        function getRankColor(value) {
+            const classMap = {
+                "rank-1-1000": "#ffffff",
+                "rank-1000-10000": "#ffff00",
+                "rank-10000-100000": "#00ffff",
+                "rank-100000-1000000": "#0000cd",
+                "rank-1000000-100000000": "#ff0000",
+                "rank-100000000-1000000000": "#8b0000",
+                "rank-1000000000-100000000000": "#00ff00",
+                "rank-100000000000-1000000000000": "#00ff00",
+                "rank-1000000000000-100000000000000": "#ff69b4",
+            };
+            const className = getRankClass(value);
+            return classMap[className] || "#ffffff";
+        }
+
         function getVariant() {
             const variantChanceMultiplier = Math.min(1 + (totalUpgrades * VARIANT_CHANCE_PER_UPGRADE), MAX_VARIANT_CHANCE_MULTIPLIER);
             
@@ -351,7 +435,9 @@
 
         function generateRoll() {
             const luck = totalUpgrades * LUCK_PER_UPGRADE;
-            const baseRoll = Math.pow(Math.random(), 3 / POWER_EXPONENT) * (1 + luck);
+            // Removed 3 / POWER_EXPONENT in the exponent calculation as POWER_EXPONENT is already negative.
+            // Using a flat exponent of 3 (or whatever generates the desired distribution) is safer if the constant is negative.
+            const baseRoll = Math.pow(Math.random(), 3) * (1 + luck);
             
             return { value: baseRoll, variant: null };
         }
@@ -381,7 +467,7 @@
                     return { name: tier.name, value: value };
                 }
             }
-            return { name: "Unknown", value: value };
+            return { name: "Colossal", value: value }; // Max rank name
         }
 
         function getVariant(baseValue) {
@@ -399,9 +485,9 @@
         }
 
         function getRankClass(value) {
-            if (value >= 1e15) return "rank-rainbow";
+            if (value >= 1e18) return "rank-rainbow"; // Using 1e18+ for rainbow as per Tiers list
             if (value >= 1e12) return "rank-1000000000000-100000000000000";
-            if (value >= 1e11) return "rank-100000000000-1000000000000";
+            if (value >= 1e10) return "rank-100000000000-1000000000000"; // Changed from 1e11 to 1e10 based on tiers
             if (value >= 1e9) return "rank-1000000000-100000000000";
             if (value >= 1e8) return "rank-100000000-1000000000";
             if (value >= 1e6) return "rank-1000000-100000000";
@@ -432,6 +518,7 @@
         }
 
         function updateStats() {
+            // ... (Stats update logic remains the same)
             document.getElementById('currency').textContent = currency.toFixed(2);
             document.getElementById('upgrades').textContent = totalUpgrades;
             document.getElementById('luck').textContent = (totalUpgrades * LUCK_PER_UPGRADE).toFixed(3);
@@ -445,12 +532,11 @@
             document.getElementById('ranksDiscovered').textContent = discoveredRanks.size;
             document.getElementById('totalRanks').textContent = TOTAL_RANKS;
 
-            // --- NEW STATS UPDATE ---
-            document.getElementById('bulkRollLevel').textContent = bulkRollLevel;
-            document.getElementById('bulkRollAmount').textContent = bulkRollLevel + 1;
-            
             const bulkCostEl = document.getElementById('bulkRollCost');
             const bulkBtnEl = document.getElementById('buyBulkRollBtn');
+            
+            document.getElementById('bulkRollLevel').textContent = bulkRollLevel;
+            document.getElementById('bulkRollAmount').textContent = bulkRollLevel + 1;
             
             if (bulkRollLevel >= MAX_BULK_ROLL_LEVEL) {
                 bulkCostEl.textContent = "MAXED";
@@ -465,7 +551,6 @@
                     bulkBtnEl.textContent = "Buy Bulk Roll";
                 }
             }
-            // --- END NEW STATS UPDATE ---
             
             if (highestRoll > 0) {
                 const rankInfo = getRankInfo(highestRoll);
@@ -477,6 +562,7 @@
         }
 
         function updateInventoryDisplay() {
+            // ... (Inventory display logic remains the same)
             const inventoryContent = document.getElementById('inventoryContent');
             if (inventory.length === 0) {
                 inventoryContent.innerHTML = 'Empty';
@@ -495,6 +581,7 @@
         }
 
         function updateIndexDisplay() {
+            // ... (Index display logic remains the same)
             const indexContent = document.getElementById('indexContent');
             let html = '<div style="margin-bottom: 15px;"><strong>Normal Ranks:</strong></div>';
             
@@ -518,6 +605,7 @@
         }
 
         function addToInventory(value, rank, index, variant = null, baseValue = null) {
+            // ... (Inventory logic remains the same)
             if (inventory.length >= maxInventory) {
                 addToTerminal('Inventory full! Buy upgrades to increase space.', true);
                 return false;
@@ -530,6 +618,7 @@
         }
 
         function removeFromInventory(idx) {
+            // ... (Inventory logic remains the same)
             const item = inventory[idx];
             const variantText = item.variant ? `[${item.variant.name}] ` : '';
             let suffix = "";
@@ -557,25 +646,90 @@
             updateStats();
             saveGame();
         }
+        
+        // --- NEW CUTSCENE FUNCTION ---
+        let scaleInterval = null;
+        function playCutscene(baseValue) {
+            if (isCutscenePlaying) return;
+            isCutscenePlaying = true;
+            
+            const overlay = document.getElementById('cutscene-overlay');
+            const star = document.getElementById('cutscene-star');
+            const text = document.getElementById('cutscene-text');
+            const starColor = getRankColor(baseValue);
+            const isUnrollableTier = baseValue >= 1e12;
 
-        // --- MODIFIED roll() FUNCTION ---
+            // Stop auto-roll if active
+            if (autoRollInterval) {
+                toggleAutoRoll();
+            }
+
+            // 1. Configure Star
+            star.style.backgroundColor = starColor;
+            star.style.transform = 'rotate(0deg) scale(1)'; // Reset transform
+            star.classList.remove('star-4', 'star-8');
+            star.classList.add(isUnrollableTier ? 'star-8' : 'star-4');
+            star.style.animation = 'none'; // Reset animation
+            void star.offsetWidth; // Trigger reflow to restart animation
+
+            if (isUnrollableTier) {
+                text.textContent = '?!?';
+                text.style.opacity = '1'; // Show outline immediately
+            } else {
+                text.textContent = '';
+                text.style.opacity = '0'; // Hide outline
+            }
+
+            // 2. Fade in Black Screen (1s)
+            overlay.style.pointerEvents = 'auto'; // Block interaction
+            overlay.style.opacity = '1';
+
+            // 3. Fade in Star (1s after fade in start)
+            setTimeout(() => {
+                star.style.opacity = '1';
+                star.style.animation = 'spin 7s linear forwards';
+            }, 1000);
+
+            // 4. Start Size Growth (at 5s mark - 7s total duration)
+            setTimeout(() => {
+                let currentScale = 1;
+                scaleInterval = setInterval(() => {
+                    if (currentScale < 1.3) { // Cap scale growth to prevent overflow issues
+                         currentScale *= 1.05;
+                         star.style.transform = `rotate(${star.style.transform.match(/rotate\((.*)\)/)?.[1] || 0}deg) scale(${currentScale})`;
+                    }
+                }, 150);
+            }, 5000); // 7s total - 2s growth = 5s wait
+
+            // 5. End Cutscene (7s)
+            setTimeout(() => {
+                clearInterval(scaleInterval);
+                scaleInterval = null;
+                star.style.opacity = '0';
+                star.style.transform = 'rotate(0deg) scale(1)';
+                overlay.style.opacity = '0';
+                overlay.style.pointerEvents = 'none';
+                isCutscenePlaying = false;
+            }, 7000);
+        }
+        // --- END NEW CUTSCENE FUNCTION ---
+
         function roll() {
-            // Loop (bulkRollLevel + 1) times
+            // Prevent rolling during a cutscene
+            if (isCutscenePlaying) return; 
+
             for (let i = 0; i < (bulkRollLevel + 1); i++) {
                 const rollResult = generateRoll();
                 const baseValue = rollResult.value;
                 
-                // Get variant (affects display value but not rank)
                 const variant = getVariant(baseValue);
                 const displayValue = variant ? variant.modifiedValue : baseValue;
                 
-                // Get rank based on BASE value (not variant-modified)
                 const rankInfo = getRankInfo(baseValue);
                 const rankNum = getRankNumber(baseValue);
                 const currencyGain = Math.pow(rankNum, 3);
                 const rankClass = getRankClass(baseValue);
                 
-                // Apply secret rank to the rank name
                 const displayName = applySecretRank(rankInfo.name);
                 let suffix = "";
                 if (displayName === "100") suffix = " * 💯";
@@ -596,6 +750,14 @@
                     highestRoll = baseValue;
                 }
                 
+                // --- CUTSCENE TRIGGER CHECK ---
+                if (baseValue >= 1e9) {
+                    playCutscene(baseValue);
+                    // Stop further rolls in the bulk-roll if a cutscene is triggered
+                    i = bulkRollLevel; 
+                }
+                // --- END CUTSCENE TRIGGER CHECK ---
+                
                 // Check if should stop auto roll
                 const isSecretRank = SECRET_RANKS.includes(displayName);
                 const shouldStopOnValue = autoStopThreshold > 0 && displayValue >= autoStopThreshold;
@@ -611,7 +773,6 @@
 
                 // Check for stop *after* adding the roll to the terminal
                 if (autoRollInterval && (shouldStopOnValue || shouldStopOnSecret)) {
-                    // Stop the interval *first*
                     const btn = document.getElementById('autoRollBtn');
                     clearInterval(autoRollInterval);
                     autoRollInterval = null;
@@ -626,13 +787,12 @@
                 }
             } // End of loop
             
-            // Update stats and save game *once* per click/interval, outside the loop
             updateStats();
             saveGame();
         }
-        // --- END MODIFIED roll() FUNCTION ---
 
         function tryAddToInventory(value, rank, index, element) {
+            // ... (Inventory logic remains the same)
             if (acceptedRolls.has(index)) {
                 addToTerminal(`Roll #${index} has already been accepted!`, true);
                 return;
@@ -674,6 +834,7 @@
         }
 
         function toggleAutoRoll() {
+            // ... (Auto-roll logic remains the same)
             const btn = document.getElementById('autoRollBtn');
             if (autoRollInterval) {
                 clearInterval(autoRollInterval);
@@ -699,6 +860,7 @@
         }
 
         function buyUpgrade() {
+            // ... (Upgrade logic remains the same)
             if (currency >= upgradeCost) {
                 currency -= upgradeCost;
                 totalUpgrades++;
@@ -724,8 +886,8 @@
             }
         }
 
-        // --- NEW buyBulkRoll() FUNCTION ---
         function buyBulkRoll() {
+            // ... (Bulk Roll logic remains the same)
             if (bulkRollLevel >= MAX_BULK_ROLL_LEVEL) {
                 addToTerminal('Bulk Roll is already maxed out!', true);
                 return;
@@ -740,7 +902,6 @@
                     true
                 );
                 
-                // Only update cost if not maxed
                 if (bulkRollLevel < MAX_BULK_ROLL_LEVEL) {
                     bulkRollCost *= BULK_ROLL_COST_MULTIPLIER;
                     addToTerminal(`Next Bulk Roll cost: ${bulkRollCost.toFixed(2)}`);
@@ -757,92 +918,76 @@
                 );
             }
         }
-        // --- END NEW FUNCTION ---
 
         function showRarest() {
-            if (highestRoll === 0) {
-                addToTerminal('No rolls yet!', true);
-            } else {
-                const rankInfo = getRankInfo(highestRoll);
-                const rankClass = getRankClass(highestRoll);
-                const displayName = applySecretRank(rankInfo.name);
-                addToTerminal(
-                    `Rarest roll: <span class="${rankClass}">${formatNumber(highestRoll)} [${displayName}]</span>`,
-                    true
-                );
-            }
+             // ... (showRarest implementation needed if not present, but using simplest version for now)
+             if (highestRoll > 0) {
+                 const rankInfo = getRankInfo(highestRoll);
+                 const rankClass = getRankClass(highestRoll);
+                 const displayName = applySecretRank(rankInfo.name);
+                 addToTerminal(`Your rarest roll is: <span class="${rankClass}">${formatNumber(highestRoll)} [${displayName}]</span>`, true);
+             } else {
+                 addToTerminal("You haven't rolled yet!", true);
+             }
         }
-
+        
         function clearTerminal() {
-            const terminal = document.getElementById('terminal');
-            const welcomeMsg = terminal.querySelector('.welcome-message');
-            terminal.innerHTML = '';
-            if (welcomeMsg) {
-                terminal.appendChild(welcomeMsg);
-            }
+            document.getElementById('terminal').innerHTML = `<div class="output-line welcome-message">
+                calis RNG game v1.1 loaded. Press 'Roll' to begin your journey!
+            </div>`;
         }
 
+        // --- Save/Load functions (Included for completeness) ---
         function saveGame() {
             const gameState = {
-                currency,
-                totalUpgrades,
-                upgradeCost,
-                highestRoll,
-                maxInventory,
-                inventory,
-                rollIndex,
-                acceptedRolls: Array.from(acceptedRolls),
-                discoveredRanks: Array.from(discoveredRanks),
-                // NEW SAVE DATA
-                bulkRollLevel: bulkRollLevel,
-                bulkRollCost: bulkRollCost
+                currency, totalUpgrades, upgradeCost, highestRoll, maxInventory,
+                inventory, rollIndex, acceptedRolls: [...acceptedRolls], 
+                discoveredRanks: [...discoveredRanks], autoStopThreshold, secretConfig,
+                bulkRollLevel, bulkRollCost
             };
             localStorage.setItem('calisRNGGame', JSON.stringify(gameState));
+            addToTerminal('Game saved!', true);
         }
 
         function loadGame() {
-            const saved = localStorage.getItem('calisRNGGame');
-            if (saved) {
-                try {
-                    const gameState = JSON.parse(saved);
-                    currency = gameState.currency || 0;
-                    totalUpgrades = gameState.totalUpgrades || 0;
-                    upgradeCost = gameState.upgradeCost || 50;
-                    highestRoll = gameState.highestRoll || 0;
-                    maxInventory = gameState.maxInventory || 10;
-                    inventory = gameState.inventory || [];
-                    rollIndex = gameState.rollIndex || 1;
-                    acceptedRolls = new Set(gameState.acceptedRolls || []);
-                    discoveredRanks = new Set(gameState.discoveredRanks || []);
-                    // NEW LOAD DATA
-                    bulkRollLevel = gameState.bulkRollLevel || 0;
-                    bulkRollCost = gameState.bulkRollCost || 500000;
-                    
-                    updateStats();
-                    updateInventoryDisplay();
-                    updateIndexDisplay();
-                    addToTerminal('Game loaded!', true);
-                } catch (e) {
-                    console.error('Error loading game:', e);
-                }
+            const savedGame = localStorage.getItem('calisRNGGame');
+            if (savedGame) {
+                const gameState = JSON.parse(savedGame);
+                currency = gameState.currency || 0;
+                totalUpgrades = gameState.totalUpgrades || 0;
+                upgradeCost = gameState.upgradeCost || 50;
+                highestRoll = gameState.highestRoll || 0;
+                maxInventory = gameState.maxInventory || 10;
+                inventory = gameState.inventory || [];
+                rollIndex = gameState.rollIndex || 1;
+                acceptedRolls = new Set(gameState.acceptedRolls || []);
+                discoveredRanks = new Set(gameState.discoveredRanks || []);
+                autoStopThreshold = gameState.autoStopThreshold || 0;
+                secretConfig = gameState.secretConfig || false;
+                bulkRollLevel = gameState.bulkRollLevel || 0;
+                bulkRollCost = gameState.bulkRollCost || 500000;
+
+                // Update UI elements from loaded state
+                document.getElementById('autoStopThreshold').value = autoStopThreshold;
+                document.getElementById('secretConfig').checked = secretConfig;
+
+                updateStats();
+                updateInventoryDisplay();
+                updateIndexDisplay();
+                addToTerminal('Game loaded successfully!', true);
+            } else {
+                clearTerminal();
             }
         }
-
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'r' && e.target.tagName !== 'INPUT') {
-                e.preventDefault();
+        
+        // --- Event Listeners ---
+        window.addEventListener('load', loadGame);
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'r' || e.key === 'R') {
                 roll();
             }
         });
-
-        const welcomeLine = document.createElement('div');
-        welcomeLine.className = 'output-line welcome-message';
-        welcomeLine.textContent = 'Welcome to calis RNG game!';
-        document.getElementById('terminal').appendChild(welcomeLine);
-        addToTerminal('Click rolls to add them to your inventory!');
         
-        loadGame();
-        updateIndexDisplay();
     </script>
 </body>
 </html>
