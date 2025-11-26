@@ -205,6 +205,48 @@
             100% { background-position: 200% 50%; }
         }
 
+        /* --- CUTSCENE STYLES --- */
+        #cutscene-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #000000; /* Black screen */
+            z-index: 9999;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease-in-out;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .cutscene-active #cutscene-overlay {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        #star-element {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            opacity: 0;
+            transition: opacity 0.5s ease-in;
+            filter: drop-shadow(0 0 15px currentColor);
+        }
+        
+        /* 4-point star for 1e9+ */
+        .star-4 {
+            clip-path: polygon(50% 0%, 65% 50%, 100% 50%, 65% 50%, 50% 100%, 35% 50%, 0% 50%, 35% 50%);
+        }
+        
+        /* 8-point star for 1e12+ */
+        .star-8 {
+            clip-path: polygon(50% 0%, 58% 30%, 100% 30%, 66% 50%, 100% 70%, 58% 70%, 50% 100%, 42% 70%, 0% 70%, 34% 50%, 0% 30%, 42% 30%);
+        }
+        /* --- END CUTSCENE STYLES --- */
+
         @media (max-width: 1200px) {
             .main-container {
                 grid-template-columns: 1fr 1fr;
@@ -218,7 +260,7 @@
         }
     </style>
 </head>
-<body>
+<body class="cutscene-inactive">
     <h1>calis RNG game</h1>
     
     <div class="stats">
@@ -279,13 +321,17 @@
         </div>
     </div>
 
+    <div id="cutscene-overlay">
+        <div id="star-element"></div>
+    </div>
     <script>
         // --- CONSTANTS ---
         const POWER_EXPONENT = -2.5;
         const AUTO_ROLL_DELAY_MS = 12.5;
         // NERF: Upgrade cost multiplier changed from 1.25 to 1.15
         const UPGRADE_COST_MULTIPLIER = 1.15;
-        const LUCK_PER_UPGRADE = 1.777;
+        // MODIFIED: Luck scaling changed from 1.777 to 2.5
+        const LUCK_PER_UPGRADE = 2.5;
         const INVENTORY_PER_UPGRADE = 5;
         const VARIANT_CHANCE_PER_UPGRADE = 0.05;
         const MAX_VARIANT_CHANCE_MULTIPLIER = 5;
@@ -294,6 +340,13 @@
         const BULK_ROLL_COST_MULTIPLIER = 1.75;
         const MAX_BULK_ROLL_LEVEL = 4;
         const MAX_VARIANTS_PER_ROLL = 5; // NEW CONSTANT
+        
+        // CUTSCENE CONSTANTS
+        const CUTSCENE_DURATION_MS = 7000;
+        const STAR_FADE_IN_MS = 2000;
+        const SPIN_ACCEL_MS = 5000;
+        const SIZE_UPDATE_INTERVAL_MS = 25;
+        const SIZE_MULTIPLIER_PER_UPDATE = 1.02;
 
         // UPDATED VARIANTS ARRAY
         const VARIANTS = [
@@ -372,6 +425,7 @@
         let secretConfig = false;
         let bulkRollLevel = 0;
         let bulkRollCost = 500000;
+        let isCutscenePlaying = false; // Prevents rolling during cutscene
         
         // --- OPTIMIZATION: CALCULATED STATS (set by updateCalculatedStats) ---
         let currentLuck = 0;
@@ -473,18 +527,27 @@
             };
         }
 
+        // MODIFIED: Also returns the color string instead of just the class
+        function getRankClassAndColor(value) {
+            let color = "#ffffff";
+            let className = "rank-1-1000";
+
+            if (value >= 1e30) { className = "rank-improbable"; color = "#008080"; } // NEW RANK
+            else if (value >= 1e15) { className = "rank-rainbow"; color = "#ff7f00"; } // Rainbow is multi-colored, picking orange as a default
+            else if (value >= 1e12) { className = "rank-1000000000000-100000000000000"; color = "#ff69b4"; } // Pink
+            else if (value >= 1e11) { className = "rank-100000000000-1000000000000"; color = "#00ff00"; } // Bright Green
+            else if (value >= 1e9) { className = "rank-1000000000-100000000000"; color = "#00ff00"; } // Bright Green
+            else if (value >= 1e8) { className = "rank-100000000-1000000000"; color = "#8b0000"; } // Dark Red
+            else if (value >= 1e6) { className = "rank-1000000-100000000"; color = "#ff0000"; } // Red
+            else if (value >= 1e5) { className = "rank-100000-1000000"; color = "#0000cd"; } // Medium Blue
+            else if (value >= 10000) { className = "rank-10000-100000"; color = "#00ffff"; } // Cyan
+            else if (value >= 1000) { className = "rank-1000-10000"; color = "#ffff00"; } // Yellow
+            
+            return { className, color };
+        }
+
         function getRankClass(value) {
-            if (value >= 1e30) return "rank-improbable"; // NEW RANK
-            if (value >= 1e15) return "rank-rainbow";
-            if (value >= 1e12) return "rank-1000000000000-100000000000000";
-            if (value >= 1e11) return "rank-100000000000-1000000000000";
-            if (value >= 1e9) return "rank-1000000000-100000000000";
-            if (value >= 1e8) return "rank-100000000-1000000000";
-            if (value >= 1e6) return "rank-1000000-100000000";
-            if (value >= 1e5) return "rank-100000-1000000";
-            if (value >= 10000) return "rank-10000-100000";
-            if (value >= 1000) return "rank-1000-10000";
-            return "rank-1-1000";
+            return getRankClassAndColor(value).className;
         }
 
         function addToTerminal(text, isCommand = false, className = "") {
@@ -659,36 +722,136 @@
             saveGame();
         }
 
-        function roll() {
-            // Loop (bulkRollLevel + 1) times
+        // NEW FUNCTION: Cutscene Handler
+        function playCutscene(rollValue) {
+            return new Promise(resolve => {
+                // If in auto-roll, stop it temporarily
+                const wasAutoRolling = autoRollInterval !== null;
+                if (wasAutoRolling) {
+                    toggleAutoRoll();
+                }
+                
+                isCutscenePlaying = true;
+                const body = document.body;
+                const overlay = document.getElementById('cutscene-overlay');
+                const starElement = document.getElementById('star-element');
+                
+                // 1. Activate black screen
+                body.classList.add('cutscene-active');
+                
+                // Get color and determine star shape
+                const { color } = getRankClassAndColor(rollValue);
+                starElement.style.color = color;
+                
+                let starShapeClass = 'star-4'; // 1e9+
+                if (rollValue >= 1e12) {
+                    starShapeClass = 'star-8'; // 1e12+
+                }
+                
+                starElement.className = starShapeClass;
+                starElement.style.transform = 'rotate(0deg) scale(1)'; // Reset transform
+                let currentScale = 1;
+                let currentRotation = 0;
+                let rotationSpeed = 3; // Initial rotation speed (degrees per frame)
+                let sizeInterval = null;
+                
+                // 2. Star fade-in at 2s
+                setTimeout(() => {
+                    starElement.style.opacity = 1;
+                }, STAR_FADE_IN_MS);
+                
+                // 3. Star spin and size update
+                const spinUpdate = () => {
+                    currentRotation += rotationSpeed;
+                    starElement.style.transform = `rotate(${currentRotation}deg) scale(${currentScale})`;
+                    if (isCutscenePlaying) {
+                        requestAnimationFrame(spinUpdate);
+                    }
+                };
+
+                // Start spinning immediately
+                requestAnimationFrame(spinUpdate);
+
+                // 4. Star speed and size acceleration at 5s (3s after fade-in)
+                setTimeout(() => {
+                    // Increase rotation speed
+                    rotationSpeed = 15; 
+                    
+                    // Start size increase interval
+                    sizeInterval = setInterval(() => {
+                        currentScale *= SIZE_MULTIPLIER_PER_UPDATE;
+                    }, SIZE_UPDATE_INTERVAL_MS);
+
+                }, SPIN_ACCEL_MS);
+                
+                // 5. Cutscene end at 7s
+                setTimeout(() => {
+                    isCutscenePlaying = false;
+                    clearInterval(sizeInterval);
+                    body.classList.remove('cutscene-active');
+                    starElement.style.opacity = 0;
+                    
+                    // Reset star state after transition
+                    setTimeout(() => {
+                        starElement.style.transform = 'rotate(0deg) scale(1)';
+                        starElement.style.color = '';
+                        starElement.className = '';
+                        // If auto-roll was active, restart it
+                        if (wasAutoRolling) {
+                            toggleAutoRoll();
+                        }
+                        resolve(); // Resolve the promise once the cutscene is fully over
+                    }, 500); // Wait for fade-out transition
+                    
+                }, CUTSCENE_DURATION_MS);
+            });
+        }
+
+        async function roll() {
+            if (isCutscenePlaying) {
+                addToTerminal('Wait for the cutscene to finish!', true);
+                return;
+            }
+            
+            const rollResults = [];
+            // Collect all rolls first
             for (let i = 0; i < (bulkRollLevel + 1); i++) {
                 const rollResult = generateRoll();
                 const baseValue = rollResult.value;
-                
-                // Get variant(s)
                 const variantResult = getVariants(baseValue);
                 const displayValue = variantResult ? variantResult.modifiedValue : baseValue;
                 const variants = variantResult ? variantResult.variants : [];
                 
-                // OPTIMIZATION: Use rankInfo.rankNum
+                rollResults.push({ baseValue, displayValue, variants });
+            }
+            
+            // Check for cutscene condition in all collected rolls
+            const rarestRoll = rollResults.reduce((max, r) => Math.max(max, r.displayValue), 0);
+            
+            // Cutscene only plays for rolls of 1e9 or greater
+            if (rarestRoll >= 1e9) {
+                await playCutscene(rarestRoll);
+            }
+            
+            // Process and display all rolls
+            for (const rollData of rollResults) {
+                const { baseValue, displayValue, variants } = rollData;
+                
                 const rankInfo = getRankInfo(baseValue);
                 const currencyGain = Math.pow(rankInfo.rankNum, 3);
                 let rankClass = getRankClass(baseValue);
                 
-                // Apply secret rank
                 const displayName = applySecretRank(rankInfo.name);
                 let suffix = "";
                 if (displayName === "100") suffix = " * 💯";
                 if (displayName === ":[{(absolute zero)}]:") suffix = " * 0";
 
-                // Apply special color for ~Nonavacious~
                 if (displayName === "~Nonavacious~") {
                     rankClass += " secret-nonavacious";
                 }
                 
                 const currentIndex = rollIndex++;
                 
-                // Add to discovered ranks
                 if (!discoveredRanks.has(displayName)) {
                     discoveredRanks.add(displayName);
                     addToTerminal(`🎉 NEW RANK DISCOVERED: ${displayName}!`, true);
@@ -701,15 +864,12 @@
                     highestRoll = baseValue;
                 }
                 
-                // Check if should stop auto roll
                 const isSecretRank = SECRET_RANKS_CHANCES.map(r => r.name).includes(displayName);
                 const shouldStopOnValue = autoStopThreshold > 0 && displayValue >= autoStopThreshold;
                 const shouldStopOnSecret = secretConfig && isSecretRank;
                 
-                // Handle stacked variants for terminal display
                 const variantText = variants.map(v => `<span style="color: ${v.color}; font-weight: bold;">[${v.name}]</span>`).join('') + ' ';
                 
-                // Store all variants for tryAddToInventory
                 const variantDataAttr = variants.length > 0 ? `data-variants='${JSON.stringify(variants)}'` : '';
                 const baseValueAttr = `data-basevalue='${baseValue}'`;
                 
@@ -717,9 +877,7 @@
                     `#${currentIndex}: ${variantText}<span class="clickable-roll ${rankClass}" onclick="tryAddToInventory(${displayValue}, '${displayName}', ${currentIndex}, this)" id="roll-${currentIndex}" ${variantDataAttr} ${baseValueAttr}>${formatNumber(displayValue)} [${displayName}]${suffix}</span> (+${currencyGain.toFixed(2)} currency)`
                 );
 
-                // Check for stop *after* adding the roll to the terminal
                 if (autoRollInterval && (shouldStopOnValue || shouldStopOnSecret)) {
-                    // Stop the interval *first*
                     const btn = document.getElementById('autoRollBtn');
                     clearInterval(autoRollInterval);
                     autoRollInterval = null;
@@ -732,9 +890,8 @@
                     // Break the loop so it doesn't keep rolling in this bulk roll
                     break; 
                 }
-            } // End of loop
+            } // End of roll loop
             
-            // Update stats and save game *once* per click/interval, outside the loop
             updateStats();
             saveGame();
         }
@@ -785,6 +942,11 @@
         }
 
         function toggleAutoRoll() {
+            if (isCutscenePlaying) {
+                addToTerminal('Cannot toggle auto-roll during a cutscene!', true);
+                return;
+            }
+            
             const btn = document.getElementById('autoRollBtn');
             if (autoRollInterval) {
                 clearInterval(autoRollInterval);
