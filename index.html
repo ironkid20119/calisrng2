@@ -214,11 +214,11 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: #000000; /* Black screen */
+            background-color: #000000; /* Black screen default */
             z-index: 9999;
             opacity: 0;
             pointer-events: none;
-            transition: opacity 0.5s ease-in-out;
+            transition: opacity 0.5s ease-in-out, background-color 0.1s linear; /* Added background-color transition */
             display: flex;
             justify-content: center;
             align-items: center;
@@ -227,6 +227,11 @@
         .cutscene-active #cutscene-overlay {
             opacity: 1;
             pointer-events: all;
+        }
+        
+        /* New class for the white flash effect */
+        .cutscene-flash #cutscene-overlay {
+            background-color: #ffffff; /* White screen */
         }
 
         #star-element {
@@ -352,8 +357,11 @@
         const CUTSCENE_DURATION_MS = 7000;
         const STAR_FADE_IN_MS = 2000;
         const SPIN_ACCEL_MS = 5000;
-        const SIZE_UPDATE_INTERVAL_MS = 25;
+        // MODIFIED: Star growth rate changed from 25ms to 10ms
+        const SIZE_UPDATE_INTERVAL_MS = 10; 
         const SIZE_MULTIPLIER_PER_UPDATE = 1.02;
+        // NEW: White flash duration
+        const WHITE_FLASH_DURATION_MS = 1000; 
 
         // UPDATED VARIANTS ARRAY
         const VARIANTS = [
@@ -396,7 +404,7 @@
 
         // NEW SECRET RANKS ADDED
         const SECRET_RANKS_CHANCES = [
-            { name: "nil", chance: 1/10000 }, // MODIFIED: Buffed rarity from 1/1000 to 1/10000
+            { name: "nil", chance: 1/10000 }, 
             { name: "Title Label Missing", chance: 1/4040.404 },
             { name: "?!? unknown ?!?", chance: 1/6666.666 },
             { name: "r", chance: 1/6942 },
@@ -406,9 +414,9 @@
             { name: "cheese", chance: 1/10000 },
             { name: "100", chance: 1/10000 },
             { name: "Minimal", chance: 1/15000 },
-            { name: "Seize", chance: 1/97525 }, // NEW SECRET RANK
-            { name: "~Nonavacious~", chance: 1/575630 }, // NEW SECRET RANK
-            { name: "Insanity", chance: 1/666666 }, // NEW SECRET RANK
+            { name: "Seize", chance: 1/97525 }, 
+            { name: "~Nonavacious~", chance: 1/575630 }, 
+            { name: "Insanity", chance: 1/666666 }, 
             { name: "Grand", chance: 1/1e6 },
             { name: ":[{(absolute zero)}]:", chance: 1/1e6 },
             { name: "cali^2", chance: 1/1e12 }
@@ -687,7 +695,6 @@
                 const rankName = rankInfo.name;
                 const discovered = discoveredRanks.has(rankName);
                 
-                // FIX: Removed all conditional rankStyle overrides.
                 // All secret ranks in the index now use the standard index color.
                 const rankStyle = `color: #ff69b4;`; // Standard secret rank color
 
@@ -746,7 +753,7 @@
             saveGame();
         }
 
-        // NEW FUNCTION: Cutscene Handler
+        // MODIFIED: Cutscene Handler to include a white flash
         function playCutscene(rollValue) {
             return new Promise(resolve => {
                 // If in auto-roll, stop it temporarily
@@ -764,22 +771,19 @@
                 body.classList.add('cutscene-active');
                 
                 // Get color and determine star shape
-                // rollValue is the final, variant-modified number, which is fine for cutscene magnitude check.
-                // The color is determined by the highest rarity (value) in the roll.
                 const { color } = getRankClassAndColor(rollValue);
                 starElement.style.color = color;
                 
-                let starShapeClass = 'star-4'; // 1e9+
+                let starShapeClass = 'star-4'; 
                 if (rollValue >= 1e12) {
-                    starShapeClass = 'star-8'; // 1e12+
+                    starShapeClass = 'star-8';
                 }
                 
                 starElement.className = starShapeClass;
-                // Fix: Initialize transformation to center the element before animation starts
                 starElement.style.transform = 'translate(-50%, -50%) rotate(0deg) scale(1)'; 
                 let currentScale = 1;
                 let currentRotation = 0;
-                let rotationSpeed = 3; // Initial rotation speed (degrees per frame)
+                let rotationSpeed = 3; 
                 let sizeInterval = null;
                 
                 // 2. Star fade-in at 2s
@@ -790,7 +794,6 @@
                 // 3. Star spin and size update
                 const spinUpdate = () => {
                     currentRotation += rotationSpeed;
-                    // Fix: Maintain centering transformation while animating
                     starElement.style.transform = `translate(-50%, -50%) rotate(${currentRotation}deg) scale(${currentScale})`; 
                     if (isCutscenePlaying) {
                         requestAnimationFrame(spinUpdate);
@@ -800,39 +803,45 @@
                 // Start spinning immediately
                 requestAnimationFrame(spinUpdate);
 
-                // 4. Star speed and size acceleration at 5s (3s after fade-in)
+                // 4. Star speed and size acceleration at 5s
                 setTimeout(() => {
-                    // Increase rotation speed
                     rotationSpeed = 15; 
                     
-                    // Start size increase interval
+                    // Start size increase interval (faster now)
                     sizeInterval = setInterval(() => {
                         currentScale *= SIZE_MULTIPLIER_PER_UPDATE;
                     }, SIZE_UPDATE_INTERVAL_MS);
 
                 }, SPIN_ACCEL_MS);
                 
-                // 5. Cutscene end at 7s
+                // 5. White Flash (1 second before cutscene officially ends)
                 setTimeout(() => {
-                    isCutscenePlaying = false;
-                    clearInterval(sizeInterval);
-                    body.classList.remove('cutscene-active');
-                    starElement.style.opacity = 0;
+                    starElement.style.opacity = 0; // Hide star
+                    body.classList.add('cutscene-flash'); // Change background to white
                     
-                    // Reset star state after transition
+                    // 6. Cutscene end and cleanup after flash duration
                     setTimeout(() => {
-                        // Fix: Reset star to initial centered state
-                        starElement.style.transform = 'translate(-50%, -50%) rotate(0deg) scale(1)';
-                        starElement.style.color = '';
-                        starElement.className = '';
-                        // If auto-roll was active, restart it
-                        if (wasAutoRolling) {
-                            toggleAutoRoll();
-                        }
-                        resolve(); // Resolve the promise once the cutscene is fully over
-                    }, 500); // Wait for fade-out transition
+                        isCutscenePlaying = false;
+                        clearInterval(sizeInterval);
+                        
+                        body.classList.remove('cutscene-flash'); // Remove white flash
+                        body.classList.remove('cutscene-active'); // Remove black screen/overlay
+                        
+                        // Reset star state after transition
+                        setTimeout(() => {
+                            starElement.style.transform = 'translate(-50%, -50%) rotate(0deg) scale(1)';
+                            starElement.style.color = '';
+                            starElement.className = '';
+                            // If auto-roll was active, restart it
+                            if (wasAutoRolling) {
+                                toggleAutoRoll();
+                            }
+                            resolve(); // Resolve the promise once the cutscene is fully over
+                        }, 500); // Wait for fade-out transition
+                        
+                    }, WHITE_FLASH_DURATION_MS);
                     
-                }, CUTSCENE_DURATION_MS);
+                }, CUTSCENE_DURATION_MS - WHITE_FLASH_DURATION_MS); // Flash starts 1s before total duration
             });
         }
 
