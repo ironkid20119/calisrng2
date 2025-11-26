@@ -1,993 +1,760 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>calis RNG game</title>
-    <style>
-        body {
-            font-family: 'Courier New', monospace;
-            background-color: #4a148c;
-            color: #ffffff;
-            padding: 20px;
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-        h1 {
-            text-align: center;
-            color: #ffffff;
-        }
-        .main-container {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 20px;
-        }
-        #terminal {
-            background-color: #2d0051;
-            border: 2px solid #ff69b4;
-            border-radius: 5px;
-            padding: 20px;
-            min-height: 400px;
-            max-height: 500px;
-            overflow-y: auto;
-            margin-bottom: 20px;
-        }
-        .output-line {
-            margin: 5px 0;
-        }
-        .command {
-            color: #ff69b4;
-        }
-        .welcome-message {
-            color: #ff69b4;
-            font-weight: bold;
-        }
-        .stats {
-            background-color: #2d0051;
-            border: 2px solid #ff69b4;
-            padding: 15px;
-            border-radius: 5px;
-            margin-bottom: 20px;
-        }
-        .stat-item {
-            margin: 8px 0;
-        }
-        .controls {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-        button {
-            background-color: #808080;
-            color: #ffffff;
-            border: 2px solid #ff69b4;
-            padding: 12px;
-            font-family: 'Courier New', monospace;
-            font-size: 14px;
-            cursor: pointer;
-            border-radius: 5px;
-            transition: all 0.3s;
-        }
-        button:hover {
-            background-color: #a0a0a0;
-        }
-        button:active {
-            transform: scale(0.95);
-        }
-        button:disabled {
-            background-color: #555;
-            border-color: #888;
-            color: #aaa;
-            cursor: not-allowed;
-        }
-        button.active {
-            background-color: #ff69b4;
-            color: #000;
-        }
-        #inventory, #index {
-            background-color: #2d0051;
-            border: 2px solid #ff69b4;
-            border-radius: 5px;
-            padding: 20px;
-            min-height: 400px;
-            max-height: 500px;
-            overflow-y: auto;
-        }
-        .inventory-item {
-            background-color: #4a148c;
-            border: 1px solid #ff69b4;
-            padding: 10px;
-            margin: 5px 0;
-            border-radius: 3px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .inventory-item:hover {
-            background-color: #5a1a9c;
-            transform: translateX(5px);
-        }
-        .section-header {
-            font-size: 18px;
-            margin-bottom: 10px;
-            color: #ff69b4;
-            font-weight: bold;
-        }
-        .clickable-roll {
-            cursor: pointer;
-            display: inline-block;
-            transition: all 0.2s;
-        }
-        .clickable-roll:hover {
-            transform: scale(1.05);
-            text-shadow: 0 0 10px currentColor;
-        }
-        .index-item {
-            background-color: #4a148c;
-            border: 1px solid #ff69b4;
-            padding: 8px;
-            margin: 5px 0;
-            border-radius: 3px;
-        }
-        .index-item.discovered {
-            border-color: #00ff00;
-        }
-        .index-item.locked {
-            opacity: 0.5;
-            border-color: #666;
-        }
-        
-        .autoroll-settings {
-            background-color: #2d0051;
-            border: 2px solid #ff69b4;
-            padding: 15px;
-            border-radius: 5px;
-            margin-bottom: 20px;
-        }
-        
-        .autoroll-setting-item {
-            margin: 10px 0;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .autoroll-setting-item label {
-            flex-shrink: 0;
-        }
-        
-        .autoroll-setting-item input[type="number"] {
-            background-color: #4a148c;
-            color: #ffffff;
-            border: 1px solid #ff69b4;
-            padding: 5px 10px;
-            border-radius: 3px;
-            font-family: 'Courier New', monospace;
-            width: 150px;
-        }
-        
-        .autoroll-setting-item input[type="checkbox"] {
-            width: 20px;
-            height: 20px;
-            cursor: pointer;
-        }
-        
-        /* Rank colors */
-        .rank-1-1000 { color: #ffffff; }
-        .rank-1000-10000 { color: #ffff00; }
-        .rank-10000-100000 { color: #00ffff; }
-        .rank-100000-1000000 { color: #0000cd; }
-        .rank-1000000-100000000 { color: #ff0000; }
-        .rank-100000000-1000000000 { color: #8b0000; }
-        .rank-1000000000-100000000000 { color: #00ff00; }
-        .rank-100000000000-1000000000000 { color: #00ff00; }
-        .rank-1000000000000-100000000000000 { color: #ff69b4; }
-        .rank-rainbow {
-            background: linear-gradient(90deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            animation: rainbow-shift 3s linear infinite;
-            background-size: 200% 100%;
-        }
-        
-        @keyframes rainbow-shift {
-            0% { background-position: 0% 50%; }
-            100% { background-position: 200% 50%; }
-        }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>calis RNG game</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            background-color: #4a148c;
+            color: #ffffff;
+            padding: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        h1 {
+            text-align: center;
+            color: #ffffff;
+        }
+        .main-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+        }
+        #terminal {
+            background-color: #2d0051;
+            border: 2px solid #ff69b4;
+            border-radius: 5px;
+            padding: 20px;
+            min-height: 400px;
+            max-height: 500px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+        }
+        .output-line {
+            margin: 5px 0;
+        }
+        .command {
+            color: #ff69b4;
+        }
+        .welcome-message {
+            color: #ff69b4;
+            font-weight: bold;
+        }
+        .stats {
+            background-color: #2d0051;
+            border: 2px solid #ff69b4;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .stat-item {
+            margin: 8px 0;
+        }
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        button {
+            background-color: #808080;
+            color: #ffffff;
+            border: 2px solid #ff69b4;
+            padding: 12px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: all 0.3s;
+        }
+        button:hover {
+            background-color: #a0a0a0;
+        }
+        button:active {
+            transform: scale(0.95);
+        }
+        button:disabled {
+            background-color: #555;
+            border-color: #888;
+            color: #aaa;
+            cursor: not-allowed;
+        }
+        button.active {
+            background-color: #ff69b4;
+            color: #000;
+        }
+        #inventory, #index {
+            background-color: #2d0051;
+            border: 2px solid #ff69b4;
+            border-radius: 5px;
+            padding: 20px;
+            min-height: 400px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        .inventory-item {
+            background-color: #4a148c;
+            border: 1px solid #ff69b4;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .inventory-item:hover {
+            background-color: #5a1a9c;
+            transform: translateX(5px);
+        }
+        .section-header {
+            font-size: 18px;
+            margin-bottom: 10px;
+            color: #ff69b4;
+            font-weight: bold;
+        }
+        .clickable-roll {
+            cursor: pointer;
+            display: inline-block;
+            transition: all 0.2s;
+        }
+        .clickable-roll:hover {
+            transform: scale(1.05);
+            text-shadow: 0 0 10px currentColor;
+        }
+        .index-item {
+            background-color: #4a148c;
+            border: 1px solid #ff69b4;
+            padding: 8px;
+            margin: 5px 0;
+            border-radius: 3px;
+        }
+        .index-item.discovered {
+            border-color: #00ff00;
+        }
+        .index-item.locked {
+            opacity: 0.5;
+            border-color: #666;
+        }
+        
+        .autoroll-settings {
+            background-color: #2d0051;
+            border: 2px solid #ff69b4;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        
+        .autoroll-setting-item {
+            margin: 10px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .autoroll-setting-item label {
+            flex-shrink: 0;
+        }
+        
+        .autoroll-setting-item input[type="number"] {
+            background-color: #4a148c;
+            color: #ffffff;
+            border: 1px solid #ff69b4;
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            width: 150px;
+        }
+        
+        .autoroll-setting-item input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+        
+        /* Rank colors */
+        .rank-1-1000 { color: #ffffff; }
+        .rank-1000-10000 { color: #ffff00; }
+        .rank-10000-100000 { color: #00ffff; }
+        .rank-100000-1000000 { color: #0000cd; }
+        .rank-1000000-100000000 { color: #ff0000; }
+        .rank-100000000-1000000000 { color: #8b0000; }
+        .rank-1000000000-100000000000 { color: #00ff00; }
+        .rank-100000000000-1000000000000 { color: #00ff00; }
+        .rank-1000000000000-100000000000000 { color: #ff69b4; }
+        .rank-rainbow {
+            background: linear-gradient(90deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: rainbow-shift 3s linear infinite;
+            background-size: 200% 100%;
+        }
+        
+        @keyframes rainbow-shift {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 200% 50%; }
+        }
 
-        @media (max-width: 1200px) {
-            .main-container {
-                grid-template-columns: 1fr 1fr;
-            }
-        }
+        @media (max-width: 1200px) {
+            .main-container {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
 
-        @media (max-width: 768px) {
-            .main-container {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        /* --- CUTSCENE CSS --- */
-        #cutscene-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: black;
-            opacity: 0;
-            z-index: 9999;
-            pointer-events: none; /* Allows clicks to pass through when hidden */
-            transition: opacity 1s ease-in-out;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-        }
-
-        .cutscene-star {
-            width: 100px;
-            height: 100px;
-            opacity: 0;
-            transition: opacity 1s ease-in;
-            position: relative;
-            animation: spin 7s linear forwards;
-        }
-
-        @keyframes spin {
-            from { transform: rotate(0deg) scale(1); }
-            to { transform: rotate(360deg) scale(1); }
-        }
-
-        .star-4 {
-            clip-path: polygon(50% 0%, 65% 50%, 100% 50%, 65% 50%, 50% 100%, 35% 50%, 0% 50%, 35% 50%);
-        }
-
-        .star-8 {
-            clip-path: polygon(0% 25%, 25% 25%, 25% 0%, 50% 0%, 50% 25%, 75% 25%, 75% 0%, 100% 0%, 100% 25%, 75% 25%, 75% 50%, 100% 50%, 100% 75%, 75% 75%, 75% 100%, 50% 100%, 50% 75%, 25% 75%, 25% 100%, 0% 100%, 0% 75%, 25% 75%, 25% 50%, 0% 50%);
-            /* Simplified 8-point star */
-            clip-path: polygon(50% 0%, 66% 34%, 100% 50%, 66% 66%, 50% 100%, 34% 66%, 0% 50%, 34% 34%);
-        }
-        
-        .cutscene-outline {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 50px;
-            font-weight: bold;
-            color: transparent;
-            -webkit-text-stroke: 2px white;
-            opacity: 0;
-            animation: fade-in 1s 1s forwards;
-            pointer-events: none;
-        }
-        /* --- END CUTSCENE CSS --- */
-
-    </style>
+        @media (max-width: 768px) {
+            .main-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 </head>
 <body>
-    
-    <div id="cutscene-overlay">
-        <div id="cutscene-star" class="cutscene-star star-4">
-            <div id="cutscene-text" class="cutscene-outline"></div>
-        </div>
-    </div>
-    <h1>calis RNG game</h1>
-    
-    <div class="stats">
-        <div class="stat-item">Currency: <span id="currency">0.00</span></div>
-        <div class="stat-item">Total Upgrades: <span id="upgrades">0</span></div>
-        <div class="stat-item">Luck: +<span id="luck">0.000</span></div>
-        <div class="stat-item">Secret Luck: <span id="secretLuck">1.00</span>x</div>
-        <div class="stat-item">Variant Chance: <span id="variantChance">1.00</span>x</div>
-        <div class="stat-item">Next Upgrade Cost: <span id="upgradeCost">50.00</span></div>
-        <div class="stat-item">Bulk Roll (Lvl <span id="bulkRollLevel">0</span>): <span id="bulkRollAmount">1</span> roll/click</div>
-        <div class="stat-item">Next Bulk Roll Cost: <span id="bulkRollCost">500,000.00</span></div>
-        <div class="stat-item">Inventory: <span id="inventoryCount">0</span>/<span id="inventoryMax">10</span></div>
-        <div class="stat-item">Rarest Roll: <span id="rarest">None yet</span></div>
-        <div class="stat-item">Ranks Discovered: <span id="ranksDiscovered">0</span>/<span id="totalRanks">25</span></div>
-    </div>
+    <h1>calis RNG game</h1>
+    
+    <div class="stats">
+        <div class="stat-item">Currency: <span id="currency">0.00</span></div>
+        <div class="stat-item">Total Upgrades: <span id="upgrades">0</span></div>
+        <div class="stat-item">Luck: +<span id="luck">0.000</span></div>
+        <div class="stat-item">Secret Luck: <span id="secretLuck">1.00</span>x</div>
+        <div class="stat-item">Variant Chance: <span id="variantChance">1.00</span>x</div>
+        <div class="stat-item">Next Upgrade Cost: <span id="upgradeCost">50.00</span></div>
+        <div class="stat-item">Bulk Roll (Lvl <span id="bulkRollLevel">0</span>): <span id="bulkRollAmount">1</span> roll/click</div>
+        <div class="stat-item">Next Bulk Roll Cost: <span id="bulkRollCost">500,000.00</span></div>
+        <div class="stat-item">Inventory: <span id="inventoryCount">0</span>/<span id="inventoryMax">10</span></div>
+        <div class="stat-item">Rarest Roll: <span id="rarest">None yet</span></div>
+        <div class="stat-item">Ranks Discovered: <span id="ranksDiscovered">0</span>/<span id="totalRanks">25</span></div>
+    </div>
 
-    <div class="autoroll-settings">
-        <div class="section-header">Auto Roll Settings</div>
-        <div class="autoroll-setting-item">
-            <label>Stop on rank ≥:</label>
-            <input type="number" id="autoStopThreshold" value="0" step="0.000001" placeholder="Enter minimum value">
-        </div>
-        <div class="autoroll-setting-item">
-            <input type="checkbox" id="secretConfig">
-            <label for="secretConfig">Secret Config (stop on secret ranks)</label>
-        </div>
-    </div>
+    <div class="autoroll-settings">
+        <div class="section-header">Auto Roll Settings</div>
+        <div class="autoroll-setting-item">
+            <label>Stop on rank ≥:</label>
+            <input type="number" id="autoStopThreshold" value="0" step="0.000001" placeholder="Enter minimum value">
+        </div>
+        <div class="autoroll-setting-item">
+            <input type="checkbox" id="secretConfig">
+            <label for="secretConfig">Secret Config (stop on secret ranks)</label>
+        </div>
+    </div>
 
-    <div class="controls">
-        <button onclick="roll()">Roll (r)</button>
-        <button id="autoRollBtn" onclick="toggleAutoRoll()">Auto Roll</button>
-        <button onclick="buyUpgrade()">Buy Upgrade</button>
-        <button id="buyBulkRollBtn" onclick="buyBulkRoll()">Buy Bulk Roll</button>
-        <button onclick="showRarest()">Show Rarest</button>
-        <button onclick="clearTerminal()">Clear Terminal</button>
-        <button onclick="saveGame()">Save Game</button>
-    </div>
+    <div class="controls">
+        <button onclick="roll()">Roll (r)</button>
+        <button id="autoRollBtn" onclick="toggleAutoRoll()">Auto Roll</button>
+        <button onclick="buyUpgrade()">Buy Upgrade</button>
+        <button id="buyBulkRollBtn" onclick="buyBulkRoll()">Buy Bulk Roll</button>
+        <button onclick="showRarest()">Show Rarest</button>
+        <button onclick="clearTerminal()">Clear Terminal</button>
+        <button onclick="saveGame()">Save Game</button>
+    </div>
 
-    <div class="main-container">
-        <div>
-            <div id="terminal"></div>
-        </div>
-        <div>
-            <div id="inventory">
-                <div class="section-header">Inventory</div>
-                <div id="inventoryContent">Empty</div>
-            </div>
-        </div>
-        <div>
-            <div id="index">
-                <div class="section-header">Index (Ranks Discovered)</div>
-                <div id="indexContent">Roll to discover ranks!</div>
-            </div>
-        </div>
-    </div>
+    <div class="main-container">
+        <div>
+            <div id="terminal"></div>
+        </div>
+        <div>
+            <div id="inventory">
+                <div class="section-header">Inventory</div>
+                <div id="inventoryContent">Empty</div>
+            </div>
+        </div>
+        <div>
+            <div id="index">
+                <div class="section-header">Index (Ranks Discovered)</div>
+                <div id="indexContent">Roll to discover ranks!</div>
+            </div>
+        </div>
+    </div>
 
-    <script>
-        const POWER_EXPONENT = -2.5;
-        const AUTO_ROLL_DELAY_MS = 12.5;
-        const UPGRADE_COST_MULTIPLIER = 1.25;
-        const LUCK_PER_UPGRADE = 1.777;
-        const INVENTORY_PER_UPGRADE = 5;
-        const VARIANT_CHANCE_PER_UPGRADE = 0.05;
-        const MAX_VARIANT_CHANCE_MULTIPLIER = 5;
-        const SECRET_LUCK_PER_UPGRADE = 0.25;
-        const MAX_SECRET_LUCK = 5;
-        const BULK_ROLL_COST_MULTIPLIER = 1.75;
-        const MAX_BULK_ROLL_LEVEL = 4;
+    <script>
+        const POWER_EXPONENT = -2.5;
+        const AUTO_ROLL_DELAY_MS = 12.5;
+        const UPGRADE_COST_MULTIPLIER = 1.25;
+        const LUCK_PER_UPGRADE = 1.777;
+        const INVENTORY_PER_UPGRADE = 5;
+        const VARIANT_CHANCE_PER_UPGRADE = 0.05;
+        const MAX_VARIANT_CHANCE_MULTIPLIER = 5;
+        const SECRET_LUCK_PER_UPGRADE = 0.25;
+        const MAX_SECRET_LUCK = 5;
+        // NEW CONSTANTS FOR BULK ROLL
+        const BULK_ROLL_COST_MULTIPLIER = 1.75;
+        const MAX_BULK_ROLL_LEVEL = 4;
 
-        const VARIANTS = [
-            { name: "Shiny", chance: 1/25, multiplier: 25, color: "#FFD700" },
-            { name: "Gilded", chance: 1/125, multiplier: 125, color: "#FFA500" },
-            { name: "Spectral", chance: 1/625, multiplier: 625, color: "#9400D3" },
-            { name: "Extraordinary", chance: 1/1250, multiplier: 1250, color: "#FF1493" },
-            { name: "Myriad", chance: 1/2500, multiplier: 2500, color: "#00FFFF" }
-        ];
+        const VARIANTS = [
+            { name: "Shiny", chance: 1/25, multiplier: 25, color: "#FFD700" },
+            { name: "Gilded", chance: 1/125, multiplier: 125, color: "#FFA500" },
+            { name: "Spectral", chance: 1/625, multiplier: 625, color: "#9400D3" },
+            { name: "Extraordinary", chance: 1/1250, multiplier: 1250, color: "#FF1493" },
+            { name: "Myriad", chance: 1/2500, multiplier: 2500, color: "#00FFFF" }
+        ];
 
-        let currency = 0;
-        let totalUpgrades = 0;
-        let upgradeCost = 50;
-        let highestRoll = 0;
-        let autoRollInterval = null;
-        let maxInventory = 10;
-        let inventory = [];
-        let rollIndex = 1;
-        let acceptedRolls = new Set();
-        let discoveredRanks = new Set();
-        let autoStopThreshold = 0;
-        let secretConfig = false;
-        let bulkRollLevel = 0;
-        let bulkRollCost = 500000;
-        let isCutscenePlaying = false; // New state variable
+        let currency = 0;
+        let totalUpgrades = 0;
+        let upgradeCost = 50;
+        let highestRoll = 0;
+        let autoRollInterval = null;
+        let maxInventory = 10;
+        let inventory = [];
+        let rollIndex = 1;
+        let acceptedRolls = new Set();
+        let discoveredRanks = new Set();
+        let autoStopThreshold = 0;
+        let secretConfig = false;
+        // NEW VARIABLES FOR BULK ROLL
+        let bulkRollLevel = 0;
+        let bulkRollCost = 500000;
 
-        const RANK_TIERS = [
-            { min: 1, max: 5, name: "Common" },
-            { min: 5, max: 25, name: "Natural" },
-            { min: 25, max: 50, name: "Uncommon" },
-            { min: 50, max: 100, name: "Normal" },
-            { min: 100, max: 500, name: "Divine" },
-            { min: 500, max: 1000, name: "Grandiose" },
-            { min: 1000, max: 2500, name: "Decent" },
-            { min: 2500, max: 7500, name: "Unreal" },
-            { min: 7500, max: 25000, name: "Cosmic" },
-            { min: 25000, max: 100000, name: "Eternal" },
-            { min: 100000, max: 1e6, name: "Iridescent" },
-            { min: 1e6, max: 1e7, name: "Heavenly" },
-            { min: 1e7, max: 5e7, name: "Unattainable" },
-            { min: 5e7, max: 1e9, name: "Gigantic" },
-            { min: 1e9, max: 1e10, name: "Infinitude" },
-            { min: 1e10, max: 1e12, name: "Unseeable" },
-            { min: 1e12, max: 1e15, name: "Unrollable" },
-            { min: 1e15, max: 1e18, name: "Imaginary" },
-            { min: 1e18, max: 1e21, name: "Impossible" },
-            { min: 1e21, max: 1e24, name: "Astronomical" },
-            { min: 1e24, max: Infinity, name: "Colossal" }
-        ];
+        const RANK_TIERS = [
+            { min: 1, max: 5, name: "Common" },
+            { min: 5, max: 25, name: "Natural" },
+            { min: 25, max: 50, name: "Uncommon" },
+            { min: 50, max: 100, name: "Normal" },
+            { min: 100, max: 500, name: "Divine" },
+            { min: 500, max: 1000, name: "Grandiose" },
+            { min: 1000, max: 2500, name: "Decent" },
+            { min: 2500, max: 7500, name: "Unreal" },
+            { min: 7500, max: 25000, name: "Cosmic" },
+            { min: 25000, max: 100000, name: "Eternal" },
+            { min: 100000, max: 1e6, name: "Iridescent" },
+            { min: 1e6, max: 1e7, name: "Heavenly" },
+            { min: 1e7, max: 5e7, name: "Unattainable" },
+            { min: 5e7, max: 1e9, name: "Gigantic" },
+            { min: 1e9, max: 1e10, name: "Infinitude" },
+            { min: 1e10, max: 1e12, name: "Unseeable" },
+            { min: 1e12, max: 1e15, name: "Unrollable" },
+            { min: 1e15, max: 1e18, name: "Imaginary" },
+            { min: 1e18, max: 1e21, name: "Impossible" },
+            { min: 1e21, max: 1e24, name: "Astronomical" },
+            { min: 1e24, max: Infinity, name: "Colossal" }
+        ];
 
-        const SECRET_RANKS = ["nil", "In im table ?!?!?", "cheese", "cali^2", "100", "r", "fish", "Title Label Missing", "?!? unknown ?!?", "Minimal", ":[{(absolute zero)}]:", "Interminable", "Grand"];
-        const TOTAL_RANKS = RANK_TIERS.length + SECRET_RANKS.length;
+        const SECRET_RANKS = ["nil", "In im table ?!?!?", "cheese", "cali^2", "100", "r", "fish", "Title Label Missing", "?!? unknown ?!?", "Minimal", ":[{(absolute zero)}]:", "Interminable", "Grand"];
+        const TOTAL_RANKS = RANK_TIERS.length + SECRET_RANKS.length;
 
-        function formatNumber(num) {
-            return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-        }
+        function formatNumber(num) {
+            return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
 
-        // Helper to get the CSS color property from a rank class
-        function getRankColor(value) {
-            const classMap = {
-                "rank-1-1000": "#ffffff",
-                "rank-1000-10000": "#ffff00",
-                "rank-10000-100000": "#00ffff",
-                "rank-100000-1000000": "#0000cd",
-                "rank-1000000-100000000": "#ff0000",
-                "rank-100000000-1000000000": "#8b0000",
-                "rank-1000000000-100000000000": "#00ff00",
-                "rank-100000000000-1000000000000": "#00ff00",
-                "rank-1000000000000-100000000000000": "#ff69b4",
-            };
-            const className = getRankClass(value);
-            return classMap[className] || "#ffffff";
-        }
+        function getVariant() {
+            const variantChanceMultiplier = Math.min(1 + (totalUpgrades * VARIANT_CHANCE_PER_UPGRADE), MAX_VARIANT_CHANCE_MULTIPLIER);
+            
+            // Check variants from rarest to most common
+            for (let i = VARIANTS.length - 1; i >= 0; i--) {
+                const variant = VARIANTS[i];
+                const adjustedChance = variant.chance * variantChanceMultiplier;
+                if (Math.random() < adjustedChance) {
+                    return variant;
+                }
+            }
+            return null;
+        }
 
-        function getVariant() {
-            const variantChanceMultiplier = Math.min(1 + (totalUpgrades * VARIANT_CHANCE_PER_UPGRADE), MAX_VARIANT_CHANCE_MULTIPLIER);
-            
-            // Check variants from rarest to most common
-            for (let i = VARIANTS.length - 1; i >= 0; i--) {
-                const variant = VARIANTS[i];
-                const adjustedChance = variant.chance * variantChanceMultiplier;
-                if (Math.random() < adjustedChance) {
-                    return variant;
-                }
-            }
-            return null;
-        }
+        function generateRoll() {
+            const luck = totalUpgrades * LUCK_PER_UPGRADE;
+            const baseRoll = Math.pow(Math.random(), 3 / POWER_EXPONENT) * (1 + luck);
+            
+            return { value: baseRoll, variant: null };
+        }
 
-        function generateRoll() {
-            const luck = totalUpgrades * LUCK_PER_UPGRADE;
-            // Removed 3 / POWER_EXPONENT in the exponent calculation as POWER_EXPONENT is already negative.
-            // Using a flat exponent of 3 (or whatever generates the desired distribution) is safer if the constant is negative.
-            const baseRoll = Math.pow(Math.random(), 3) * (1 + luck);
-            
-            return { value: baseRoll, variant: null };
-        }
+        function applySecretRank(rankName) {
+            const secretLuckMultiplier = Math.min(1 + (totalUpgrades * SECRET_LUCK_PER_UPGRADE), MAX_SECRET_LUCK);
+            const rand = Math.random();
+            if (rand < (1/1e12) * secretLuckMultiplier) return "cali^2";
+            if (rand < (1/1e6) * secretLuckMultiplier) return ":[{(absolute zero)}]:";
+            if (rand < (1/1e6) * secretLuckMultiplier) return "Grand";
+            if (rand < (1/15000) * secretLuckMultiplier) return "Minimal";
+            if (rand < (1/10000) * secretLuckMultiplier) return "100";
+            if (rand < (1/10000) * secretLuckMultiplier) return "cheese";
+            if (rand < (1/7979) * secretLuckMultiplier) return "fish";
+            if (rand < (1/7777) * secretLuckMultiplier) return "Interminable";
+            if (rand < (1/7500) * secretLuckMultiplier) return "In im table ?!?!?";
+            if (rand < (1/6942) * secretLuckMultiplier) return "r";
+            if (rand < (1/6666.666) * secretLuckMultiplier) return "?!? unknown ?!?";
+            if (rand < (1/4040.404) * secretLuckMultiplier) return "Title Label Missing";
+            if (rand < (1/1000) * secretLuckMultiplier) return "nil";
+            return rankName;
+        }
 
-        function applySecretRank(rankName) {
-            const secretLuckMultiplier = Math.min(1 + (totalUpgrades * SECRET_LUCK_PER_UPGRADE), MAX_SECRET_LUCK);
-            const rand = Math.random();
-            if (rand < (1/1e12) * secretLuckMultiplier) return "cali^2";
-            if (rand < (1/1e6) * secretLuckMultiplier) return ":[{(absolute zero)}]:";
-            if (rand < (1/1e6) * secretLuckMultiplier) return "Grand";
-            if (rand < (1/15000) * secretLuckMultiplier) return "Minimal";
-            if (rand < (1/10000) * secretLuckMultiplier) return "100";
-            if (rand < (1/10000) * secretLuckMultiplier) return "cheese";
-            if (rand < (1/7979) * secretLuckMultiplier) return "fish";
-            if (rand < (1/7777) * secretLuckMultiplier) return "Interminable";
-            if (rand < (1/7500) * secretLuckMultiplier) return "In im table ?!?!?";
-            if (rand < (1/6942) * secretLuckMultiplier) return "r";
-            if (rand < (1/6666.666) * secretLuckMultiplier) return "?!? unknown ?!?";
-            if (rand < (1/4040.404) * secretLuckMultiplier) return "Title Label Missing";
-            if (rand < (1/1000) * secretLuckMultiplier) return "nil";
-            return rankName;
-        }
+        function getRankInfo(value) {
+            for (let tier of RANK_TIERS) {
+                if (value >= tier.min && value < tier.max) {
+                    return { name: tier.name, value: value };
+                }
+            }
+            return { name: "Unknown", value: value };
+        }
 
-        function getRankInfo(value) {
-            for (let tier of RANK_TIERS) {
-                if (value >= tier.min && value < tier.max) {
-                    return { name: tier.name, value: value };
-                }
-            }
-            return { name: "Colossal", value: value }; // Max rank name
-        }
+        function getVariant(baseValue) {
+            const variantChanceMultiplier = Math.min(1 + (totalUpgrades * VARIANT_CHANCE_PER_UPGRADE), MAX_VARIANT_CHANCE_MULTIPLIER);
+            
+            // Check variants from rarest to most common
+            for (let i = VARIANTS.length - 1; i >= 0; i--) {
+                const variant = VARIANTS[i];
+                const adjustedChance = variant.chance * variantChanceMultiplier;
+                if (Math.random() < adjustedChance) {
+                    return { ...variant, modifiedValue: baseValue * variant.multiplier };
+                }
+            }
+            return null;
+        }
 
-        function getVariant(baseValue) {
-            const variantChanceMultiplier = Math.min(1 + (totalUpgrades * VARIANT_CHANCE_PER_UPGRADE), MAX_VARIANT_CHANCE_MULTIPLIER);
-            
-            // Check variants from rarest to most common
-            for (let i = VARIANTS.length - 1; i >= 0; i--) {
-                const variant = VARIANTS[i];
-                const adjustedChance = variant.chance * variantChanceMultiplier;
-                if (Math.random() < adjustedChance) {
-                    return { ...variant, modifiedValue: baseValue * variant.multiplier };
-                }
-            }
-            return null;
-        }
+        function getRankClass(value) {
+            if (value >= 1e15) return "rank-rainbow";
+            if (value >= 1e12) return "rank-1000000000000-100000000000000";
+            if (value >= 1e11) return "rank-100000000000-1000000000000";
+            if (value >= 1e9) return "rank-1000000000-100000000000";
+            if (value >= 1e8) return "rank-100000000-1000000000";
+            if (value >= 1e6) return "rank-1000000-100000000";
+            if (value >= 1e5) return "rank-100000-1000000";
+            if (value >= 10000) return "rank-10000-100000";
+            if (value >= 1000) return "rank-1000-10000";
+            return "rank-1-1000";
+        }
 
-        function getRankClass(value) {
-            if (value >= 1e18) return "rank-rainbow"; // Using 1e18+ for rainbow as per Tiers list
-            if (value >= 1e12) return "rank-1000000000000-100000000000000";
-            if (value >= 1e10) return "rank-100000000000-1000000000000"; // Changed from 1e11 to 1e10 based on tiers
-            if (value >= 1e9) return "rank-1000000000-100000000000";
-            if (value >= 1e8) return "rank-100000000-1000000000";
-            if (value >= 1e6) return "rank-1000000-100000000";
-            if (value >= 1e5) return "rank-100000-1000000";
-            if (value >= 10000) return "rank-10000-100000";
-            if (value >= 1000) return "rank-1000-10000";
-            return "rank-1-1000";
-        }
+        function getRankNumber(value) {
+            for (let i = 0; i < RANK_TIERS.length; i++) {
+                if (value >= RANK_TIERS[i].min && value < RANK_TIERS[i].max) {
+                    return i + 1;
+                }
+            }
+            return RANK_TIERS.length;
+        }
 
-        function getRankNumber(value) {
-            for (let i = 0; i < RANK_TIERS.length; i++) {
-                if (value >= RANK_TIERS[i].min && value < RANK_TIERS[i].max) {
-                    return i + 1;
-                }
-            }
-            return RANK_TIERS.length;
-        }
+        function addToTerminal(text, isCommand = false, className = "") {
+            const terminal = document.getElementById('terminal');
+            const line = document.createElement('div');
+            line.className = 'output-line';
+            if (isCommand) line.classList.add('command');
+            if (className) line.classList.add(className);
+            line.innerHTML = text;
+            terminal.appendChild(line);
+            terminal.scrollTop = terminal.scrollHeight;
+        }
 
-        function addToTerminal(text, isCommand = false, className = "") {
-            const terminal = document.getElementById('terminal');
-            const line = document.createElement('div');
-            line.className = 'output-line';
-            if (isCommand) line.classList.add('command');
-            if (className) line.classList.add(className);
-            line.innerHTML = text;
-            terminal.appendChild(line);
-            terminal.scrollTop = terminal.scrollHeight;
-        }
+        function updateStats() {
+            document.getElementById('currency').textContent = currency.toFixed(2);
+            document.getElementById('upgrades').textContent = totalUpgrades;
+            document.getElementById('luck').textContent = (totalUpgrades * LUCK_PER_UPGRADE).toFixed(3);
+            const secretLuckMultiplier = Math.min(1 + (totalUpgrades * SECRET_LUCK_PER_UPGRADE), MAX_SECRET_LUCK);
+            document.getElementById('secretLuck').textContent = secretLuckMultiplier.toFixed(2);
+            const variantChanceMultiplier = Math.min(1 + (totalUpgrades * VARIANT_CHANCE_PER_UPGRADE), MAX_VARIANT_CHANCE_MULTIPLIER);
+            document.getElementById('variantChance').textContent = variantChanceMultiplier.toFixed(2);
+            document.getElementById('upgradeCost').textContent = upgradeCost.toFixed(2);
+            document.getElementById('inventoryCount').textContent = inventory.length;
+            document.getElementById('inventoryMax').textContent = maxInventory;
+            document.getElementById('ranksDiscovered').textContent = discoveredRanks.size;
+            document.getElementById('totalRanks').textContent = TOTAL_RANKS;
 
-        function updateStats() {
-            // ... (Stats update logic remains the same)
-            document.getElementById('currency').textContent = currency.toFixed(2);
-            document.getElementById('upgrades').textContent = totalUpgrades;
-            document.getElementById('luck').textContent = (totalUpgrades * LUCK_PER_UPGRADE).toFixed(3);
-            const secretLuckMultiplier = Math.min(1 + (totalUpgrades * SECRET_LUCK_PER_UPGRADE), MAX_SECRET_LUCK);
-            document.getElementById('secretLuck').textContent = secretLuckMultiplier.toFixed(2);
-            const variantChanceMultiplier = Math.min(1 + (totalUpgrades * VARIANT_CHANCE_PER_UPGRADE), MAX_VARIANT_CHANCE_MULTIPLIER);
-            document.getElementById('variantChance').textContent = variantChanceMultiplier.toFixed(2);
-            document.getElementById('upgradeCost').textContent = upgradeCost.toFixed(2);
-            document.getElementById('inventoryCount').textContent = inventory.length;
-            document.getElementById('inventoryMax').textContent = maxInventory;
-            document.getElementById('ranksDiscovered').textContent = discoveredRanks.size;
-            document.getElementById('totalRanks').textContent = TOTAL_RANKS;
+            // --- NEW STATS UPDATE ---
+            document.getElementById('bulkRollLevel').textContent = bulkRollLevel;
+            document.getElementById('bulkRollAmount').textContent = bulkRollLevel + 1;
+            
+            const bulkCostEl = document.getElementById('bulkRollCost');
+            const bulkBtnEl = document.getElementById('buyBulkRollBtn');
+            
+            if (bulkRollLevel >= MAX_BULK_ROLL_LEVEL) {
+                bulkCostEl.textContent = "MAXED";
+                if (bulkBtnEl) {
+                    bulkBtnEl.disabled = true;
+                    bulkBtnEl.textContent = "Bulk Roll (MAXED)";
+                }
+            } else {
+                bulkCostEl.textContent = formatNumber(bulkRollCost);
+                if (bulkBtnEl) {
+                    bulkBtnEl.disabled = false;
+                    bulkBtnEl.textContent = "Buy Bulk Roll";
+                }
+            }
+            // --- END NEW STATS UPDATE ---
+            
+            if (highestRoll > 0) {
+                const rankInfo = getRankInfo(highestRoll);
+                const rankClass = getRankClass(highestRoll);
+                const displayName = applySecretRank(rankInfo.name);
+                document.getElementById('rarest').innerHTML = 
+                    `<span class="${rankClass}">${formatNumber(highestRoll)} [${displayName}]</span>`;
+            }
+        }
 
-            const bulkCostEl = document.getElementById('bulkRollCost');
-            const bulkBtnEl = document.getElementById('buyBulkRollBtn');
-            
-            document.getElementById('bulkRollLevel').textContent = bulkRollLevel;
-            document.getElementById('bulkRollAmount').textContent = bulkRollLevel + 1;
-            
-            if (bulkRollLevel >= MAX_BULK_ROLL_LEVEL) {
-                bulkCostEl.textContent = "MAXED";
-                if (bulkBtnEl) {
-                    bulkBtnEl.disabled = true;
-                    bulkBtnEl.textContent = "Bulk Roll (MAXED)";
-                }
-            } else {
-                bulkCostEl.textContent = formatNumber(bulkRollCost);
-                if (bulkBtnEl) {
-                    bulkBtnEl.disabled = false;
-                    bulkBtnEl.textContent = "Buy Bulk Roll";
-                }
-            }
-            
-            if (highestRoll > 0) {
-                const rankInfo = getRankInfo(highestRoll);
-                const rankClass = getRankClass(highestRoll);
-                const displayName = applySecretRank(rankInfo.name);
-                document.getElementById('rarest').innerHTML = 
-                    `<span class="${rankClass}">${formatNumber(highestRoll)} [${displayName}]</span>`;
-            }
-        }
+        function updateInventoryDisplay() {
+            const inventoryContent = document.getElementById('inventoryContent');
+            if (inventory.length === 0) {
+                inventoryContent.innerHTML = 'Empty';
+            } else {
+                inventoryContent.innerHTML = inventory.map((item, idx) => {
+                    const rankClass = getRankClass(item.baseValue || item.value);
+                    const variantText = item.variant ? `<span style="color: ${item.variant.color}; font-weight: bold;">[${item.variant.name}]</span> ` : '';
+                    let suffix = "";
+                    if (item.rank === "100") suffix = " * 💯";
+                    if (item.rank === ":[{(absolute zero)}]:") suffix = " * 0";
+                    return `<div class="inventory-item" onclick="removeFromInventory(${idx})">
+                        #${item.index}: ${variantText}<span class="${rankClass}">${formatNumber(item.value)} [${item.rank}]${suffix}</span>
+                    </div>`;
+                }).join('');
+            }
+        }
 
-        function updateInventoryDisplay() {
-            // ... (Inventory display logic remains the same)
-            const inventoryContent = document.getElementById('inventoryContent');
-            if (inventory.length === 0) {
-                inventoryContent.innerHTML = 'Empty';
-            } else {
-                inventoryContent.innerHTML = inventory.map((item, idx) => {
-                    const rankClass = getRankClass(item.baseValue || item.value);
-                    const variantText = item.variant ? `<span style="color: ${item.variant.color}; font-weight: bold;">[${item.variant.name}]</span> ` : '';
-                    let suffix = "";
-                    if (item.rank === "100") suffix = " * 💯";
-                    if (item.rank === ":[{(absolute zero)}]:") suffix = " * 0";
-                    return `<div class="inventory-item" onclick="removeFromInventory(${idx})">
-                        #${item.index}: ${variantText}<span class="${rankClass}">${formatNumber(item.value)} [${item.rank}]${suffix}</span>
-                    </div>`;
-                }).join('');
-            }
-        }
+        function updateIndexDisplay() {
+            const indexContent = document.getElementById('indexContent');
+            let html = '<div style="margin-bottom: 15px;"><strong>Normal Ranks:</strong></div>';
+            
+            RANK_TIERS.forEach(tier => {
+                const discovered = discoveredRanks.has(tier.name);
+                const rankClass = getRankClass((tier.min + tier.max) / 2);
+                html += `<div class="index-item ${discovered ? 'discovered' : 'locked'}">
+                    ${discovered ? `<span class="${rankClass}">${tier.name}</span>` : '???'}
+                </div>`;
+            });
+            
+            html += '<div style="margin: 15px 0;"><strong>Secret Ranks:</strong></div>';
+            SECRET_RANKS.forEach(rank => {
+                const discovered = discoveredRanks.has(rank);
+                html += `<div class="index-item ${discovered ? 'discovered' : 'locked'}">
+                    ${discovered ? `<span style="color: #ff69b4;">${rank}</span>` : '???'}
+                </div>`;
+            });
+            
+            indexContent.innerHTML = html;
+        }
 
-        function updateIndexDisplay() {
-            // ... (Index display logic remains the same)
-            const indexContent = document.getElementById('indexContent');
-            let html = '<div style="margin-bottom: 15px;"><strong>Normal Ranks:</strong></div>';
-            
-            RANK_TIERS.forEach(tier => {
-                const discovered = discoveredRanks.has(tier.name);
-                const rankClass = getRankClass((tier.min + tier.max) / 2);
-                html += `<div class="index-item ${discovered ? 'discovered' : 'locked'}">
-                    ${discovered ? `<span class="${rankClass}">${tier.name}</span>` : '???'}
-                </div>`;
-            });
-            
-            html += '<div style="margin: 15px 0;"><strong>Secret Ranks:</strong></div>';
-            SECRET_RANKS.forEach(rank => {
-                const discovered = discoveredRanks.has(rank);
-                html += `<div class="index-item ${discovered ? 'discovered' : 'locked'}">
-                    ${discovered ? `<span style="color: #ff69b4;">${rank}</span>` : '???'}
-                </div>`;
-            });
-            
-            indexContent.innerHTML = html;
-        }
+        function addToInventory(value, rank, index, variant = null, baseValue = null) {
+            if (inventory.length >= maxInventory) {
+                addToTerminal('Inventory full! Buy upgrades to increase space.', true);
+                return false;
+            }
+            inventory.push({ value, rank, index, variant, baseValue: baseValue || value });
+            updateInventoryDisplay();
+            updateStats();
+            saveGame();
+            return true;
+        }
 
-        function addToInventory(value, rank, index, variant = null, baseValue = null) {
-            // ... (Inventory logic remains the same)
-            if (inventory.length >= maxInventory) {
-                addToTerminal('Inventory full! Buy upgrades to increase space.', true);
-                return false;
-            }
-            inventory.push({ value, rank, index, variant, baseValue: baseValue || value });
-            updateInventoryDisplay();
-            updateStats();
-            saveGame();
-            return true;
-        }
+        function removeFromInventory(idx) {
+            const item = inventory[idx];
+            const variantText = item.variant ? `[${item.variant.name}] ` : '';
+            let suffix = "";
+            if (item.rank === "100") suffix = " * 💯";
+            if (item.rank === ":[{(absolute zero)}]:") suffix = " * 0";
+            addToTerminal(`Removed from inventory: #${item.index} ${variantText}${formatNumber(item.value)} [${item.rank}]${suffix}`, true);
+            
+            acceptedRolls.delete(item.index);
+            
+            const rollElement = document.getElementById(`roll-${item.index}`);
+            if (rollElement) {
+                rollElement.style.opacity = '1';
+                rollElement.style.cursor = 'pointer';
+                rollElement.onclick = function() { tryAddToInventory(item.value, item.rank, item.index, rollElement); };
+                if (item.variant) {
+                    rollElement.setAttribute('data-variant', JSON.stringify(item.variant));
+                }
+                if (item.baseValue) {
+                    rollElement.setAttribute('data-basevalue', item.baseValue);
+                }
+            }
+            
+            inventory.splice(idx, 1);
+            updateInventoryDisplay();
+            updateStats();
+            saveGame();
+        }
 
-        function removeFromInventory(idx) {
-            // ... (Inventory logic remains the same)
-            const item = inventory[idx];
-            const variantText = item.variant ? `[${item.variant.name}] ` : '';
-            let suffix = "";
-            if (item.rank === "100") suffix = " * 💯";
-            if (item.rank === ":[{(absolute zero)}]:") suffix = " * 0";
-            addToTerminal(`Removed from inventory: #${item.index} ${variantText}${formatNumber(item.value)} [${item.rank}]${suffix}`, true);
-            
-            acceptedRolls.delete(item.index);
-            
-            const rollElement = document.getElementById(`roll-${item.index}`);
-            if (rollElement) {
-                rollElement.style.opacity = '1';
-                rollElement.style.cursor = 'pointer';
-                rollElement.onclick = function() { tryAddToInventory(item.value, item.rank, item.index, rollElement); };
-                if (item.variant) {
-                    rollElement.setAttribute('data-variant', JSON.stringify(item.variant));
-                }
-                if (item.baseValue) {
-                    rollElement.setAttribute('data-basevalue', item.baseValue);
-                }
-            }
-            
-            inventory.splice(idx, 1);
-            updateInventoryDisplay();
-            updateStats();
-            saveGame();
-        }
-        
-        // --- NEW CUTSCENE FUNCTION ---
-        let scaleInterval = null;
-        function playCutscene(baseValue) {
-            if (isCutscenePlaying) return;
-            isCutscenePlaying = true;
-            
-            const overlay = document.getElementById('cutscene-overlay');
-            const star = document.getElementById('cutscene-star');
-            const text = document.getElementById('cutscene-text');
-            const starColor = getRankColor(baseValue);
-            const isUnrollableTier = baseValue >= 1e12;
+        // --- MODIFIED roll() FUNCTION ---
+        function roll() {
+            // Loop (bulkRollLevel + 1) times
+            for (let i = 0; i < (bulkRollLevel + 1); i++) {
+                const rollResult = generateRoll();
+                const baseValue = rollResult.value;
+                
+                // Get variant (affects display value but not rank)
+                const variant = getVariant(baseValue);
+                const displayValue = variant ? variant.modifiedValue : baseValue;
+                
+                // Get rank based on BASE value (not variant-modified)
+                const rankInfo = getRankInfo(baseValue);
+                const rankNum = getRankNumber(baseValue);
+                const currencyGain = Math.pow(rankNum, 3);
+                const rankClass = getRankClass(baseValue);
+                
+                // Apply secret rank to the rank name
+                const displayName = applySecretRank(rankInfo.name);
+                let suffix = "";
+                if (displayName === "100") suffix = " * 💯";
+                if (displayName === ":[{(absolute zero)}]:") suffix = " * 0";
+                
+                const currentIndex = rollIndex++;
+                
+                // Add to discovered ranks
+                if (!discoveredRanks.has(displayName)) {
+                    discoveredRanks.add(displayName);
+                    addToTerminal(`🎉 NEW RANK DISCOVERED: ${displayName}!`, true);
+                    updateIndexDisplay();
+                }
+                
+                currency += currencyGain;
+                
+                if (baseValue > highestRoll) {
+                    highestRoll = baseValue;
+                }
+                
+                // Check if should stop auto roll
+                const isSecretRank = SECRET_RANKS.includes(displayName);
+                const shouldStopOnValue = autoStopThreshold > 0 && displayValue >= autoStopThreshold;
+                const shouldStopOnSecret = secretConfig && isSecretRank;
+                
+                const variantText = variant ? `<span style="color: ${variant.color}; font-weight: bold;">[${variant.name}]</span> ` : '';
+                const variantDataAttr = variant ? `data-variant='${JSON.stringify(variant)}'` : '';
+                const baseValueAttr = `data-basevalue='${baseValue}'`;
+                
+                addToTerminal(
+                    `#${currentIndex}: ${variantText}<span class="clickable-roll ${rankClass}" onclick="tryAddToInventory(${displayValue}, '${displayName}', ${currentIndex}, this)" id="roll-${currentIndex}" ${variantDataAttr} ${baseValueAttr}>${formatNumber(displayValue)} [${displayName}]${suffix}</span> (+${currencyGain.toFixed(2)} currency)`
+                );
 
-            // Stop auto-roll if active
-            if (autoRollInterval) {
-                toggleAutoRoll();
-            }
+                // Check for stop *after* adding the roll to the terminal
+                if (autoRollInterval && (shouldStopOnValue || shouldStopOnSecret)) {
+                    // Stop the interval *first*
+                    const btn = document.getElementById('autoRollBtn');
+                    clearInterval(autoRollInterval);
+                    autoRollInterval = null;
+                    btn.textContent = 'Auto Roll';
+                    btn.classList.remove('active');
+                    
+                    const reason = shouldStopOnSecret ? `secret rank [${displayName}]` : `threshold (${formatNumber(displayValue)} ≥ ${autoStopThreshold})`;
+                    addToTerminal(`Auto-roll stopped: ${reason} detected!`, true);
+                    
+                    // Break the loop so it doesn't keep rolling in this bulk roll
+                    break; 
+                }
+            } // End of loop
+            
+            // Update stats and save game *once* per click/interval, outside the loop
+            updateStats();
+            saveGame();
+        }
+        // --- END MODIFIED roll() FUNCTION ---
 
-            // 1. Configure Star
-            star.style.backgroundColor = starColor;
-            star.style.transform = 'rotate(0deg) scale(1)'; // Reset transform
-            star.classList.remove('star-4', 'star-8');
-            star.classList.add(isUnrollableTier ? 'star-8' : 'star-4');
-            star.style.animation = 'none'; // Reset animation
-            void star.offsetWidth; // Trigger reflow to restart animation
+        function tryAddToInventory(value, rank, index, element) {
+            if (acceptedRolls.has(index)) {
+                addToTerminal(`Roll #${index} has already been accepted!`, true);
+                return;
+            }
+            
+            let variant = null;
+            let baseValue = value;
+            
+            if (element && element.dataset) {
+                if (element.dataset.variant) {
+                    try {
+                        variant = JSON.parse(element.dataset.variant);
+                    } catch (e) {
+                        console.error('Error parsing variant:', e);
+                    }
+                }
+                if (element.dataset.basevalue) {
+                    baseValue = parseFloat(element.dataset.basevalue);
+                }
+            }
+            
+            if (addToInventory(value, rank, index, variant, baseValue)) {
+                acceptedRolls.add(index);
+                const variantText = variant ? `[${variant.name}] ` : '';
+                let suffix = "";
+                if (rank === "100") suffix = " * 💯";
+                if (rank === ":[{(absolute zero)}]:") suffix = " * 0";
+                addToTerminal(`Added to inventory: #${index} ${variantText}${formatNumber(value)} [${rank}]${suffix}`, true);
+                
+                const rollElement = document.getElementById(`roll-${index}`);
+                if (rollElement) {
+                    rollElement.style.opacity = '0.5';
+                    rollElement.style.cursor = 'not-allowed';
+                    rollElement.onclick = null;
+                }
+                
+                saveGame();
+            }
+        }
 
-            if (isUnrollableTier) {
-                text.textContent = '?!?';
-                text.style.opacity = '1'; // Show outline immediately
-            } else {
-                text.textContent = '';
-                text.style.opacity = '0'; // Hide outline
-            }
+        function toggleAutoRoll() {
+            const btn = document.getElementById('autoRollBtn');
+            if (autoRollInterval) {
+                clearInterval(autoRollInterval);
+                autoRollInterval = null;
+                btn.textContent = 'Auto Roll';
+                btn.classList.remove('active');
+                addToTerminal('Auto-rolling stopped.', true);
+            } else {
+                autoStopThreshold = parseFloat(document.getElementById('autoStopThreshold').value) || 0;
+                secretConfig = document.getElementById('secretConfig').checked;
+                autoRollInterval = setInterval(roll, AUTO_ROLL_DELAY_MS);
+                btn.textContent = 'Stop Auto Roll';
+                btn.classList.add('active');
+                let message = 'Auto-rolling started...';
+                if (autoStopThreshold > 0) {
+                    message += ` (stop at ≥${autoStopThreshold})`;
+                }
+                if (secretConfig) {
+                    message += ` (stop on secret ranks)`;
+                }
+                addToTerminal(message, true);
+            }
+        }
 
-            // 2. Fade in Black Screen (1s)
-            overlay.style.pointerEvents = 'auto'; // Block interaction
-            overlay.style.opacity = '1';
+        function buyUpgrade() {
+            if (currency >= upgradeCost) {
+                currency -= upgradeCost;
+                totalUpgrades++;
+                maxInventory += INVENTORY_PER_UPGRADE;
+                const currentLuck = totalUpgrades * LUCK_PER_UPGRADE;
+                const secretLuckMultiplier = Math.min(1 + (totalUpgrades * SECRET_LUCK_PER_UPGRADE), MAX_SECRET_LUCK);
+                
+                addToTerminal(
+                    `Upgrade purchased! Total upgrades: ${totalUpgrades} | Luck: +${currentLuck.toFixed(3)} | Secret Luck: ${secretLuckMultiplier.toFixed(2)}x | Inventory space: ${maxInventory} | Currency: ${currency.toFixed(2)}`,
+                    true
+                );
+                
+                upgradeCost *= UPGRADE_COST_MULTIPLIER;
+                addToTerminal(`Next upgrade cost: ${upgradeCost.toFixed(2)}`);
+                
+                updateStats();
+                saveGame();
+            } else {
+                addToTerminal(
+                    `Not enough currency! You have ${currency.toFixed(2)} but need ${upgradeCost.toFixed(2)}`,
+                    true
+                );
+            }
+        }
 
-            // 3. Fade in Star (1s after fade in start)
-            setTimeout(() => {
-                star.style.opacity = '1';
-                star.style.animation = 'spin 7s linear forwards';
-            }, 1000);
-
-            // 4. Start Size Growth (at 5s mark - 7s total duration)
-            setTimeout(() => {
-                let currentScale = 1;
-                scaleInterval = setInterval(() => {
-                    if (currentScale < 1.3) { // Cap scale growth to prevent overflow issues
-                         currentScale *= 1.05;
-                         star.style.transform = `rotate(${star.style.transform.match(/rotate\((.*)\)/)?.[1] || 0}deg) scale(${currentScale})`;
-                    }
-                }, 150);
-            }, 5000); // 7s total - 2s growth = 5s wait
-
-            // 5. End Cutscene (7s)
-            setTimeout(() => {
-                clearInterval(scaleInterval);
-                scaleInterval = null;
-                star.style.opacity = '0';
-                star.style.transform = 'rotate(0deg) scale(1)';
-                overlay.style.opacity = '0';
-                overlay.style.pointerEvents = 'none';
-                isCutscenePlaying = false;
-            }, 7000);
-        }
-        // --- END NEW CUTSCENE FUNCTION ---
-
-        function roll() {
-            // Prevent rolling during a cutscene
-            if (isCutscenePlaying) return; 
-
-            for (let i = 0; i < (bulkRollLevel + 1); i++) {
-                const rollResult = generateRoll();
-                const baseValue = rollResult.value;
-                
-                const variant = getVariant(baseValue);
-                const displayValue = variant ? variant.modifiedValue : baseValue;
-                
-                const rankInfo = getRankInfo(baseValue);
-                const rankNum = getRankNumber(baseValue);
-                const currencyGain = Math.pow(rankNum, 3);
-                const rankClass = getRankClass(baseValue);
-                
-                const displayName = applySecretRank(rankInfo.name);
-                let suffix = "";
-                if (displayName === "100") suffix = " * 💯";
-                if (displayName === ":[{(absolute zero)}]:") suffix = " * 0";
-                
-                const currentIndex = rollIndex++;
-                
-                // Add to discovered ranks
-                if (!discoveredRanks.has(displayName)) {
-                    discoveredRanks.add(displayName);
-                    addToTerminal(`🎉 NEW RANK DISCOVERED: ${displayName}!`, true);
-                    updateIndexDisplay();
-                }
-                
-                currency += currencyGain;
-                
-                if (baseValue > highestRoll) {
-                    highestRoll = baseValue;
-                }
-                
-                // --- CUTSCENE TRIGGER CHECK ---
-                if (baseValue >= 1e9) {
-                    playCutscene(baseValue);
-                    // Stop further rolls in the bulk-roll if a cutscene is triggered
-                    i = bulkRollLevel; 
-                }
-                // --- END CUTSCENE TRIGGER CHECK ---
-                
-                // Check if should stop auto roll
-                const isSecretRank = SECRET_RANKS.includes(displayName);
-                const shouldStopOnValue = autoStopThreshold > 0 && displayValue >= autoStopThreshold;
-                const shouldStopOnSecret = secretConfig && isSecretRank;
-                
-                const variantText = variant ? `<span style="color: ${variant.color}; font-weight: bold;">[${variant.name}]</span> ` : '';
-                const variantDataAttr = variant ? `data-variant='${JSON.stringify(variant)}'` : '';
-                const baseValueAttr = `data-basevalue='${baseValue}'`;
-                
-                addToTerminal(
-                    `#${currentIndex}: ${variantText}<span class="clickable-roll ${rankClass}" onclick="tryAddToInventory(${displayValue}, '${displayName}', ${currentIndex}, this)" id="roll-${currentIndex}" ${variantDataAttr} ${baseValueAttr}>${formatNumber(displayValue)} [${displayName}]${suffix}</span> (+${currencyGain.toFixed(2)} currency)`
-                );
-
-                // Check for stop *after* adding the roll to the terminal
-                if (autoRollInterval && (shouldStopOnValue || shouldStopOnSecret)) {
-                    const btn = document.getElementById('autoRollBtn');
-                    clearInterval(autoRollInterval);
-                    autoRollInterval = null;
-                    btn.textContent = 'Auto Roll';
-                    btn.classList.remove('active');
-                    
-                    const reason = shouldStopOnSecret ? `secret rank [${displayName}]` : `threshold (${formatNumber(displayValue)} ≥ ${autoStopThreshold})`;
-                    addToTerminal(`Auto-roll stopped: ${reason} detected!`, true);
-                    
-                    // Break the loop so it doesn't keep rolling in this bulk roll
-                    break; 
-                }
-            } // End of loop
-            
-            updateStats();
-            saveGame();
-        }
-
-        function tryAddToInventory(value, rank, index, element) {
-            // ... (Inventory logic remains the same)
-            if (acceptedRolls.has(index)) {
-                addToTerminal(`Roll #${index} has already been accepted!`, true);
-                return;
-            }
-            
-            let variant = null;
-            let baseValue = value;
-            
-            if (element && element.dataset) {
-                if (element.dataset.variant) {
-                    try {
-                        variant = JSON.parse(element.dataset.variant);
-                    } catch (e) {
-                        console.error('Error parsing variant:', e);
-                    }
-                }
-                if (element.dataset.basevalue) {
-                    baseValue = parseFloat(element.dataset.basevalue);
-                }
-            }
-            
-            if (addToInventory(value, rank, index, variant, baseValue)) {
-                acceptedRolls.add(index);
-                const variantText = variant ? `[${variant.name}] ` : '';
-                let suffix = "";
-                if (rank === "100") suffix = " * 💯";
-                if (rank === ":[{(absolute zero)}]:") suffix = " * 0";
-                addToTerminal(`Added to inventory: #${index} ${variantText}${formatNumber(value)} [${rank}]${suffix}`, true);
-                
-                const rollElement = document.getElementById(`roll-${index}`);
-                if (rollElement) {
-                    rollElement.style.opacity = '0.5';
-                    rollElement.style.cursor = 'not-allowed';
-                    rollElement.onclick = null;
-                }
-                
-                saveGame();
-            }
-        }
-
-        function toggleAutoRoll() {
-            // ... (Auto-roll logic remains the same)
-            const btn = document.getElementById('autoRollBtn');
-            if (autoRollInterval) {
-                clearInterval(autoRollInterval);
-                autoRollInterval = null;
-                btn.textContent = 'Auto Roll';
-                btn.classList.remove('active');
-                addToTerminal('Auto-rolling stopped.', true);
-            } else {
-                autoStopThreshold = parseFloat(document.getElementById('autoStopThreshold').value) || 0;
-                secretConfig = document.getElementById('secretConfig').checked;
-                autoRollInterval = setInterval(roll, AUTO_ROLL_DELAY_MS);
-                btn.textContent = 'Stop Auto Roll';
-                btn.classList.add('active');
-                let message = 'Auto-rolling started...';
-                if (autoStopThreshold > 0) {
-                    message += ` (stop at ≥${autoStopThreshold})`;
-                }
-                if (secretConfig) {
-                    message += ` (stop on secret ranks)`;
-                }
-                addToTerminal(message, true);
-            }
-        }
-
-        function buyUpgrade() {
-            // ... (Upgrade logic remains the same)
-            if (currency >= upgradeCost) {
-                currency -= upgradeCost;
-                totalUpgrades++;
-                maxInventory += INVENTORY_PER_UPGRADE;
-                const currentLuck = totalUpgrades * LUCK_PER_UPGRADE;
-                const secretLuckMultiplier = Math.min(1 + (totalUpgrades * SECRET_LUCK_PER_UPGRADE), MAX_SECRET_LUCK);
-                
-                addToTerminal(
-                    `Upgrade purchased! Total upgrades: ${totalUpgrades} | Luck: +${currentLuck.toFixed(3)} | Secret Luck: ${secretLuckMultiplier.toFixed(2)}x | Inventory space: ${maxInventory} | Currency: ${currency.toFixed(2)}`,
-                    true
-                );
-                
-                upgradeCost *= UPGRADE_COST_MULTIPLIER;
-                addToTerminal(`Next upgrade cost: ${upgradeCost.toFixed(2)}`);
-                
-                updateStats();
-                saveGame();
-            } else {
-                addToTerminal(
-                    `Not enough currency! You have ${currency.toFixed(2)} but need ${upgradeCost.toFixed(2)}`,
-                    true
-                );
-            }
-        }
-
-        function buyBulkRoll() {
-            // ... (Bulk Roll logic remains the same)
-            if (bulkRollLevel >= MAX_BULK_ROLL_LEVEL) {
-                addToTerminal('Bulk Roll is already maxed out!', true);
-                return;
-            }
-            
-            if (currency >= bulkRollCost) {
-                currency -= bulkRollCost;
-                bulkRollLevel++;
-                
-                addToTerminal(
-                    `Bulk Roll purchased! Level: ${bulkRollLevel} | Rolls per click: ${bulkRollLevel + 1} | Currency: ${currency.toFixed(2)}`,
-                    true
-                );
-                
-                if (bulkRollLevel < MAX_BULK_ROLL_LEVEL) {
-                    bulkRollCost *= BULK_ROLL_COST_MULTIPLIER;
-                    addToTerminal(`Next Bulk Roll cost: ${bulkRollCost.toFixed(2)}`);
-                } else {
-                    addToTerminal('Bulk Roll is now MAXED!');
-                }
-                
-                updateStats();
-                saveGame();
-            } else {
-                addToTerminal(
-                    `Not enough currency! You have ${currency.toFixed(2)} but need ${bulkRollCost.toFixed(2)}`,
-                    true
-                );
-            }
-        }
-
-        function showRarest() {
-             // ... (showRarest implementation needed if not present, but using simplest version for now)
-             if (highestRoll > 0) {
-                 const rankInfo = getRankInfo(highestRoll);
-                 const rankClass = getRankClass(highestRoll);
-                 const displayName = applySecretRank(rankInfo.name);
-                 addToTerminal(`Your rarest roll is: <span class="${rankClass}">${formatNumber(highestRoll)} [${displayName}]</span>`, true);
-             } else {
-                 addToTerminal("You haven't rolled yet!", true);
-             }
-        }
-        
-        function clearTerminal() {
-            document.getElementById('terminal').innerHTML = `<div class="output-line welcome-message">
-                calis RNG game v1.1 loaded. Press 'Roll' to begin your journey!
-            </div>`;
-        }
-
-        // --- Save/Load functions (Included for completeness) ---
-        function saveGame() {
-            const gameState = {
-                currency, totalUpgrades, upgradeCost, highestRoll, maxInventory,
-                inventory, rollIndex, acceptedRolls: [...acceptedRolls], 
-                discoveredRanks: [...discoveredRanks], autoStopThreshold, secretConfig,
-                bulkRollLevel, bulkRollCost
-            };
-            localStorage.setItem('calisRNGGame', JSON.stringify(gameState));
-            addToTerminal('Game saved!', true);
-        }
-
-        function loadGame() {
-            const savedGame = localStorage.getItem('calisRNGGame');
-            if (savedGame) {
-                const gameState = JSON.parse(savedGame);
-                currency = gameState.currency || 0;
-                totalUpgrades = gameState.totalUpgrades || 0;
-                upgradeCost = gameState.upgradeCost || 50;
-                highestRoll = gameState.highestRoll || 0;
-                maxInventory = gameState.maxInventory || 10;
-                inventory = gameState.inventory || [];
-                rollIndex = gameState.rollIndex || 1;
-                acceptedRolls = new Set(gameState.acceptedRolls || []);
-                discoveredRanks = new Set(gameState.discoveredRanks || []);
-                autoStopThreshold = gameState.autoStopThreshold || 0;
-                secretConfig = gameState.secretConfig || false;
-                bulkRollLevel = gameState.bulkRollLevel || 0;
-                bulkRollCost = gameState.bulkRollCost || 500000;
-
-                // Update UI elements from loaded state
-                document.getElementById('autoStopThreshold').value = autoStopThreshold;
-                document.getElementById('secretConfig').checked = secretConfig;
-
-                updateStats();
-                updateInventoryDisplay();
-                updateIndexDisplay();
-                addToTerminal('Game loaded successfully!', true);
-            } else {
-                clearTerminal();
-            }
-        }
-        
-        // --- Event Listeners ---
-        window.addEventListener('load', loadGame);
-        window.addEventListener('keydown', (e) => {
-            if (e.key === 'r' || e.key === 'R') {
-                roll();
-            }
-        });
-        
-    </script>
-</body>
-</html>
+        // --- NEW buyBulkRoll() FUNCTION ---
+        function buyBulkRoll() {
+            if (bulkRollLevel >= MAX_BULK_ROLL_LEVEL) {
+                addToTerminal('Bulk Roll is already maxed out!', true);
+                return;
+            }
+            
+            if (currency >= bulkRollCost) {
+                currency -= bulkRollCost;
+                bulkRollLevel++;
+                
+                addToTerminal(
+                    `Bulk Roll purchased! Level: ${bulkRollLevel} | Rolls per click: ${bulkRollLevel + 1} | Currency: ${currency.toFixed(2)}`,
+                    true
+                );
+                
+                // Only update cost if not maxed
+                if (bulkRollLevel < MAX_BULK_ROLL_LEVEL) {
+                    bulkRollCost *= BULK_ROLL_COST_MULTIPLIER;
+                    addToTerminal(`Next Bulk Roll cost: ${bulkRollCost.toFixed(2)}`);
+                } else {
+                    addToTerminal('Bulk Roll is now MAXED!');
+                }
+                
+                updateStats();
+                saveGame();
+            } else {
+                addToTerminal(
+                    `Not enough currency! You have ${currency.toFixed(2)} but need ${bulkRollCost.toFixed(2)}`,
+                    true
+                );
+            }
+        }
+    
