@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>calis RNG game</title>
     <style>
+        /* CSS is unchanged, but included for completeness */
         body {
             font-family: 'Courier New', monospace;
             background-color: #4a148c;
@@ -267,6 +268,7 @@
     </div>
 
     <script>
+        // --- CONSTANTS ---
         const POWER_EXPONENT = -2.5;
         const AUTO_ROLL_DELAY_MS = 12.5;
         const UPGRADE_COST_MULTIPLIER = 1.25;
@@ -276,7 +278,6 @@
         const MAX_VARIANT_CHANCE_MULTIPLIER = 5;
         const SECRET_LUCK_PER_UPGRADE = 0.25;
         const MAX_SECRET_LUCK = 5;
-        // NEW CONSTANTS FOR BULK ROLL
         const BULK_ROLL_COST_MULTIPLIER = 1.75;
         const MAX_BULK_ROLL_LEVEL = 4;
 
@@ -287,22 +288,6 @@
             { name: "Extraordinary", chance: 1/1250, multiplier: 1250, color: "#FF1493" },
             { name: "Myriad", chance: 1/2500, multiplier: 2500, color: "#00FFFF" }
         ];
-
-        let currency = 0;
-        let totalUpgrades = 0;
-        let upgradeCost = 50;
-        let highestRoll = 0;
-        let autoRollInterval = null;
-        let maxInventory = 10;
-        let inventory = [];
-        let rollIndex = 1;
-        let acceptedRolls = new Set();
-        let discoveredRanks = new Set();
-        let autoStopThreshold = 0;
-        let secretConfig = false;
-        // NEW VARIABLES FOR BULK ROLL
-        let bulkRollLevel = 0;
-        let bulkRollCost = 500000;
 
         const RANK_TIERS = [
             { min: 1, max: 5, name: "Common" },
@@ -329,63 +314,62 @@
         ];
 
         const SECRET_RANKS = ["nil", "In im table ?!?!?", "cheese", "cali^2", "100", "r", "fish", "Title Label Missing", "?!? unknown ?!?", "Minimal", ":[{(absolute zero)}]:", "Interminable", "Grand"];
-        const TOTAL_RANKS = RANK_TIERS.length + SECRET_RANKS.length;
+        const TOTAL_RANKS = RANK_TIERS.length + SECRET_RANKS.length; // 21 + 13 = 34
+
+        // OPTIMIZATION: Streamlined Secret Ranks with Chances (highest chance first)
+        const SECRET_RANKS_CHANCES = [
+            { name: "nil", chance: 1/1000 },
+            { name: "Title Label Missing", chance: 1/4040.404 },
+            { name: "?!? unknown ?!?", chance: 1/6666.666 },
+            { name: "r", chance: 1/6942 },
+            { name: "In im table ?!?!?", chance: 1/7500 },
+            { name: "Interminable", chance: 1/7777 },
+            { name: "fish", chance: 1/7979 },
+            { name: "cheese", chance: 1/10000 },
+            { name: "100", chance: 1/10000 },
+            { name: "Minimal", chance: 1/15000 },
+            { name: "Grand", chance: 1/1e6 },
+            { name: ":[{(absolute zero)}]:", chance: 1/1e6 },
+            { name: "cali^2", chance: 1/1e12 }
+        ];
+
+        // --- GAME STATE VARIABLES ---
+        let currency = 0;
+        let totalUpgrades = 0;
+        let upgradeCost = 50;
+        let highestRoll = 0;
+        let autoRollInterval = null;
+        let maxInventory = 10;
+        let inventory = [];
+        let rollIndex = 1;
+        let acceptedRolls = new Set();
+        let discoveredRanks = new Set();
+        let autoStopThreshold = 0;
+        let secretConfig = false;
+        let bulkRollLevel = 0;
+        let bulkRollCost = 500000;
+        
+        // --- OPTIMIZATION: CALCULATED STATS (set by updateCalculatedStats) ---
+        let currentLuck = 0;
+        let secretLuckMultiplier = 1;
+        let variantChanceMultiplier = 1;
+
+
+        // --- CORE FUNCTIONS ---
 
         function formatNumber(num) {
             return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         }
 
-        function getVariant() {
-            const variantChanceMultiplier = Math.min(1 + (totalUpgrades * VARIANT_CHANCE_PER_UPGRADE), MAX_VARIANT_CHANCE_MULTIPLIER);
-            
-            // Check variants from rarest to most common
-            for (let i = VARIANTS.length - 1; i >= 0; i--) {
-                const variant = VARIANTS[i];
-                const adjustedChance = variant.chance * variantChanceMultiplier;
-                if (Math.random() < adjustedChance) {
-                    return variant;
-                }
-            }
-            return null;
-        }
-
-        function generateRoll() {
-            const luck = totalUpgrades * LUCK_PER_UPGRADE;
-            const baseRoll = Math.pow(Math.random(), 3 / POWER_EXPONENT) * (1 + luck);
-            
-            return { value: baseRoll, variant: null };
-        }
-
-        function applySecretRank(rankName) {
-            const secretLuckMultiplier = Math.min(1 + (totalUpgrades * SECRET_LUCK_PER_UPGRADE), MAX_SECRET_LUCK);
-            const rand = Math.random();
-            if (rand < (1/1e12) * secretLuckMultiplier) return "cali^2";
-            if (rand < (1/1e6) * secretLuckMultiplier) return ":[{(absolute zero)}]:";
-            if (rand < (1/1e6) * secretLuckMultiplier) return "Grand";
-            if (rand < (1/15000) * secretLuckMultiplier) return "Minimal";
-            if (rand < (1/10000) * secretLuckMultiplier) return "100";
-            if (rand < (1/10000) * secretLuckMultiplier) return "cheese";
-            if (rand < (1/7979) * secretLuckMultiplier) return "fish";
-            if (rand < (1/7777) * secretLuckMultiplier) return "Interminable";
-            if (rand < (1/7500) * secretLuckMultiplier) return "In im table ?!?!?";
-            if (rand < (1/6942) * secretLuckMultiplier) return "r";
-            if (rand < (1/6666.666) * secretLuckMultiplier) return "?!? unknown ?!?";
-            if (rand < (1/4040.404) * secretLuckMultiplier) return "Title Label Missing";
-            if (rand < (1/1000) * secretLuckMultiplier) return "nil";
-            return rankName;
-        }
-
-        function getRankInfo(value) {
-            for (let tier of RANK_TIERS) {
-                if (value >= tier.min && value < tier.max) {
-                    return { name: tier.name, value: value };
-                }
-            }
-            return { name: "Unknown", value: value };
+        // OPTIMIZATION: Centralized function to calculate multipliers after upgrades
+        function updateCalculatedStats() {
+            currentLuck = totalUpgrades * LUCK_PER_UPGRADE;
+            secretLuckMultiplier = Math.min(1 + (totalUpgrades * SECRET_LUCK_PER_UPGRADE), MAX_SECRET_LUCK);
+            variantChanceMultiplier = Math.min(1 + (totalUpgrades * VARIANT_CHANCE_PER_UPGRADE), MAX_VARIANT_CHANCE_MULTIPLIER);
         }
 
         function getVariant(baseValue) {
-            const variantChanceMultiplier = Math.min(1 + (totalUpgrades * VARIANT_CHANCE_PER_UPGRADE), MAX_VARIANT_CHANCE_MULTIPLIER);
+            // Use pre-calculated global multiplier
             
             // Check variants from rarest to most common
             for (let i = VARIANTS.length - 1; i >= 0; i--) {
@@ -396,6 +380,45 @@
                 }
             }
             return null;
+        }
+
+        function generateRoll() {
+            // Use pre-calculated global luck value
+            const baseRoll = Math.pow(Math.random(), 3 / POWER_EXPONENT) * (1 + currentLuck);
+            return { value: baseRoll, variant: null };
+        }
+        
+        // OPTIMIZATION: Simplified Secret Rank Application using the new array structure
+        function applySecretRank(rankName) {
+            const rand = Math.random();
+            
+            for (const secret of SECRET_RANKS_CHANCES) {
+                // Use pre-calculated global multiplier
+                if (rand < secret.chance * secretLuckMultiplier) {
+                    return secret.name;
+                }
+            }
+            return rankName;
+        }
+
+        // OPTIMIZATION: Merged getRankNumber logic here
+        function getRankInfo(value) {
+            for (let i = 0; i < RANK_TIERS.length; i++) {
+                const tier = RANK_TIERS[i];
+                if (value >= tier.min && value < tier.max) {
+                    return { 
+                        name: tier.name, 
+                        value: value, 
+                        rankNum: i + 1 // Sequential rank number
+                    };
+                }
+            }
+            // Fallback for Colossal (Max Rank)
+            return { 
+                name: "Colossal", 
+                value: value, 
+                rankNum: RANK_TIERS.length // Last rank number
+            };
         }
 
         function getRankClass(value) {
@@ -409,15 +432,6 @@
             if (value >= 10000) return "rank-10000-100000";
             if (value >= 1000) return "rank-1000-10000";
             return "rank-1-1000";
-        }
-
-        function getRankNumber(value) {
-            for (let i = 0; i < RANK_TIERS.length; i++) {
-                if (value >= RANK_TIERS[i].min && value < RANK_TIERS[i].max) {
-                    return i + 1;
-                }
-            }
-            return RANK_TIERS.length;
         }
 
         function addToTerminal(text, isCommand = false, className = "") {
@@ -434,18 +448,18 @@
         function updateStats() {
             document.getElementById('currency').textContent = currency.toFixed(2);
             document.getElementById('upgrades').textContent = totalUpgrades;
-            document.getElementById('luck').textContent = (totalUpgrades * LUCK_PER_UPGRADE).toFixed(3);
-            const secretLuckMultiplier = Math.min(1 + (totalUpgrades * SECRET_LUCK_PER_UPGRADE), MAX_SECRET_LUCK);
+            
+            // OPTIMIZATION: Use pre-calculated global values
+            document.getElementById('luck').textContent = currentLuck.toFixed(3);
             document.getElementById('secretLuck').textContent = secretLuckMultiplier.toFixed(2);
-            const variantChanceMultiplier = Math.min(1 + (totalUpgrades * VARIANT_CHANCE_PER_UPGRADE), MAX_VARIANT_CHANCE_MULTIPLIER);
             document.getElementById('variantChance').textContent = variantChanceMultiplier.toFixed(2);
+            
             document.getElementById('upgradeCost').textContent = upgradeCost.toFixed(2);
             document.getElementById('inventoryCount').textContent = inventory.length;
             document.getElementById('inventoryMax').textContent = maxInventory;
             document.getElementById('ranksDiscovered').textContent = discoveredRanks.size;
-            document.getElementById('totalRanks').textContent = TOTAL_RANKS;
-
-            // --- NEW STATS UPDATE ---
+            document.getElementById('totalRanks').textContent = TOTAL_RANKS; // FIX: Use the JS constant (34)
+            
             document.getElementById('bulkRollLevel').textContent = bulkRollLevel;
             document.getElementById('bulkRollAmount').textContent = bulkRollLevel + 1;
             
@@ -465,7 +479,6 @@
                     bulkBtnEl.textContent = "Buy Bulk Roll";
                 }
             }
-            // --- END NEW STATS UPDATE ---
             
             if (highestRoll > 0) {
                 const rankInfo = getRankInfo(highestRoll);
@@ -558,24 +571,22 @@
             saveGame();
         }
 
-        // --- MODIFIED roll() FUNCTION ---
         function roll() {
             // Loop (bulkRollLevel + 1) times
             for (let i = 0; i < (bulkRollLevel + 1); i++) {
                 const rollResult = generateRoll();
                 const baseValue = rollResult.value;
                 
-                // Get variant (affects display value but not rank)
+                // Get variant
                 const variant = getVariant(baseValue);
                 const displayValue = variant ? variant.modifiedValue : baseValue;
                 
-                // Get rank based on BASE value (not variant-modified)
+                // OPTIMIZATION: Use rankInfo.rankNum
                 const rankInfo = getRankInfo(baseValue);
-                const rankNum = getRankNumber(baseValue);
-                const currencyGain = Math.pow(rankNum, 3);
+                const currencyGain = Math.pow(rankInfo.rankNum, 3);
                 const rankClass = getRankClass(baseValue);
                 
-                // Apply secret rank to the rank name
+                // Apply secret rank
                 const displayName = applySecretRank(rankInfo.name);
                 let suffix = "";
                 if (displayName === "100") suffix = " * 💯";
@@ -630,7 +641,6 @@
             updateStats();
             saveGame();
         }
-        // --- END MODIFIED roll() FUNCTION ---
 
         function tryAddToInventory(value, rank, index, element) {
             if (acceptedRolls.has(index)) {
@@ -703,8 +713,9 @@
                 currency -= upgradeCost;
                 totalUpgrades++;
                 maxInventory += INVENTORY_PER_UPGRADE;
-                const currentLuck = totalUpgrades * LUCK_PER_UPGRADE;
-                const secretLuckMultiplier = Math.min(1 + (totalUpgrades * SECRET_LUCK_PER_UPGRADE), MAX_SECRET_LUCK);
+                
+                // OPTIMIZATION: Update calculated stats only when upgrades change
+                updateCalculatedStats();
                 
                 addToTerminal(
                     `Upgrade purchased! Total upgrades: ${totalUpgrades} | Luck: +${currentLuck.toFixed(3)} | Secret Luck: ${secretLuckMultiplier.toFixed(2)}x | Inventory space: ${maxInventory} | Currency: ${currency.toFixed(2)}`,
@@ -724,7 +735,6 @@
             }
         }
 
-        // --- NEW buyBulkRoll() FUNCTION ---
         function buyBulkRoll() {
             if (bulkRollLevel >= MAX_BULK_ROLL_LEVEL) {
                 addToTerminal('Bulk Roll is already maxed out!', true);
@@ -757,7 +767,6 @@
                 );
             }
         }
-        // --- END NEW FUNCTION ---
 
         function showRarest() {
             if (highestRoll === 0) {
@@ -793,7 +802,6 @@
                 rollIndex,
                 acceptedRolls: Array.from(acceptedRolls),
                 discoveredRanks: Array.from(discoveredRanks),
-                // NEW SAVE DATA
                 bulkRollLevel: bulkRollLevel,
                 bulkRollCost: bulkRollCost
             };
@@ -814,9 +822,11 @@
                     rollIndex = gameState.rollIndex || 1;
                     acceptedRolls = new Set(gameState.acceptedRolls || []);
                     discoveredRanks = new Set(gameState.discoveredRanks || []);
-                    // NEW LOAD DATA
                     bulkRollLevel = gameState.bulkRollLevel || 0;
                     bulkRollCost = gameState.bulkRollCost || 500000;
+                    
+                    // OPTIMIZATION: Call the calculation function here
+                    updateCalculatedStats();
                     
                     updateStats();
                     updateInventoryDisplay();
@@ -825,6 +835,9 @@
                 } catch (e) {
                     console.error('Error loading game:', e);
                 }
+            } else {
+                 // Ensure calculated stats are initialized even if no save exists
+                updateCalculatedStats();
             }
         }
 
