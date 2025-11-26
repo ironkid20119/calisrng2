@@ -75,6 +75,12 @@
         button:active {
             transform: scale(0.95);
         }
+        button:disabled {
+            background-color: #555;
+            border-color: #888;
+            color: #aaa;
+            cursor: not-allowed;
+        }
         button.active {
             background-color: #ff69b4;
             color: #000;
@@ -213,6 +219,8 @@
         <div class="stat-item">Secret Luck: <span id="secretLuck">1.00</span>x</div>
         <div class="stat-item">Variant Chance: <span id="variantChance">1.00</span>x</div>
         <div class="stat-item">Next Upgrade Cost: <span id="upgradeCost">50.00</span></div>
+        <div class="stat-item">Bulk Roll (Lvl <span id="bulkRollLevel">0</span>): <span id="bulkRollAmount">1</span> roll/click</div>
+        <div class="stat-item">Next Bulk Roll Cost: <span id="bulkRollCost">500,000.00</span></div>
         <div class="stat-item">Inventory: <span id="inventoryCount">0</span>/<span id="inventoryMax">10</span></div>
         <div class="stat-item">Rarest Roll: <span id="rarest">None yet</span></div>
         <div class="stat-item">Ranks Discovered: <span id="ranksDiscovered">0</span>/<span id="totalRanks">25</span></div>
@@ -234,6 +242,7 @@
         <button onclick="roll()">Roll (r)</button>
         <button id="autoRollBtn" onclick="toggleAutoRoll()">Auto Roll</button>
         <button onclick="buyUpgrade()">Buy Upgrade</button>
+        <button id="buyBulkRollBtn" onclick="buyBulkRoll()">Buy Bulk Roll</button>
         <button onclick="showRarest()">Show Rarest</button>
         <button onclick="clearTerminal()">Clear Terminal</button>
         <button onclick="saveGame()">Save Game</button>
@@ -267,6 +276,9 @@
         const MAX_VARIANT_CHANCE_MULTIPLIER = 5;
         const SECRET_LUCK_PER_UPGRADE = 0.25;
         const MAX_SECRET_LUCK = 5;
+        // NEW CONSTANTS FOR BULK ROLL
+        const BULK_ROLL_COST_MULTIPLIER = 1.75;
+        const MAX_BULK_ROLL_LEVEL = 4;
 
         const VARIANTS = [
             { name: "Shiny", chance: 1/25, multiplier: 25, color: "#FFD700" },
@@ -288,6 +300,9 @@
         let discoveredRanks = new Set();
         let autoStopThreshold = 0;
         let secretConfig = false;
+        // NEW VARIABLES FOR BULK ROLL
+        let bulkRollLevel = 0;
+        let bulkRollCost = 500000;
 
         const RANK_TIERS = [
             { min: 1, max: 5, name: "Common" },
@@ -429,6 +444,28 @@
             document.getElementById('inventoryMax').textContent = maxInventory;
             document.getElementById('ranksDiscovered').textContent = discoveredRanks.size;
             document.getElementById('totalRanks').textContent = TOTAL_RANKS;
+
+            // --- NEW STATS UPDATE ---
+            document.getElementById('bulkRollLevel').textContent = bulkRollLevel;
+            document.getElementById('bulkRollAmount').textContent = bulkRollLevel + 1;
+            
+            const bulkCostEl = document.getElementById('bulkRollCost');
+            const bulkBtnEl = document.getElementById('buyBulkRollBtn');
+            
+            if (bulkRollLevel >= MAX_BULK_ROLL_LEVEL) {
+                bulkCostEl.textContent = "MAXED";
+                if (bulkBtnEl) {
+                    bulkBtnEl.disabled = true;
+                    bulkBtnEl.textContent = "Bulk Roll (MAXED)";
+                }
+            } else {
+                bulkCostEl.textContent = formatNumber(bulkRollCost);
+                if (bulkBtnEl) {
+                    bulkBtnEl.disabled = false;
+                    bulkBtnEl.textContent = "Buy Bulk Roll";
+                }
+            }
+            // --- END NEW STATS UPDATE ---
             
             if (highestRoll > 0) {
                 const rankInfo = getRankInfo(highestRoll);
@@ -521,63 +558,79 @@
             saveGame();
         }
 
+        // --- MODIFIED roll() FUNCTION ---
         function roll() {
-            const rollResult = generateRoll();
-            const baseValue = rollResult.value;
+            // Loop (bulkRollLevel + 1) times
+            for (let i = 0; i < (bulkRollLevel + 1); i++) {
+                const rollResult = generateRoll();
+                const baseValue = rollResult.value;
+                
+                // Get variant (affects display value but not rank)
+                const variant = getVariant(baseValue);
+                const displayValue = variant ? variant.modifiedValue : baseValue;
+                
+                // Get rank based on BASE value (not variant-modified)
+                const rankInfo = getRankInfo(baseValue);
+                const rankNum = getRankNumber(baseValue);
+                const currencyGain = Math.pow(rankNum, 3);
+                const rankClass = getRankClass(baseValue);
+                
+                // Apply secret rank to the rank name
+                const displayName = applySecretRank(rankInfo.name);
+                let suffix = "";
+                if (displayName === "100") suffix = " * 💯";
+                if (displayName === ":[{(absolute zero)}]:") suffix = " * 0";
+                
+                const currentIndex = rollIndex++;
+                
+                // Add to discovered ranks
+                if (!discoveredRanks.has(displayName)) {
+                    discoveredRanks.add(displayName);
+                    addToTerminal(`🎉 NEW RANK DISCOVERED: ${displayName}!`, true);
+                    updateIndexDisplay();
+                }
+                
+                currency += currencyGain;
+                
+                if (baseValue > highestRoll) {
+                    highestRoll = baseValue;
+                }
+                
+                // Check if should stop auto roll
+                const isSecretRank = SECRET_RANKS.includes(displayName);
+                const shouldStopOnValue = autoStopThreshold > 0 && displayValue >= autoStopThreshold;
+                const shouldStopOnSecret = secretConfig && isSecretRank;
+                
+                const variantText = variant ? `<span style="color: ${variant.color}; font-weight: bold;">[${variant.name}]</span> ` : '';
+                const variantDataAttr = variant ? `data-variant='${JSON.stringify(variant)}'` : '';
+                const baseValueAttr = `data-basevalue='${baseValue}'`;
+                
+                addToTerminal(
+                    `#${currentIndex}: ${variantText}<span class="clickable-roll ${rankClass}" onclick="tryAddToInventory(${displayValue}, '${displayName}', ${currentIndex}, this)" id="roll-${currentIndex}" ${variantDataAttr} ${baseValueAttr}>${formatNumber(displayValue)} [${displayName}]${suffix}</span> (+${currencyGain.toFixed(2)} currency)`
+                );
+
+                // Check for stop *after* adding the roll to the terminal
+                if (autoRollInterval && (shouldStopOnValue || shouldStopOnSecret)) {
+                    // Stop the interval *first*
+                    const btn = document.getElementById('autoRollBtn');
+                    clearInterval(autoRollInterval);
+                    autoRollInterval = null;
+                    btn.textContent = 'Auto Roll';
+                    btn.classList.remove('active');
+                    
+                    const reason = shouldStopOnSecret ? `secret rank [${displayName}]` : `threshold (${formatNumber(displayValue)} ≥ ${autoStopThreshold})`;
+                    addToTerminal(`Auto-roll stopped: ${reason} detected!`, true);
+                    
+                    // Break the loop so it doesn't keep rolling in this bulk roll
+                    break; 
+                }
+            } // End of loop
             
-            // Get variant (affects display value but not rank)
-            const variant = getVariant(baseValue);
-            const displayValue = variant ? variant.modifiedValue : baseValue;
-            
-            // Get rank based on BASE value (not variant-modified)
-            const rankInfo = getRankInfo(baseValue);
-            const rankNum = getRankNumber(baseValue);
-            const currencyGain = Math.pow(rankNum, 3);
-            const rankClass = getRankClass(baseValue);
-            
-            // Apply secret rank to the rank name
-            const displayName = applySecretRank(rankInfo.name);
-            let suffix = "";
-            if (displayName === "100") suffix = " * 💯";
-            if (displayName === ":[{(absolute zero)}]:") suffix = " * 0";
-            
-            const currentIndex = rollIndex++;
-            
-            // Add to discovered ranks
-            if (!discoveredRanks.has(displayName)) {
-                discoveredRanks.add(displayName);
-                addToTerminal(`🎉 NEW RANK DISCOVERED: ${displayName}!`, true);
-                updateIndexDisplay();
-            }
-            
-            currency += currencyGain;
-            
-            if (baseValue > highestRoll) {
-                highestRoll = baseValue;
-            }
-            
-            // Check if should stop auto roll
-            const isSecretRank = SECRET_RANKS.includes(displayName);
-            const shouldStopOnValue = autoStopThreshold > 0 && displayValue >= autoStopThreshold;
-            const shouldStopOnSecret = secretConfig && isSecretRank;
-            
-            if (autoRollInterval && (shouldStopOnValue || shouldStopOnSecret)) {
-                toggleAutoRoll();
-                const reason = shouldStopOnSecret ? `secret rank [${displayName}]` : `threshold (${formatNumber(displayValue)} ≥ ${autoStopThreshold})`;
-                addToTerminal(`Auto-roll stopped: ${reason} detected!`, true);
-            }
-            
-            const variantText = variant ? `<span style="color: ${variant.color}; font-weight: bold;">[${variant.name}]</span> ` : '';
-            const variantDataAttr = variant ? `data-variant='${JSON.stringify(variant)}'` : '';
-            const baseValueAttr = `data-basevalue='${baseValue}'`;
-            
-            addToTerminal(
-                `#${currentIndex}: ${variantText}<span class="clickable-roll ${rankClass}" onclick="tryAddToInventory(${displayValue}, '${displayName}', ${currentIndex}, this)" id="roll-${currentIndex}" ${variantDataAttr} ${baseValueAttr}>${formatNumber(displayValue)} [${displayName}]${suffix}</span> (+${currencyGain.toFixed(2)} currency)`
-            );
-            
+            // Update stats and save game *once* per click/interval, outside the loop
             updateStats();
             saveGame();
         }
+        // --- END MODIFIED roll() FUNCTION ---
 
         function tryAddToInventory(value, rank, index, element) {
             if (acceptedRolls.has(index)) {
@@ -671,6 +724,41 @@
             }
         }
 
+        // --- NEW buyBulkRoll() FUNCTION ---
+        function buyBulkRoll() {
+            if (bulkRollLevel >= MAX_BULK_ROLL_LEVEL) {
+                addToTerminal('Bulk Roll is already maxed out!', true);
+                return;
+            }
+            
+            if (currency >= bulkRollCost) {
+                currency -= bulkRollCost;
+                bulkRollLevel++;
+                
+                addToTerminal(
+                    `Bulk Roll purchased! Level: ${bulkRollLevel} | Rolls per click: ${bulkRollLevel + 1} | Currency: ${currency.toFixed(2)}`,
+                    true
+                );
+                
+                // Only update cost if not maxed
+                if (bulkRollLevel < MAX_BULK_ROLL_LEVEL) {
+                    bulkRollCost *= BULK_ROLL_COST_MULTIPLIER;
+                    addToTerminal(`Next Bulk Roll cost: ${bulkRollCost.toFixed(2)}`);
+                } else {
+                    addToTerminal('Bulk Roll is now MAXED!');
+                }
+                
+                updateStats();
+                saveGame();
+            } else {
+                addToTerminal(
+                    `Not enough currency! You have ${currency.toFixed(2)} but need ${bulkRollCost.toFixed(2)}`,
+                    true
+                );
+            }
+        }
+        // --- END NEW FUNCTION ---
+
         function showRarest() {
             if (highestRoll === 0) {
                 addToTerminal('No rolls yet!', true);
@@ -704,7 +792,10 @@
                 inventory,
                 rollIndex,
                 acceptedRolls: Array.from(acceptedRolls),
-                discoveredRanks: Array.from(discoveredRanks)
+                discoveredRanks: Array.from(discoveredRanks),
+                // NEW SAVE DATA
+                bulkRollLevel: bulkRollLevel,
+                bulkRollCost: bulkRollCost
             };
             localStorage.setItem('calisRNGGame', JSON.stringify(gameState));
         }
@@ -723,6 +814,9 @@
                     rollIndex = gameState.rollIndex || 1;
                     acceptedRolls = new Set(gameState.acceptedRolls || []);
                     discoveredRanks = new Set(gameState.discoveredRanks || []);
+                    // NEW LOAD DATA
+                    bulkRollLevel = gameState.bulkRollLevel || 0;
+                    bulkRollCost = gameState.bulkRollCost || 500000;
                     
                     updateStats();
                     updateInventoryDisplay();
