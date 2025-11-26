@@ -541,23 +541,14 @@
             };
         }
 
-        // MODIFIED: To handle stacked variants for color/class
+        // FIX: Reverted logic to ignore variants for color/class determination, 
+        // using only the roll value (which should be the base value) to get the rank color.
         function getRankClassAndColor(value, variants = []) {
             let color = "#ffffff";
             let className = "rank-1-1000";
 
-            // NEW LOGIC: If variants are present, prioritize the color of the rarest one
-            if (variants.length > 0) {
-                // Variants are sorted by multiplier (rarest first) in getVariants()
-                const rarestVariant = variants[0];
-                
-                // Use the variant's color
-                color = rarestVariant.color;
-                // Use a generic class for variant rolls when color is set inline
-                className = "variant-roll"; 
-                return { className, color };
-            }
-
+            // The variants array is ignored here, ensuring rank coloring is always based on the value.
+            
             // --- Original Base Rank Logic Below (only used if no variants) ---
             if (value >= 1e30) { className = "rank-improbable"; color = "#008080"; } // NEW RANK
             else if (value >= 1e15) { className = "rank-rainbow"; color = "#ff7f00"; } // Rainbow is multi-colored, picking orange as a default
@@ -626,6 +617,7 @@
             
             // MODIFIED LOGIC: Use highestFinalRoll for rarest roll display
             if (highestFinalRoll.value > 0) {
+                // Pass baseValue to get the rank color
                 const { className, color } = getRankClassAndColor(highestFinalRoll.baseValue, highestFinalRoll.variants);
                 let rankClass = className;
                 let rollColor = color;
@@ -649,7 +641,7 @@
                 inventoryContent.innerHTML = 'Empty';
             } else {
                 inventoryContent.innerHTML = inventory.map((item, idx) => {
-                    // MODIFIED: Use the new function to get class and color, passing variants
+                    // MODIFIED: Use the new function to get class and color, passing baseValue
                     const { className: rankClass, color: rollColor } = getRankClassAndColor(item.baseValue, item.variants);
                     
                     // Apply special color for ~Nonavacious~ on the determined color
@@ -778,7 +770,7 @@
                 body.classList.add('cutscene-active');
                 
                 // Get color and determine star shape
-                // NOTE: rollValue is the final, variant-modified number.
+                // rollValue is the final, variant-modified number, which is fine for cutscene magnitude check.
                 const { color } = getRankClassAndColor(rollValue);
                 starElement.style.color = color;
                 
@@ -884,7 +876,7 @@
                 const rankInfo = getRankInfo(baseValue); // Rank name is based on BASE roll
                 const currencyGain = Math.pow(rankInfo.rankNum, 3);
                 
-                // MODIFIED: Get class and color based on base roll OR variant
+                // MODIFIED: Get class and color based on base roll ONLY (variants array is passed but ignored inside)
                 const { className: rankClassBase, color: rollColorBase } = getRankClassAndColor(baseValue, variants);
 
                 let rankClass = rankClassBase;
@@ -929,6 +921,7 @@
                 const shouldStopOnValue = autoStopThreshold > 0 && displayValue >= autoStopThreshold;
                 const shouldStopOnSecret = secretConfig && isSecretRank;
                 
+                // Variants are still displayed using their custom color
                 const variantText = variants.map(v => `<span style="color: ${v.color}; font-weight: bold;">[${v.name}]</span>`).join('') + ' ';
                 
                 const variantDataAttr = variants.length > 0 ? `data-variants='${JSON.stringify(variants)}'` : '';
@@ -1101,6 +1094,7 @@
             if (highestFinalRoll.value === 0) {
                 addToTerminal('No rolls yet!', true);
             } else {
+                // Pass baseValue to get the rank color
                 const { className, color } = getRankClassAndColor(highestFinalRoll.baseValue, highestFinalRoll.variants);
                 let rankClass = className;
                 let rollColor = color;
