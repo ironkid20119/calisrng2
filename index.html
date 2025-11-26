@@ -183,6 +183,9 @@
         .rank-1000000000-100000000000 { color: #00ff00; }
         .rank-100000000000-1000000000000 { color: #00ff00; }
         .rank-1000000000000-100000000000000 { color: #ff69b4; }
+        /* Improbable Rank Color */
+        .rank-improbable { color: #008080; }
+        
         .rank-rainbow {
             background: linear-gradient(90deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3);
             -webkit-background-clip: text;
@@ -190,6 +193,11 @@
             background-clip: text;
             animation: rainbow-shift 3s linear infinite;
             background-size: 200% 100%;
+        }
+
+        /* ~Nonavacious~ Secret Rank Color */
+        .secret-nonavacious {
+            color: #00BFFF; /* Sea Blue */
         }
         
         @keyframes rainbow-shift {
@@ -224,7 +232,7 @@
         <div class="stat-item">Next Bulk Roll Cost: <span id="bulkRollCost">500,000.00</span></div>
         <div class="stat-item">Inventory: <span id="inventoryCount">0</span>/<span id="inventoryMax">10</span></div>
         <div class="stat-item">Rarest Roll: <span id="rarest">None yet</span></div>
-        <div class="stat-item">Ranks Discovered: <span id="ranksDiscovered">0</span>/<span id="totalRanks">34</span></div>
+        <div class="stat-item">Ranks Discovered: <span id="ranksDiscovered">0</span>/<span id="totalRanks">35</span></div>
     </div>
 
     <div class="autoroll-settings">
@@ -271,7 +279,8 @@
         // --- CONSTANTS ---
         const POWER_EXPONENT = -2.5;
         const AUTO_ROLL_DELAY_MS = 12.5;
-        const UPGRADE_COST_MULTIPLIER = 1.25;
+        // NERF: Upgrade cost multiplier changed from 1.25 to 1.15
+        const UPGRADE_COST_MULTIPLIER = 1.15;
         const LUCK_PER_UPGRADE = 1.777;
         const INVENTORY_PER_UPGRADE = 5;
         const VARIANT_CHANCE_PER_UPGRADE = 0.05;
@@ -280,6 +289,7 @@
         const MAX_SECRET_LUCK = 5;
         const BULK_ROLL_COST_MULTIPLIER = 1.75;
         const MAX_BULK_ROLL_LEVEL = 4;
+        const MAX_VARIANTS_PER_ROLL = 5; // NEW CONSTANT
 
         // UPDATED VARIANTS ARRAY
         const VARIANTS = [
@@ -288,14 +298,13 @@
             { name: "Spectral", chance: 1/625, multiplier: 625, color: "#9400D3" },
             { name: "Extraordinary", chance: 1/1250, multiplier: 1250, color: "#FF1493" },
             { name: "Myriad", chance: 1/2500, multiplier: 2500, color: "#00FFFF" },
-            // --- NEW VARIANTS ADDED HERE ---
             { name: "Charred", chance: 1/4000, multiplier: 4000, color: "#FF4500" },
             { name: "Expert", chance: 1/7500, multiplier: 7500, color: "#00BFFF" },
             { name: "ETERNAL DAWN", chance: 1/77777, multiplier: 77777, color: "#FFFFFF" },
             { name: ">Finale<", chance: 1/100000, multiplier: 100000, color: "#D2691E" }
-            // ---------------------------------
         ];
 
+        // NEW RANK TIER: Improbable
         const RANK_TIERS = [
             { min: 1, max: 5, name: "Common" },
             { min: 5, max: 25, name: "Natural" },
@@ -317,13 +326,11 @@
             { min: 1e15, max: 1e18, name: "Imaginary" },
             { min: 1e18, max: 1e21, name: "Impossible" },
             { min: 1e21, max: 1e24, name: "Astronomical" },
-            { min: 1e24, max: Infinity, name: "Colossal" }
+            { min: 1e24, max: 1e30, name: "Colossal" }, // Max changed to 1e30
+            { min: 1e30, max: Infinity, name: "Improbable" } // NEW RANK
         ];
 
-        const SECRET_RANKS = ["nil", "In im table ?!?!?", "cheese", "cali^2", "100", "r", "fish", "Title Label Missing", "?!? unknown ?!?", "Minimal", ":[{(absolute zero)}]:", "Interminable", "Grand"];
-        const TOTAL_RANKS = RANK_TIERS.length + SECRET_RANKS.length; // 21 + 13 = 34
-
-        // OPTIMIZATION: Streamlined Secret Ranks with Chances (highest chance first)
+        // NEW SECRET RANKS ADDED
         const SECRET_RANKS_CHANCES = [
             { name: "nil", chance: 1/1000 },
             { name: "Title Label Missing", chance: 1/4040.404 },
@@ -335,10 +342,16 @@
             { name: "cheese", chance: 1/10000 },
             { name: "100", chance: 1/10000 },
             { name: "Minimal", chance: 1/15000 },
+            { name: "Seize", chance: 1/97525 }, // NEW SECRET RANK
+            { name: "~Nonavacious~", chance: 1/575630 }, // NEW SECRET RANK
+            { name: "Insanity", chance: 1/666666 }, // NEW SECRET RANK
             { name: "Grand", chance: 1/1e6 },
             { name: ":[{(absolute zero)}]:", chance: 1/1e6 },
             { name: "cali^2", chance: 1/1e12 }
         ];
+
+        // CALCULATED TOTAL RANKS (22 normal + 16 secret)
+        const TOTAL_RANKS = RANK_TIERS.length + SECRET_RANKS_CHANCES.length; // 22 + 16 = 38
 
         // --- GAME STATE VARIABLES ---
         let currency = 0;
@@ -375,16 +388,29 @@
             variantChanceMultiplier = Math.min(1 + (totalUpgrades * VARIANT_CHANCE_PER_UPGRADE), MAX_VARIANT_CHANCE_MULTIPLIER);
         }
 
-        function getVariant(baseValue) {
-            // Use pre-calculated global multiplier
+        // MODIFIED: Allows variants to stack up to MAX_VARIANTS_PER_ROLL
+        function getVariants(baseValue) {
+            let selectedVariants = [];
+            let modifiedValue = baseValue;
+            let totalMultiplier = 1;
             
             // Check variants from rarest to most common
             for (let i = VARIANTS.length - 1; i >= 0; i--) {
                 const variant = VARIANTS[i];
                 const adjustedChance = variant.chance * variantChanceMultiplier;
-                if (Math.random() < adjustedChance) {
-                    return { ...variant, modifiedValue: baseValue * variant.multiplier };
+                
+                // Allow stacking up to the max limit
+                while (selectedVariants.length < MAX_VARIANTS_PER_ROLL && Math.random() < adjustedChance) {
+                    selectedVariants.push(variant);
+                    totalMultiplier *= variant.multiplier;
                 }
+            }
+            
+            if (selectedVariants.length > 0) {
+                return { 
+                    variants: selectedVariants, 
+                    modifiedValue: baseValue * totalMultiplier 
+                };
             }
             return null;
         }
@@ -395,7 +421,7 @@
             return { value: baseRoll, variant: null };
         }
         
-        // OPTIMIZATION: Simplified Secret Rank Application using the new array structure
+        // MODIFIED: Simplified Secret Rank Application using the new array structure
         function applySecretRank(rankName) {
             const rand = Math.random();
             
@@ -420,15 +446,16 @@
                     };
                 }
             }
-            // Fallback for Colossal (Max Rank)
+            // Fallback for Improbable (Max Rank)
             return { 
-                name: "Colossal", 
+                name: "Improbable", 
                 value: value, 
                 rankNum: RANK_TIERS.length // Last rank number
             };
         }
 
         function getRankClass(value) {
+            if (value >= 1e30) return "rank-improbable"; // NEW RANK
             if (value >= 1e15) return "rank-rainbow";
             if (value >= 1e12) return "rank-1000000000000-100000000000000";
             if (value >= 1e11) return "rank-100000000000-1000000000000";
@@ -465,7 +492,7 @@
             document.getElementById('inventoryCount').textContent = inventory.length;
             document.getElementById('inventoryMax').textContent = maxInventory;
             document.getElementById('ranksDiscovered').textContent = discoveredRanks.size;
-            document.getElementById('totalRanks').textContent = TOTAL_RANKS; // FIX: Use the JS constant (34)
+            document.getElementById('totalRanks').textContent = TOTAL_RANKS; // FIX: Use the JS constant (38)
             
             document.getElementById('bulkRollLevel').textContent = bulkRollLevel;
             document.getElementById('bulkRollAmount').textContent = bulkRollLevel + 1;
@@ -489,8 +516,14 @@
             
             if (highestRoll > 0) {
                 const rankInfo = getRankInfo(highestRoll);
-                const rankClass = getRankClass(highestRoll);
-                const displayName = applySecretRank(rankInfo.name);
+                let rankClass = getRankClass(highestRoll);
+                let displayName = applySecretRank(rankInfo.name);
+
+                // Apply special color for ~Nonavacious~
+                if (displayName === "~Nonavacious~") {
+                    rankClass += " secret-nonavacious";
+                }
+
                 document.getElementById('rarest').innerHTML = 
                     `<span class="${rankClass}">${formatNumber(highestRoll)} [${displayName}]</span>`;
             }
@@ -502,8 +535,19 @@
                 inventoryContent.innerHTML = 'Empty';
             } else {
                 inventoryContent.innerHTML = inventory.map((item, idx) => {
-                    const rankClass = getRankClass(item.baseValue || item.value);
-                    const variantText = item.variant ? `<span style="color: ${item.variant.color}; font-weight: bold;">[${item.variant.name}]</span> ` : '';
+                    let rankClass = getRankClass(item.baseValue || item.value);
+                    
+                    // Apply special color for ~Nonavacious~
+                    if (item.rank === "~Nonavacious~") {
+                        rankClass += " secret-nonavacious";
+                    }
+
+                    // Handle stacked variants
+                    let variantText = '';
+                    if (item.variants && item.variants.length > 0) {
+                        variantText = item.variants.map(v => `<span style="color: ${v.color}; font-weight: bold;">[${v.name}]</span>`).join('') + ' ';
+                    }
+
                     let suffix = "";
                     if (item.rank === "100") suffix = " * 💯";
                     if (item.rank === ":[{(absolute zero)}]:") suffix = " * 0";
@@ -520,29 +564,43 @@
             
             RANK_TIERS.forEach(tier => {
                 const discovered = discoveredRanks.has(tier.name);
-                const rankClass = getRankClass((tier.min + tier.max) / 2);
+                let rankClass = getRankClass((tier.min + tier.max) / 2);
+
+                // Improbable rank class needs to be explicitly added
+                if (tier.name === "Improbable") {
+                    rankClass = "rank-improbable";
+                }
+
                 html += `<div class="index-item ${discovered ? 'discovered' : 'locked'}">
                     ${discovered ? `<span class="${rankClass}">${tier.name}</span>` : '???'}
                 </div>`;
             });
             
             html += '<div style="margin: 15px 0;"><strong>Secret Ranks:</strong></div>';
-            SECRET_RANKS.forEach(rank => {
-                const discovered = discoveredRanks.has(rank);
+            SECRET_RANKS_CHANCES.forEach(rankInfo => {
+                const rankName = rankInfo.name;
+                const discovered = discoveredRanks.has(rankName);
+                
+                let rankStyle = `color: #ff69b4;`;
+                if (rankName === "~Nonavacious~") {
+                    rankStyle = `color: #00BFFF;`;
+                }
+
                 html += `<div class="index-item ${discovered ? 'discovered' : 'locked'}">
-                    ${discovered ? `<span style="color: #ff69b4;">${rank}</span>` : '???'}
+                    ${discovered ? `<span style="${rankStyle}">${rankName}</span>` : '???'}
                 </div>`;
             });
             
             indexContent.innerHTML = html;
         }
 
-        function addToInventory(value, rank, index, variant = null, baseValue = null) {
+        // MODIFIED: To handle stacked variants
+        function addToInventory(value, rank, index, variants = [], baseValue = null) {
             if (inventory.length >= maxInventory) {
                 addToTerminal('Inventory full! Buy upgrades to increase space.', true);
                 return false;
             }
-            inventory.push({ value, rank, index, variant, baseValue: baseValue || value });
+            inventory.push({ value, rank, index, variants, baseValue: baseValue || value });
             updateInventoryDisplay();
             updateStats();
             saveGame();
@@ -551,7 +609,13 @@
 
         function removeFromInventory(idx) {
             const item = inventory[idx];
-            const variantText = item.variant ? `[${item.variant.name}] ` : '';
+            
+            // Handle stacked variants for terminal message
+            let variantText = '';
+            if (item.variants && item.variants.length > 0) {
+                variantText = item.variants.map(v => `[${v.name}]`).join('') + ' ';
+            }
+            
             let suffix = "";
             if (item.rank === "100") suffix = " * 💯";
             if (item.rank === ":[{(absolute zero)}]:") suffix = " * 0";
@@ -563,13 +627,11 @@
             if (rollElement) {
                 rollElement.style.opacity = '1';
                 rollElement.style.cursor = 'pointer';
-                rollElement.onclick = function() { tryAddToInventory(item.value, item.rank, item.index, rollElement); };
-                if (item.variant) {
-                    rollElement.setAttribute('data-variant', JSON.stringify(item.variant));
-                }
-                if (item.baseValue) {
-                    rollElement.setAttribute('data-basevalue', item.baseValue);
-                }
+                
+                // Recreate the function call with stored data
+                rollElement.onclick = function() { 
+                    tryAddToInventory(item.value, item.rank, item.index, rollElement); 
+                };
             }
             
             inventory.splice(idx, 1);
@@ -584,20 +646,26 @@
                 const rollResult = generateRoll();
                 const baseValue = rollResult.value;
                 
-                // Get variant
-                const variant = getVariant(baseValue);
-                const displayValue = variant ? variant.modifiedValue : baseValue;
+                // Get variant(s)
+                const variantResult = getVariants(baseValue);
+                const displayValue = variantResult ? variantResult.modifiedValue : baseValue;
+                const variants = variantResult ? variantResult.variants : [];
                 
                 // OPTIMIZATION: Use rankInfo.rankNum
                 const rankInfo = getRankInfo(baseValue);
                 const currencyGain = Math.pow(rankInfo.rankNum, 3);
-                const rankClass = getRankClass(baseValue);
+                let rankClass = getRankClass(baseValue);
                 
                 // Apply secret rank
                 const displayName = applySecretRank(rankInfo.name);
                 let suffix = "";
                 if (displayName === "100") suffix = " * 💯";
                 if (displayName === ":[{(absolute zero)}]:") suffix = " * 0";
+
+                // Apply special color for ~Nonavacious~
+                if (displayName === "~Nonavacious~") {
+                    rankClass += " secret-nonavacious";
+                }
                 
                 const currentIndex = rollIndex++;
                 
@@ -615,12 +683,15 @@
                 }
                 
                 // Check if should stop auto roll
-                const isSecretRank = SECRET_RANKS.includes(displayName);
+                const isSecretRank = SECRET_RANKS_CHANCES.map(r => r.name).includes(displayName);
                 const shouldStopOnValue = autoStopThreshold > 0 && displayValue >= autoStopThreshold;
                 const shouldStopOnSecret = secretConfig && isSecretRank;
                 
-                const variantText = variant ? `<span style="color: ${variant.color}; font-weight: bold;">[${variant.name}]</span> ` : '';
-                const variantDataAttr = variant ? `data-variant='${JSON.stringify(variant)}'` : '';
+                // Handle stacked variants for terminal display
+                const variantText = variants.map(v => `<span style="color: ${v.color}; font-weight: bold;">[${v.name}]</span>`).join('') + ' ';
+                
+                // Store all variants for tryAddToInventory
+                const variantDataAttr = variants.length > 0 ? `data-variants='${JSON.stringify(variants)}'` : '';
                 const baseValueAttr = `data-basevalue='${baseValue}'`;
                 
                 addToTerminal(
@@ -649,21 +720,22 @@
             saveGame();
         }
 
+        // MODIFIED: To retrieve and store stacked variants
         function tryAddToInventory(value, rank, index, element) {
             if (acceptedRolls.has(index)) {
                 addToTerminal(`Roll #${index} has already been accepted!`, true);
                 return;
             }
             
-            let variant = null;
+            let variants = [];
             let baseValue = value;
             
             if (element && element.dataset) {
-                if (element.dataset.variant) {
+                if (element.dataset.variants) {
                     try {
-                        variant = JSON.parse(element.dataset.variant);
+                        variants = JSON.parse(element.dataset.variants);
                     } catch (e) {
-                        console.error('Error parsing variant:', e);
+                        console.error('Error parsing variants:', e);
                     }
                 }
                 if (element.dataset.basevalue) {
@@ -671,9 +743,12 @@
                 }
             }
             
-            if (addToInventory(value, rank, index, variant, baseValue)) {
+            if (addToInventory(value, rank, index, variants, baseValue)) {
                 acceptedRolls.add(index);
-                const variantText = variant ? `[${variant.name}] ` : '';
+                
+                // Handle stacked variants for terminal message
+                const variantText = variants.map(v => `[${v.name}]`).join('') + ' ';
+                
                 let suffix = "";
                 if (rank === "100") suffix = " * 💯";
                 if (rank === ":[{(absolute zero)}]:") suffix = " * 0";
@@ -729,6 +804,7 @@
                     true
                 );
                 
+                // MODIFIED: Upgrade cost multiplier changed from 1.25 to 1.15
                 upgradeCost *= UPGRADE_COST_MULTIPLIER;
                 addToTerminal(`Next upgrade cost: ${upgradeCost.toFixed(2)}`);
                 
@@ -780,8 +856,14 @@
                 addToTerminal('No rolls yet!', true);
             } else {
                 const rankInfo = getRankInfo(highestRoll);
-                const rankClass = getRankClass(highestRoll);
+                let rankClass = getRankClass(highestRoll);
                 const displayName = applySecretRank(rankInfo.name);
+
+                // Apply special color for ~Nonavacious~
+                if (displayName === "~Nonavacious~") {
+                    rankClass += " secret-nonavacious";
+                }
+
                 addToTerminal(
                     `Rarest roll: <span class="${rankClass}">${formatNumber(highestRoll)} [${displayName}]</span>`,
                     true
@@ -825,7 +907,19 @@
                     upgradeCost = gameState.upgradeCost || 50;
                     highestRoll = gameState.highestRoll || 0;
                     maxInventory = gameState.maxInventory || 10;
-                    inventory = gameState.inventory || [];
+                    
+                    // Handle inventory compatibility with new 'variants' array instead of 'variant' object
+                    inventory = (gameState.inventory || []).map(item => {
+                        // Check if old 'variant' field exists and convert it to 'variants' array for compatibility
+                        if (item.variant && !item.variants) {
+                            item.variants = [item.variant];
+                            delete item.variant; // Clean up old field if necessary
+                        } else if (!item.variants) {
+                            item.variants = [];
+                        }
+                        return item;
+                    });
+
                     rollIndex = gameState.rollIndex || 1;
                     acceptedRolls = new Set(gameState.acceptedRolls || []);
                     discoveredRanks = new Set(gameState.discoveredRanks || []);
