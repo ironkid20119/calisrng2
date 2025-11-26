@@ -362,9 +362,40 @@
         const SIZE_MULTIPLIER_PER_UPDATE = 1.02;
         const WHITE_FLASH_DURATION_MS = 1000; 
 
+        // --- NEW EVENT CONSTANTS ---
+        const EVENT_CHECK_INTERVAL_MS = 2500; // Check every 2.5 seconds
+
+        const EVENTS = [
+            { 
+                name: "Error", 
+                chance: 1/40.4, 
+                duration: 40000, // 40 seconds
+                description: "makes nil, Title Label Missing and unknown's rarity be easier by x4",
+                targets: ["nil", "Title Label Missing", "?!? unknown ?!?"],
+                multiplier: 4 
+            },
+            { 
+                name: "Lol", 
+                chance: 1/69, 
+                duration: 20000, // 20 seconds
+                description: "makes every meme related secret easier by 6.94x and boosts future event chances",
+                targets: ["r", "fish", "cheese", "In im table ?!?!?"],
+                multiplier: 6.94,
+                eventChanceBoost: 69 
+            },
+            { 
+                name: "UNDEFINED", 
+                chance: 1/300, 
+                duration: 30000, // 30 seconds
+                description: "makes ranks 'unknown,' 'title label missing' and 'absolute zero' be x5 times easier",
+                targets: ["?!? unknown ?!?", "Title Label Missing", ":[{(absolute zero)}]:"],
+                multiplier: 5
+            }
+        ];
+
         // UPDATED VARIANTS ARRAY
         const VARIANTS = [
-            { name: "Shiny", chance: 1/33, multiplier: 25, color: "#FFD700" },
+            { name: "Shiny", chance: 1/25, multiplier: 25, color: "#FFD700" },
             { name: "Gilded", chance: 1/125, multiplier: 125, color: "#FFA500" },
             { name: "Spectral", chance: 1/625, multiplier: 625, color: "#9400D3" },
             { name: "Extraordinary", chance: 1/1250, multiplier: 1250, color: "#FF1493" },
@@ -447,10 +478,84 @@
         let bulkRollCost = 500000;
         let isCutscenePlaying = false; 
         
+        // --- NEW EVENT VARIABLES ---
+        let currentEvent = null; 
+        let eventEndTime = 0;    
+        let eventInterval = null;
+        let eventCheckChance = 1; 
+
         // --- OPTIMIZATION: CALCULATED STATS (set by updateCalculatedStats) ---
         let currentLuck = 0;
         let secretLuckMultiplier = 1;
         let variantChanceMultiplier = 1;
+
+        // --- NEW EVENT FUNCTIONS ---
+
+        function startEvent(event) {
+            // If an event is already running, end it first to prevent overlap
+            if (currentEvent) {
+                clearTimeout(currentEvent.timeoutId);
+                endEvent(currentEvent);
+            }
+            
+            currentEvent = event;
+            eventEndTime = Date.now() + event.duration;
+
+            addToTerminal(`🚨 EVENT STARTED: **${event.name}**! ${event.description} for ${event.duration / 1000} seconds!`, true, 'rank-1000-10000'); 
+
+            if (event.name === "Lol") {
+                // Apply boost to future event rolls
+                eventCheckChance = event.eventChanceBoost; 
+            } else {
+                eventCheckChance = 1; // Ensure it's reset if a non-'Lol' event overrides a 'Lol' event
+            }
+
+            // Set a timeout to automatically end the event
+            event.timeoutId = setTimeout(() => {
+                endEvent(event);
+            }, event.duration);
+
+            updateStats();
+        }
+
+        function endEvent(event) {
+            addToTerminal(`✅ EVENT ENDED: **${event.name}** is over.`, true);
+
+            if (event.name === "Lol") {
+                eventCheckChance = 1; // Reset event chance boost
+            }
+
+            // Only null out currentEvent if the event that ended is the currently running one
+            if (currentEvent && currentEvent.name === event.name) {
+                currentEvent = null;
+                eventEndTime = 0;
+            }
+
+            updateStats();
+        }
+
+        function checkEvent() {
+            // Only check if no event is currently running
+            if (currentEvent) return; 
+
+            for (const event of EVENTS) {
+                // Apply the 'Lol' boost to the event chance when checking for a NEW event
+                const adjustedChance = event.chance / eventCheckChance;
+
+                if (Math.random() < adjustedChance) {
+                    startEvent(event);
+                    return; 
+                }
+            }
+        }
+
+        function startEventLoop() {
+            if (eventInterval) clearInterval(eventInterval);
+            // Start the 2.5 second check loop
+            eventInterval = setInterval(checkEvent, EVENT_CHECK_INTERVAL_MS);
+        }
+
+        // --- END NEW EVENT FUNCTIONS ---
 
 
         // --- CORE FUNCTIONS ---
@@ -520,8 +625,15 @@
             const rand = Math.random();
             
             for (const secret of SECRET_RANKS_CHANCES) {
-                // Use pre-calculated global multiplier
-                if (rand < secret.chance * secretLuckMultiplier) {
+                let chanceMultiplier = 1;
+
+                // --- NEW: Apply Event Multiplier ---
+                if (currentEvent && currentEvent.targets.includes(secret.name)) {
+                    chanceMultiplier = currentEvent.multiplier;
+                }
+                
+                // Use pre-calculated global secret luck multiplier and event multiplier
+                if (rand < secret.chance * secretLuckMultiplier * chanceMultiplier) {
                     return secret.name;
                 }
             }
@@ -619,6 +731,24 @@
                     bulkBtnEl.textContent = "Buy Bulk Roll";
                 }
             }
+            
+            // --- NEW: Dynamic Event Status Display ---
+            const statsContainer = document.querySelector('.stats');
+            let eventStat = document.getElementById('eventStat');
+
+            if (!eventStat) {
+                eventStat = document.createElement('div');
+                eventStat.className = 'stat-item';
+                eventStat.id = 'eventStat';
+                statsContainer.appendChild(eventStat);
+            }
+            
+            const eventName = currentEvent ? currentEvent.name : "None";
+            const timeLeft = currentEvent ? Math.max(0, eventEndTime - Date.now()) : 0;
+            const timeLeftFormatted = (timeLeft / 1000).toFixed(1);
+            
+            eventStat.innerHTML = `Active Event: <span style="color: ${currentEvent ? '#00FFFF' : '#ffffff'};">${eventName}</span> (${timeLeftFormatted}s)`;
+            // End New Event Status
             
             // FIX: Use highestFinalRoll.value (the final, variant-modified number) for color determination
             if (highestFinalRoll.value > 0) {
@@ -876,7 +1006,8 @@
             for (const rollData of rollResults) {
                 const { baseValue, displayValue, variants } = rollData;
                 
-                const rankInfo = getRankInfo(baseValue); // Rank name is based on BASE roll
+                // NOTE: Rank name is based on BASE roll, but multipliers are applied to chance via applySecretRank
+                const rankInfo = getRankInfo(baseValue); 
                 const currencyGain = Math.pow(rankInfo.rankNum, 3);
                 
                 // FIX: Get class and color based on the final displayValue (rarity always wins based on visual magnitude)
@@ -1233,6 +1364,7 @@
         
         loadGame();
         updateIndexDisplay();
+        startEventLoop(); 
     </script>
 </body>
 </html>
