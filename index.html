@@ -197,9 +197,9 @@
             background-size: 200% 100%;
         }
 
-        /* ~Nonavacious~ Secret Rank Color */
+        /* ~Nonavacious~ Secret Rank Class (Rarity still determines color, but this provides a glow) */
         .secret-nonavacious {
-            color: #00BFFF; /* Sea Blue */
+            filter: drop-shadow(0 0 5px #00BFFF); 
         }
         
         @keyframes rainbow-shift {
@@ -230,24 +230,22 @@
         }
 
         #star-element {
-            /* Fix: Added initial position for centering */
             position: absolute; 
             top: 50%; 
             left: 50%;
             transform: translate(-50%, -50%);
-            /* End Fix */
             width: 100px;
             height: 100px;
             opacity: 0;
             transition: opacity 0.5s ease-in;
             filter: drop-shadow(0 0 15px currentColor);
-            /* 👇 NEW FIX: Ensures the star is visible (by giving it a background) */
             background-color: currentColor; 
         }
         
         /* 4-point star for 1e9+ */
         .star-4 {
-            clip-path: polygon(50% 0%, 65% 50%, 100% 50%, 65% 50%, 50% 100%, 35% 50%, 0% 50%, 35% 50%);
+            /* FIX: Corrected degenerate polygon to a robust 4-pointed star shape (8 points) */
+            clip-path: polygon(50% 0%, 61% 39%, 100% 50%, 61% 61%, 50% 100%, 39% 61%, 0% 50%, 39% 39%);
         }
         
         /* 8-point star for 1e12+ */
@@ -398,7 +396,7 @@
 
         // NEW SECRET RANKS ADDED
         const SECRET_RANKS_CHANCES = [
-            { name: "nil", chance: 1/1000 },
+            { name: "nil", chance: 1/10000 }, // MODIFIED: Buffed rarity from 1/1000 to 1/10000
             { name: "Title Label Missing", chance: 1/4040.404 },
             { name: "?!? unknown ?!?", chance: 1/6666.666 },
             { name: "r", chance: 1/6942 },
@@ -543,15 +541,12 @@
             };
         }
 
-        // FIX: Reverted logic to ignore variants for color/class determination, 
-        // using only the roll value (which should be the base value) to get the rank color.
+        // This function enforces the "rarity always wins" rule by using the raw 'value' (base roll)
         function getRankClassAndColor(value, variants = []) {
             let color = "#ffffff";
             let className = "rank-1-1000";
-
-            // The variants array is ignored here, ensuring rank coloring is always based on the value.
             
-            // --- Original Base Rank Logic Below (only used if no variants) ---
+            // This logic determines color based purely on magnitude (rarity)
             if (value >= 1e30) { className = "rank-improbable"; color = "#008080"; } // NEW RANK
             else if (value >= 1e15) { className = "rank-rainbow"; color = "#ff7f00"; } // Rainbow is multi-colored, picking orange as a default
             else if (value >= 1e12) { className = "rank-1000000000000-100000000000000"; color = "#ff69b4"; } // Pink
@@ -619,16 +614,15 @@
             
             // MODIFIED LOGIC: Use highestFinalRoll for rarest roll display
             if (highestFinalRoll.value > 0) {
-                // Pass baseValue to get the rank color
+                // Pass baseValue to get the rank color (rarity always wins)
                 const { className, color } = getRankClassAndColor(highestFinalRoll.baseValue, highestFinalRoll.variants);
                 let rankClass = className;
                 let rollColor = color;
                 let displayName = highestFinalRoll.rank;
 
-                // Apply special color for ~Nonavacious~
+                // Only add the class for potential styling (like a glow), but let rarity determine the color.
                 if (displayName === "~Nonavacious~") {
                     rankClass += " secret-nonavacious";
-                    rollColor = "#00BFFF";
                 }
                 
                 // Display the final value
@@ -643,13 +637,12 @@
                 inventoryContent.innerHTML = 'Empty';
             } else {
                 inventoryContent.innerHTML = inventory.map((item, idx) => {
-                    // MODIFIED: Use the new function to get class and color, passing baseValue
+                    // MODIFIED: Use the new function to get class and color, passing baseValue (rarity always wins)
                     const { className: rankClass, color: rollColor } = getRankClassAndColor(item.baseValue, item.variants);
                     
-                    // Apply special color for ~Nonavacious~ on the determined color
+                    // Only add the class for potential styling (like a glow), but let rarity determine the color.
                     if (item.rank === "~Nonavacious~") {
                         rankClass += " secret-nonavacious";
-                        rollColor = "#00BFFF";
                     }
 
                     // Handle stacked variants
@@ -694,10 +687,9 @@
                 const rankName = rankInfo.name;
                 const discovered = discoveredRanks.has(rankName);
                 
-                let rankStyle = `color: #ff69b4;`;
-                if (rankName === "~Nonavacious~") {
-                    rankStyle = `color: #00BFFF;`;
-                }
+                // FIX: Removed all conditional rankStyle overrides.
+                // All secret ranks in the index now use the standard index color.
+                const rankStyle = `color: #ff69b4;`; // Standard secret rank color
 
                 html += `<div class="index-item ${discovered ? 'discovered' : 'locked'}">
                     ${discovered ? `<span style="${rankStyle}">${rankName}</span>` : '???'}
@@ -773,6 +765,7 @@
                 
                 // Get color and determine star shape
                 // rollValue is the final, variant-modified number, which is fine for cutscene magnitude check.
+                // The color is determined by the highest rarity (value) in the roll.
                 const { color } = getRankClassAndColor(rollValue);
                 starElement.style.color = color;
                 
@@ -878,7 +871,7 @@
                 const rankInfo = getRankInfo(baseValue); // Rank name is based on BASE roll
                 const currencyGain = Math.pow(rankInfo.rankNum, 3);
                 
-                // MODIFIED: Get class and color based on base roll ONLY (variants array is passed but ignored inside)
+                // MODIFIED: Get class and color based on base roll ONLY (rarity always wins)
                 const { className: rankClassBase, color: rollColorBase } = getRankClassAndColor(baseValue, variants);
 
                 let rankClass = rankClassBase;
@@ -889,9 +882,9 @@
                 if (displayName === "100") suffix = " * 💯";
                 if (displayName === ":[{(absolute zero)}]:") suffix = " * 0";
 
+                // Only add the class for potential styling (like a glow), but let rarity determine the color.
                 if (displayName === "~Nonavacious~") {
                     rankClass += " secret-nonavacious";
-                    rollColor = "#00BFFF"; // Ensure the specific color is used
                 }
                 
                 const currentIndex = rollIndex++;
@@ -1096,16 +1089,15 @@
             if (highestFinalRoll.value === 0) {
                 addToTerminal('No rolls yet!', true);
             } else {
-                // Pass baseValue to get the rank color
+                // Pass baseValue to get the rank color (rarity always wins)
                 const { className, color } = getRankClassAndColor(highestFinalRoll.baseValue, highestFinalRoll.variants);
                 let rankClass = className;
                 let rollColor = color;
                 const displayName = highestFinalRoll.rank;
 
-                // Apply special color for ~Nonavacious~
+                // Only add the class for potential styling (like a glow), but let rarity determine the color.
                 if (displayName === "~Nonavacious~") {
                     rankClass += " secret-nonavacious";
-                    rollColor = "#00BFFF";
                 }
 
                 // Handle stacked variants for terminal message
