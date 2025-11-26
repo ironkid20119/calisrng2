@@ -230,7 +230,12 @@
         }
 
         #star-element {
-            position: absolute;
+            /* Fix: Added initial position for centering */
+            position: absolute; 
+            top: 50%; 
+            left: 50%;
+            transform: translate(-50%, -50%);
+            /* End Fix */
             width: 100px;
             height: 100px;
             opacity: 0;
@@ -324,8 +329,8 @@
     </div>
 
     <div id="cutscene-overlay">
-        <div id="star-element"></div>
-    </div>
+        <div id="star-element" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);"></div>
+        </div>
     <script>
         // --- CONSTANTS ---
         const POWER_EXPONENT = -2.5;
@@ -557,8 +562,8 @@
             if (value >= 1e30) { className = "rank-improbable"; color = "#008080"; } // NEW RANK
             else if (value >= 1e15) { className = "rank-rainbow"; color = "#ff7f00"; } // Rainbow is multi-colored, picking orange as a default
             else if (value >= 1e12) { className = "rank-1000000000000-100000000000000"; color = "#ff69b4"; } // Pink
-            else if (value >= 1e11) { className = "rank-100000000000-1000000000000"; color = "#00ff00"; } // Bright Green
-            else if (value >= 1e9) { className = "rank-1000000000-100000000000"; color = "#00ff00"; } // Bright Green
+            else if (value >= 1e10) { className = "rank-10000000000-1000000000000"; color = "#00ff00"; } // Bright Green (for Unseeable)
+            else if (value >= 1e9) { className = "rank-1000000000-10000000000"; color = "#00ff00"; } // Bright Green (for Infinitude)
             else if (value >= 1e8) { className = "rank-100000000-1000000000"; color = "#8b0000"; } // Dark Red
             else if (value >= 1e6) { className = "rank-1000000-100000000"; color = "#ff0000"; } // Red
             else if (value >= 1e5) { className = "rank-100000-1000000"; color = "#0000cd"; } // Medium Blue
@@ -783,7 +788,8 @@
                 }
                 
                 starElement.className = starShapeClass;
-                starElement.style.transform = 'rotate(0deg) scale(1)'; // Reset transform
+                // Fix: Initialize transformation to center the element before animation starts
+                starElement.style.transform = 'translate(-50%, -50%) rotate(0deg) scale(1)'; 
                 let currentScale = 1;
                 let currentRotation = 0;
                 let rotationSpeed = 3; // Initial rotation speed (degrees per frame)
@@ -797,7 +803,8 @@
                 // 3. Star spin and size update
                 const spinUpdate = () => {
                     currentRotation += rotationSpeed;
-                    starElement.style.transform = `rotate(${currentRotation}deg) scale(${currentScale})`;
+                    // Fix: Maintain centering transformation while animating
+                    starElement.style.transform = `translate(-50%, -50%) rotate(${currentRotation}deg) scale(${currentScale})`; 
                     if (isCutscenePlaying) {
                         requestAnimationFrame(spinUpdate);
                     }
@@ -827,7 +834,8 @@
                     
                     // Reset star state after transition
                     setTimeout(() => {
-                        starElement.style.transform = 'rotate(0deg) scale(1)';
+                        // Fix: Reset star to initial centered state
+                        starElement.style.transform = 'translate(-50%, -50%) rotate(0deg) scale(1)';
                         starElement.style.color = '';
                         starElement.className = '';
                         // If auto-roll was active, restart it
