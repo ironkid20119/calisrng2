@@ -185,6 +185,8 @@
         .rank-1000000000000-100000000000000 { color: #ff69b4; }
         /* Improbable Rank Color */
         .rank-improbable { color: #008080; }
+        /* Generic class for variant rolls when color is set inline */
+        .variant-roll {} 
         
         .rank-rainbow {
             background: linear-gradient(90deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3);
@@ -274,7 +276,7 @@
         <div class="stat-item">Next Bulk Roll Cost: <span id="bulkRollCost">500,000.00</span></div>
         <div class="stat-item">Inventory: <span id="inventoryCount">0</span>/<span id="inventoryMax">10</span></div>
         <div class="stat-item">Rarest Roll: <span id="rarest">None yet</span></div>
-        <div class="stat-item">Ranks Discovered: <span id="ranksDiscovered">0</span>/<span id="totalRanks">35</span></div>
+        <div class="stat-item">Ranks Discovered: <span id="ranksDiscovered">0</span>/<span id="totalRanks">38</span></div>
     </div>
 
     <div class="autoroll-settings">
@@ -414,7 +416,13 @@
         let currency = 0;
         let totalUpgrades = 0;
         let upgradeCost = 50;
-        let highestRoll = 0;
+        let highestBaseRoll = 0; // Tracks the highest BASE roll for legacy reason (not displayed)
+        let highestFinalRoll = { // NEW: Tracks the highest final value including variants
+            value: 0,
+            baseValue: 0,
+            rank: 'None yet',
+            variants: []
+        };
         let autoRollInterval = null;
         let maxInventory = 10;
         let inventory = [];
@@ -464,7 +472,6 @@
         // MODIFIED: Allows variants to stack up to MAX_VARIANTS_PER_ROLL
         function getVariants(baseValue) {
             let selectedVariants = [];
-            let modifiedValue = baseValue;
             let totalMultiplier = 1;
             
             // Check variants from rarest to most common
@@ -480,6 +487,8 @@
             }
             
             if (selectedVariants.length > 0) {
+                // Sort variants by multiplier for consistent display/rarest detection (descending)
+                selectedVariants.sort((a, b) => b.multiplier - a.multiplier);
                 return { 
                     variants: selectedVariants, 
                     modifiedValue: baseValue * totalMultiplier 
@@ -527,11 +536,24 @@
             };
         }
 
-        // MODIFIED: Also returns the color string instead of just the class
-        function getRankClassAndColor(value) {
+        // MODIFIED: To handle stacked variants for color/class
+        function getRankClassAndColor(value, variants = []) {
             let color = "#ffffff";
             let className = "rank-1-1000";
 
+            // NEW LOGIC: If variants are present, prioritize the color of the rarest one
+            if (variants.length > 0) {
+                // Variants are sorted by multiplier (rarest first) in getVariants()
+                const rarestVariant = variants[0];
+                
+                // Use the variant's color
+                color = rarestVariant.color;
+                // Use a generic class for variant rolls when color is set inline
+                className = "variant-roll"; 
+                return { className, color };
+            }
+
+            // --- Original Base Rank Logic Below (only used if no variants) ---
             if (value >= 1e30) { className = "rank-improbable"; color = "#008080"; } // NEW RANK
             else if (value >= 1e15) { className = "rank-rainbow"; color = "#ff7f00"; } // Rainbow is multi-colored, picking orange as a default
             else if (value >= 1e12) { className = "rank-1000000000000-100000000000000"; color = "#ff69b4"; } // Pink
@@ -546,8 +568,9 @@
             return { className, color };
         }
 
-        function getRankClass(value) {
-            return getRankClassAndColor(value).className;
+        // MODIFIED: Pass variants array
+        function getRankClass(value, variants = []) {
+            return getRankClassAndColor(value, variants).className;
         }
 
         function addToTerminal(text, isCommand = false, className = "") {
@@ -596,20 +619,22 @@
                 }
             }
             
-            if (highestRoll > 0) {
-                // Note: highestRoll tracks the base roll. For display, we use the base roll's rank name and class.
-                // The final, variant-modified number (which is what we care about for rarity/cutscene) is not tracked here.
-                const rankInfo = getRankInfo(highestRoll);
-                let rankClass = getRankClass(highestRoll);
-                let displayName = applySecretRank(rankInfo.name);
+            // MODIFIED LOGIC: Use highestFinalRoll for rarest roll display
+            if (highestFinalRoll.value > 0) {
+                const { className, color } = getRankClassAndColor(highestFinalRoll.baseValue, highestFinalRoll.variants);
+                let rankClass = className;
+                let rollColor = color;
+                let displayName = highestFinalRoll.rank;
 
                 // Apply special color for ~Nonavacious~
                 if (displayName === "~Nonavacious~") {
                     rankClass += " secret-nonavacious";
+                    rollColor = "#00BFFF";
                 }
-
+                
+                // Display the final value
                 document.getElementById('rarest').innerHTML = 
-                    `<span class="${rankClass}">${formatNumber(highestRoll)} [${displayName}]</span>`;
+                    `<span class="${rankClass}" style="color: ${rollColor};">${formatNumber(highestFinalRoll.value)} [${displayName}]</span>`;
             }
         }
 
@@ -619,12 +644,13 @@
                 inventoryContent.innerHTML = 'Empty';
             } else {
                 inventoryContent.innerHTML = inventory.map((item, idx) => {
-                    // Rank class is based on the baseValue, as per game design
-                    let rankClass = getRankClass(item.baseValue);
+                    // MODIFIED: Use the new function to get class and color, passing variants
+                    const { className: rankClass, color: rollColor } = getRankClassAndColor(item.baseValue, item.variants);
                     
-                    // Apply special color for ~Nonavacious~
+                    // Apply special color for ~Nonavacious~ on the determined color
                     if (item.rank === "~Nonavacious~") {
                         rankClass += " secret-nonavacious";
+                        rollColor = "#00BFFF";
                     }
 
                     // Handle stacked variants
@@ -637,9 +663,9 @@
                     if (item.rank === "100") suffix = " * 💯";
                     if (item.rank === ":[{(absolute zero)}]:") suffix = " * 0";
                     
-                    // Display the final, variant-modified value (item.value)
+                    // Display the final, variant-modified value (item.value), using the rollColor style
                     return `<div class="inventory-item" onclick="removeFromInventory(${idx})">
-                        #${item.index}: ${variantText}<span class="${rankClass}">${formatNumber(item.value)} [${item.rank}]${suffix}</span>
+                        #${item.index}: ${variantText}<span class="${rankClass}" style="color: ${rollColor};">${formatNumber(item.value)} [${item.rank}]${suffix}</span>
                     </div>`;
                 }).join('');
             }
@@ -651,7 +677,8 @@
             
             RANK_TIERS.forEach(tier => {
                 const discovered = discoveredRanks.has(tier.name);
-                let rankClass = getRankClass((tier.min + tier.max) / 2);
+                // Get rank class based on an intermediate value, variants array is empty here
+                let rankClass = getRankClass((tier.min + tier.max) / 2); 
 
                 // Improbable rank class needs to be explicitly added
                 if (tier.name === "Improbable") {
@@ -821,6 +848,8 @@
             }
             
             const rollResults = [];
+            let maxRollValueInBulk = 0;
+            
             // Collect all rolls first
             for (let i = 0; i < (bulkRollLevel + 1); i++) {
                 const rollResult = generateRoll();
@@ -830,16 +859,14 @@
                 const variants = variantResult ? variantResult.variants : [];
                 
                 rollResults.push({ baseValue, displayValue, variants });
+                maxRollValueInBulk = Math.max(maxRollValueInBulk, displayValue);
             }
             
             // Check for cutscene condition in all collected rolls
-            // This check now reliably uses the final, variant-modified value (displayValue)
-            const rarestRoll = rollResults.reduce((max, r) => Math.max(max, r.displayValue), 0);
-            
-            // Cutscene only plays for rolls of 1e9 or greater
-            if (rarestRoll >= 1e9) {
+            // This check now reliably uses the final, variant-modified value (maxRollValueInBulk)
+            if (maxRollValueInBulk >= 1e9) {
                 // Pass the highest final value to playCutscene to ensure correct color/shape
-                await playCutscene(rarestRoll);
+                await playCutscene(maxRollValueInBulk);
             }
             
             // Process and display all rolls
@@ -848,8 +875,13 @@
                 
                 const rankInfo = getRankInfo(baseValue); // Rank name is based on BASE roll
                 const currencyGain = Math.pow(rankInfo.rankNum, 3);
-                let rankClass = getRankClass(baseValue);
                 
+                // MODIFIED: Get class and color based on base roll OR variant
+                const { className: rankClassBase, color: rollColorBase } = getRankClassAndColor(baseValue, variants);
+
+                let rankClass = rankClassBase;
+                let rollColor = rollColorBase;
+
                 const displayName = applySecretRank(rankInfo.name);
                 let suffix = "";
                 if (displayName === "100") suffix = " * 💯";
@@ -857,6 +889,7 @@
 
                 if (displayName === "~Nonavacious~") {
                     rankClass += " secret-nonavacious";
+                    rollColor = "#00BFFF"; // Ensure the specific color is used
                 }
                 
                 const currentIndex = rollIndex++;
@@ -869,9 +902,19 @@
                 
                 currency += currencyGain;
                 
-                // highestRoll tracks the highest base roll for the stat display, but doesn't affect gameplay
-                if (baseValue > highestRoll) {
-                    highestRoll = baseValue;
+                // highestBaseRoll tracks the highest base roll (for legacy internal tracking)
+                if (baseValue > highestBaseRoll) {
+                    highestBaseRoll = baseValue;
+                }
+
+                // MODIFIED LOGIC: Update highestFinalRoll if this roll is rarer
+                if (displayValue > highestFinalRoll.value) {
+                    highestFinalRoll = {
+                        value: displayValue,
+                        baseValue: baseValue,
+                        rank: displayName,
+                        variants: variants
+                    };
                 }
                 
                 const isSecretRank = SECRET_RANKS_CHANCES.map(r => r.name).includes(displayName);
@@ -884,8 +927,9 @@
                 const baseValueAttr = `data-basevalue='${baseValue}'`;
                 
                 // The roll element will use the final value (displayValue) for inventory storage
+                // MODIFIED: Use rollColor for the clickable-roll style
                 addToTerminal(
-                    `#${currentIndex}: ${variantText}<span class="clickable-roll ${rankClass}" onclick="tryAddToInventory(${displayValue}, '${displayName}', ${currentIndex}, this)" id="roll-${currentIndex}" ${variantDataAttr} ${baseValueAttr}>${formatNumber(displayValue)} [${displayName}]${suffix}</span> (+${currencyGain.toFixed(2)} currency)`
+                    `#${currentIndex}: ${variantText}<span class="clickable-roll ${rankClass}" style="color: ${rollColor};" onclick="tryAddToInventory(${displayValue}, '${displayName}', ${currentIndex}, this)" id="roll-${currentIndex}" ${variantDataAttr} ${baseValueAttr}>${formatNumber(displayValue)} [${displayName}]${suffix}</span> (+${currencyGain.toFixed(2)} currency)`
                 );
 
                 if (autoRollInterval && (shouldStopOnValue || shouldStopOnSecret)) {
@@ -1045,20 +1089,29 @@
         }
 
         function showRarest() {
-            if (highestRoll === 0) {
+            // MODIFIED LOGIC: Use highestFinalRoll
+            if (highestFinalRoll.value === 0) {
                 addToTerminal('No rolls yet!', true);
             } else {
-                const rankInfo = getRankInfo(highestRoll);
-                let rankClass = getRankClass(highestRoll);
-                const displayName = applySecretRank(rankInfo.name);
+                const { className, color } = getRankClassAndColor(highestFinalRoll.baseValue, highestFinalRoll.variants);
+                let rankClass = className;
+                let rollColor = color;
+                const displayName = highestFinalRoll.rank;
 
                 // Apply special color for ~Nonavacious~
                 if (displayName === "~Nonavacious~") {
                     rankClass += " secret-nonavacious";
+                    rollColor = "#00BFFF";
                 }
 
+                // Handle stacked variants for terminal message
+                let variantText = '';
+                if (highestFinalRoll.variants && highestFinalRoll.variants.length > 0) {
+                    variantText = highestFinalRoll.variants.map(v => `[${v.name}]`).join('') + ' ';
+                }
+                
                 addToTerminal(
-                    `Rarest roll: <span class="${rankClass}">${formatNumber(highestRoll)} [${displayName}]</span>`,
+                    `Rarest roll: ${variantText}<span class="${rankClass}" style="color: ${rollColor};">${formatNumber(highestFinalRoll.value)} [${displayName}]</span>`,
                     true
                 );
             }
@@ -1078,7 +1131,9 @@
                 currency,
                 totalUpgrades,
                 upgradeCost,
-                highestRoll,
+                // highestRoll is now highestBaseRoll (for internal consistency, but saving highestFinalRoll)
+                highestBaseRoll, 
+                highestFinalRoll, // NEW: Save the entire object
                 maxInventory,
                 inventory,
                 rollIndex,
@@ -1098,17 +1153,38 @@
                     currency = gameState.currency || 0;
                     totalUpgrades = gameState.totalUpgrades || 0;
                     upgradeCost = gameState.upgradeCost || 50;
-                    highestRoll = gameState.highestRoll || 0;
+                    
+                    // Handle transition from highestRoll (base value) to highestFinalRoll (full object)
+                    if (gameState.highestFinalRoll) {
+                        highestFinalRoll = gameState.highestFinalRoll;
+                    } else {
+                        // For old save files, initialize highestFinalRoll from highestRoll (base)
+                        const baseRoll = gameState.highestRoll || 0;
+                        const rankInfo = getRankInfo(baseRoll);
+                         highestFinalRoll = {
+                            value: baseRoll,
+                            baseValue: baseRoll,
+                            rank: rankInfo.name,
+                            variants: []
+                        };
+                    }
+                    
+                    highestBaseRoll = gameState.highestBaseRoll || highestFinalRoll.baseValue;
+
                     maxInventory = gameState.maxInventory || 10;
                     
-                    // Handle inventory compatibility with new 'variants' array instead of 'variant' object
+                    // Handle inventory compatibility with new 'variants' array
                     inventory = (gameState.inventory || []).map(item => {
-                        // Check if old 'variant' field exists and convert it to 'variants' array for compatibility
+                        // Ensure 'variants' is an array, falling back or cleaning up old fields
                         if (item.variant && !item.variants) {
                             item.variants = [item.variant];
-                            delete item.variant; // Clean up old field if necessary
+                            delete item.variant;
                         } else if (!item.variants) {
                             item.variants = [];
+                        }
+                        // Ensure 'baseValue' is present
+                        if (!item.baseValue) {
+                            item.baseValue = item.value;
                         }
                         return item;
                     });
@@ -1130,8 +1206,11 @@
                     console.error('Error loading game:', e);
                 }
             } else {
-                 // Ensure calculated stats are initialized even if no save exists
+                 // Ensure calculated stats and highestFinalRoll are initialized if no save exists
                 updateCalculatedStats();
+                updateStats();
+                updateInventoryDisplay();
+                updateIndexDisplay();
             }
         }
 
