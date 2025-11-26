@@ -300,7 +300,7 @@
         <div class="stat-item">Next Bulk Roll Cost: <span id="bulkRollCost">500,000.00</span></div>
         <div class="stat-item">Inventory: <span id="inventoryCount">0</span>/<span id="inventoryMax">10</span></div>
         <div class="stat-item">Rarest Roll: <span id="rarest">None yet</span></div>
-        <div class="stat-item">Ranks Discovered: <span id="ranksDiscovered">0</span>/<span id="totalRanks">38</span></div>
+        <div class="stat-item">Ranks Discovered: <span id="ranksDiscovered">0</span>/<span id="totalRanks">40</span></div>
     </div>
 
     <div class="autoroll-settings">
@@ -1055,8 +1055,8 @@
             for (const rollData of rollResults) {
                 const { baseValue, displayValue, variants, displayName, isSecret, secretRarityMultiplier } = rollData;
                 
-                // Currency gain is still based on the *base* rank number (before secret multiplier)
-                const rankInfo = getRankInfo(baseValue); 
+                // FIX: Currency gain is now based on the *final, modified* displayValue
+                const rankInfo = getRankInfo(displayValue); 
                 const currencyGain = Math.pow(rankInfo.rankNum, 3);
                 
                 // FIX: Get class and color based on the final displayValue (rarity always wins based on visual magnitude)
