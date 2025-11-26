@@ -218,7 +218,8 @@
             z-index: 9999;
             opacity: 0;
             pointer-events: none;
-            transition: opacity 0.5s ease-in-out, background-color 0.1s linear; /* Added background-color transition */
+            /* FIX: Removed background-color transition to make the white flash instantaneous */
+            transition: opacity 0.5s ease-in-out; 
             display: flex;
             justify-content: center;
             align-items: center;
@@ -351,16 +352,14 @@
         const MAX_SECRET_LUCK = 5;
         const BULK_ROLL_COST_MULTIPLIER = 1.75;
         const MAX_BULK_ROLL_LEVEL = 4;
-        const MAX_VARIANTS_PER_ROLL = 5; // NEW CONSTANT
+        const MAX_VARIANTS_PER_ROLL = 5; 
         
         // CUTSCENE CONSTANTS
         const CUTSCENE_DURATION_MS = 7000;
         const STAR_FADE_IN_MS = 2000;
         const SPIN_ACCEL_MS = 5000;
-        // MODIFIED: Star growth rate changed from 25ms to 10ms
         const SIZE_UPDATE_INTERVAL_MS = 10; 
         const SIZE_MULTIPLIER_PER_UPDATE = 1.02;
-        // NEW: White flash duration
         const WHITE_FLASH_DURATION_MS = 1000; 
 
         // UPDATED VARIANTS ARRAY
@@ -398,8 +397,8 @@
             { min: 1e15, max: 1e18, name: "Imaginary" },
             { min: 1e18, max: 1e21, name: "Impossible" },
             { min: 1e21, max: 1e24, name: "Astronomical" },
-            { min: 1e24, max: 1e30, name: "Colossal" }, // Max changed to 1e30
-            { min: 1e30, max: Infinity, name: "Improbable" } // NEW RANK
+            { min: 1e24, max: 1e30, name: "Colossal" }, 
+            { min: 1e30, max: Infinity, name: "Improbable" } 
         ];
 
         // NEW SECRET RANKS ADDED
@@ -429,8 +428,8 @@
         let currency = 0;
         let totalUpgrades = 0;
         let upgradeCost = 50;
-        let highestBaseRoll = 0; // Tracks the highest BASE roll for legacy reason (not displayed)
-        let highestFinalRoll = { // NEW: Tracks the highest final value including variants
+        let highestBaseRoll = 0; 
+        let highestFinalRoll = { 
             value: 0,
             baseValue: 0,
             rank: 'None yet',
@@ -446,7 +445,7 @@
         let secretConfig = false;
         let bulkRollLevel = 0;
         let bulkRollCost = 500000;
-        let isCutscenePlaying = false; // Prevents rolling during cutscene
+        let isCutscenePlaying = false; 
         
         // --- OPTIMIZATION: CALCULATED STATS (set by updateCalculatedStats) ---
         let currentLuck = 0;
@@ -549,7 +548,8 @@
             };
         }
 
-        // This function enforces the "rarity always wins" rule by using the raw 'value' (base roll)
+        // This function determines the rank class and color based on magnitude (rarity)
+        // It should be called with the value whose magnitude we want to color-code (base or final).
         function getRankClassAndColor(value, variants = []) {
             let color = "#ffffff";
             let className = "rank-1-1000";
@@ -598,7 +598,7 @@
             document.getElementById('inventoryCount').textContent = inventory.length;
             document.getElementById('inventoryMax').textContent = maxInventory;
             document.getElementById('ranksDiscovered').textContent = discoveredRanks.size;
-            document.getElementById('totalRanks').textContent = TOTAL_RANKS; // FIX: Use the JS constant (38)
+            document.getElementById('totalRanks').textContent = TOTAL_RANKS; 
             
             document.getElementById('bulkRollLevel').textContent = bulkRollLevel;
             document.getElementById('bulkRollAmount').textContent = bulkRollLevel + 1;
@@ -620,10 +620,9 @@
                 }
             }
             
-            // MODIFIED LOGIC: Use highestFinalRoll for rarest roll display
+            // FIX: Use highestFinalRoll.value (the final, variant-modified number) for color determination
             if (highestFinalRoll.value > 0) {
-                // Pass baseValue to get the rank color (rarity always wins)
-                const { className, color } = getRankClassAndColor(highestFinalRoll.baseValue, highestFinalRoll.variants);
+                const { className, color } = getRankClassAndColor(highestFinalRoll.value, highestFinalRoll.variants);
                 let rankClass = className;
                 let rollColor = color;
                 let displayName = highestFinalRoll.rank;
@@ -645,8 +644,8 @@
                 inventoryContent.innerHTML = 'Empty';
             } else {
                 inventoryContent.innerHTML = inventory.map((item, idx) => {
-                    // MODIFIED: Use the new function to get class and color, passing baseValue (rarity always wins)
-                    const { className: rankClass, color: rollColor } = getRankClassAndColor(item.baseValue, item.variants);
+                    // FIX: Use item.value (the final, variant-modified number) for color determination
+                    const { className: rankClass, color: rollColor } = getRankClassAndColor(item.value, item.variants);
                     
                     // Only add the class for potential styling (like a glow), but let rarity determine the color.
                     if (item.rank === "~Nonavacious~") {
@@ -816,8 +815,8 @@
                 
                 // 5. White Flash (1 second before cutscene officially ends)
                 setTimeout(() => {
-                    starElement.style.opacity = 0; // Hide star
-                    body.classList.add('cutscene-flash'); // Change background to white
+                    starElement.style.opacity = 0; // Hide star immediately
+                    body.classList.add('cutscene-flash'); // Change background to white instantly
                     
                     // 6. Cutscene end and cleanup after flash duration
                     setTimeout(() => {
@@ -880,8 +879,8 @@
                 const rankInfo = getRankInfo(baseValue); // Rank name is based on BASE roll
                 const currencyGain = Math.pow(rankInfo.rankNum, 3);
                 
-                // MODIFIED: Get class and color based on base roll ONLY (rarity always wins)
-                const { className: rankClassBase, color: rollColorBase } = getRankClassAndColor(baseValue, variants);
+                // FIX: Get class and color based on the final displayValue (rarity always wins based on visual magnitude)
+                const { className: rankClassBase, color: rollColorBase } = getRankClassAndColor(displayValue, variants);
 
                 let rankClass = rankClassBase;
                 let rollColor = rollColorBase;
@@ -1098,8 +1097,8 @@
             if (highestFinalRoll.value === 0) {
                 addToTerminal('No rolls yet!', true);
             } else {
-                // Pass baseValue to get the rank color (rarity always wins)
-                const { className, color } = getRankClassAndColor(highestFinalRoll.baseValue, highestFinalRoll.variants);
+                // FIX: Use highestFinalRoll.value (the final, variant-modified number) for color determination
+                const { className, color } = getRankClassAndColor(highestFinalRoll.value, highestFinalRoll.variants);
                 let rankClass = className;
                 let rollColor = color;
                 const displayName = highestFinalRoll.rank;
