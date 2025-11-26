@@ -439,18 +439,18 @@
             return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         }
         
-        // --- NEW INVENTORY SORTING FUNCTION ---
+        // MODIFIED: Inventory now sorts by the final roll value (a.value), including variant multipliers.
         function sortInventory(type) {
             if (type === 'leastRarest') {
-                // Sorts ascending: smallest base value (least rarest) at the top
-                inventory.sort((a, b) => (a.baseValue || a.value) - (b.baseValue || b.value));
+                // Sorts ascending: smallest final value (least rarest) at the top
+                inventory.sort((a, b) => a.value - b.value);
             } else if (type === 'mostRarest') {
-                // Sorts descending: largest base value (most rarest) at the top
-                inventory.sort((a, b) => (b.baseValue || b.value) - (a.baseValue || a.value));
+                // Sorts descending: largest final value (most rarest) at the top
+                inventory.sort((a, b) => b.value - a.value);
             }
             // Refresh the display to show the newly sorted list
             updateInventoryDisplay();
-            addToTerminal(`Inventory sorted by ${type === 'mostRarest' ? 'most rarest' : 'least rarest'}.`, true);
+            addToTerminal(`Inventory sorted by ${type === 'mostRarest' ? 'most rarest' : 'least rarest'} (Variants Applied).`, true);
             saveGame();
         }
 
@@ -597,6 +597,8 @@
             }
             
             if (highestRoll > 0) {
+                // Note: highestRoll tracks the base roll. For display, we use the base roll's rank name and class.
+                // The final, variant-modified number (which is what we care about for rarity/cutscene) is not tracked here.
                 const rankInfo = getRankInfo(highestRoll);
                 let rankClass = getRankClass(highestRoll);
                 let displayName = applySecretRank(rankInfo.name);
@@ -617,7 +619,8 @@
                 inventoryContent.innerHTML = 'Empty';
             } else {
                 inventoryContent.innerHTML = inventory.map((item, idx) => {
-                    let rankClass = getRankClass(item.baseValue || item.value);
+                    // Rank class is based on the baseValue, as per game design
+                    let rankClass = getRankClass(item.baseValue);
                     
                     // Apply special color for ~Nonavacious~
                     if (item.rank === "~Nonavacious~") {
@@ -633,6 +636,8 @@
                     let suffix = "";
                     if (item.rank === "100") suffix = " * 💯";
                     if (item.rank === ":[{(absolute zero)}]:") suffix = " * 0";
+                    
+                    // Display the final, variant-modified value (item.value)
                     return `<div class="inventory-item" onclick="removeFromInventory(${idx})">
                         #${item.index}: ${variantText}<span class="${rankClass}">${formatNumber(item.value)} [${item.rank}]${suffix}</span>
                     </div>`;
@@ -682,6 +687,7 @@
                 addToTerminal('Inventory full! Buy upgrades to increase space.', true);
                 return false;
             }
+            // value is the final, variant-modified value. baseValue is the original roll.
             inventory.push({ value, rank, index, variants, baseValue: baseValue || value });
             updateInventoryDisplay();
             updateStats();
@@ -740,6 +746,7 @@
                 body.classList.add('cutscene-active');
                 
                 // Get color and determine star shape
+                // NOTE: rollValue is the final, variant-modified number.
                 const { color } = getRankClassAndColor(rollValue);
                 starElement.style.color = color;
                 
@@ -826,10 +833,12 @@
             }
             
             // Check for cutscene condition in all collected rolls
+            // This check now reliably uses the final, variant-modified value (displayValue)
             const rarestRoll = rollResults.reduce((max, r) => Math.max(max, r.displayValue), 0);
             
             // Cutscene only plays for rolls of 1e9 or greater
             if (rarestRoll >= 1e9) {
+                // Pass the highest final value to playCutscene to ensure correct color/shape
                 await playCutscene(rarestRoll);
             }
             
@@ -837,7 +846,7 @@
             for (const rollData of rollResults) {
                 const { baseValue, displayValue, variants } = rollData;
                 
-                const rankInfo = getRankInfo(baseValue);
+                const rankInfo = getRankInfo(baseValue); // Rank name is based on BASE roll
                 const currencyGain = Math.pow(rankInfo.rankNum, 3);
                 let rankClass = getRankClass(baseValue);
                 
@@ -860,6 +869,7 @@
                 
                 currency += currencyGain;
                 
+                // highestRoll tracks the highest base roll for the stat display, but doesn't affect gameplay
                 if (baseValue > highestRoll) {
                     highestRoll = baseValue;
                 }
@@ -873,6 +883,7 @@
                 const variantDataAttr = variants.length > 0 ? `data-variants='${JSON.stringify(variants)}'` : '';
                 const baseValueAttr = `data-basevalue='${baseValue}'`;
                 
+                // The roll element will use the final value (displayValue) for inventory storage
                 addToTerminal(
                     `#${currentIndex}: ${variantText}<span class="clickable-roll ${rankClass}" onclick="tryAddToInventory(${displayValue}, '${displayName}', ${currentIndex}, this)" id="roll-${currentIndex}" ${variantDataAttr} ${baseValueAttr}>${formatNumber(displayValue)} [${displayName}]${suffix}</span> (+${currencyGain.toFixed(2)} currency)`
                 );
@@ -904,7 +915,7 @@
             }
             
             let variants = [];
-            let baseValue = value;
+            let baseValue = value; // Default to final value if no base is found
             
             if (element && element.dataset) {
                 if (element.dataset.variants) {
@@ -914,6 +925,7 @@
                         console.error('Error parsing variants:', e);
                     }
                 }
+                // Retrieve the original base value for rank color display
                 if (element.dataset.basevalue) {
                     baseValue = parseFloat(element.dataset.basevalue);
                 }
