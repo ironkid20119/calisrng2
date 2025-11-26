@@ -241,6 +241,8 @@
             opacity: 0;
             transition: opacity 0.5s ease-in;
             filter: drop-shadow(0 0 15px currentColor);
+            /* 👇 NEW FIX: Ensures the star is visible (by giving it a background) */
+            background-color: currentColor; 
         }
         
         /* 4-point star for 1e9+ */
