@@ -181,14 +181,10 @@
         .rank-1000000-100000000 { color: #ff0000; }
         .rank-100000000-1000000000 { color: #8b0000; }
         .rank-1000000000-10000000000 { color: #00ff00; }
-        /* NEW: Rank 10^10 to 10^11 (Pink) */
         .rank-10000000000-100000000000 { color: #ffc0cb; } 
-        /* NEW: Rank 10^11 to 10^12 (Gray) */
         .rank-100000000000-1000000000000 { color: #a9a9a9; } 
         .rank-1000000000000-100000000000000 { color: #ff69b4; }
-        /* Improbable Rank Color */
         .rank-improbable { color: #008080; }
-        /* Generic class for variant rolls when color is set inline */
         .variant-roll {} 
         
         .rank-rainbow {
@@ -200,7 +196,6 @@
             background-size: 200% 100%;
         }
 
-        /* ~Nonavacious~ Secret Rank Class (Rarity still determines color, but this provides a glow) */
         .secret-nonavacious {
             filter: drop-shadow(0 0 5px #00BFFF); 
         }
@@ -217,11 +212,10 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: #000000; /* Black screen default */
+            background-color: #000000;
             z-index: 9999;
             opacity: 0;
             pointer-events: none;
-            /* FIX: Removed background-color transition to make the white flash instantaneous */
             transition: opacity 0.5s ease-in-out; 
             display: flex;
             justify-content: center;
@@ -233,9 +227,8 @@
             pointer-events: all;
         }
         
-        /* New class for the white flash effect */
         .cutscene-flash #cutscene-overlay {
-            background-color: #ffffff; /* White screen */
+            background-color: #ffffff;
         }
 
         #star-element {
@@ -251,27 +244,56 @@
             background-color: currentColor; 
         }
         
-        /* 4-point star for 1e9+ (Normal) */
         .star-4 {
             clip-path: polygon(50% 0%, 61% 39%, 100% 50%, 61% 61%, 50% 100%, 39% 61%, 0% 50%, 39% 39%);
         }
         
-        /* NEW: 6-point star for Secret 1e9+ */
         .star-6 {
             clip-path: polygon(50% 0%, 65% 20%, 100% 30%, 80% 50%, 100% 70%, 65% 80%, 50% 100%, 35% 80%, 0% 70%, 20% 50%, 0% 30%, 35% 20%);
         }
         
-        /* 8-point star for Normal 1e12+ */
         .star-8 {
             clip-path: polygon(50% 0%, 58% 30%, 100% 30%, 66% 50%, 100% 70%, 58% 70%, 50% 100%, 42% 70%, 0% 70%, 34% 50%, 0% 30%, 42% 30%);
         }
         
-        /* NEW: 12-point star for Secret 1e12+ */
         .star-12 {
             clip-path: polygon(50% 0%, 55% 15%, 70% 15%, 75% 0%, 80% 15%, 95% 15%, 100% 30%, 95% 45%, 100% 70%, 95% 85%, 80% 85%, 75% 100%, 70% 85%, 55% 85%, 50% 100%, 45% 85%, 30% 85%, 25% 100%, 20% 85%, 5% 85%, 0% 70%, 5% 45%, 0% 30%, 5% 15%, 20% 15%, 25% 0%, 30% 15%, 45% 15%);
         }
 
         /* --- END CUTSCENE STYLES --- */
+
+        /* --- NEW: SHAPES GUI STYLES --- */
+        #shapes-gui {
+            background-color: #2d0051;
+            border: 2px solid #00FF00; /* Green border for new UI */
+            padding: 20px;
+            border-radius: 5px;
+            margin-top: 20px;
+            display: none; /* Hidden by default */
+        }
+        
+        .shape-spawn-output {
+            background-color: #1a0033;
+            border: 1px solid #00FF00;
+            padding: 10px;
+            min-height: 50px;
+            max-height: 150px;
+            overflow-y: auto;
+            margin-bottom: 15px;
+        }
+        
+        .shape-spawn-line {
+            margin: 5px 0;
+            color: #00FF00; /* Bright green text */
+        }
+        
+        .shapes-upgrades {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        /* --- END NEW STYLES --- */
 
         @media (max-width: 1200px) {
             .main-container {
@@ -291,8 +313,10 @@
     
     <div class="stats">
         <div class="stat-item">Currency: <span id="currency">0.00</span></div>
+        <div class="stat-item">Geometrix: <span id="geometrix">0.00</span></div>
         <div class="stat-item">Total Upgrades: <span id="upgrades">0</span></div>
         <div class="stat-item">Luck: +<span id="luck">0.000</span></div>
+        <div class="stat-item">Luck Multiplier: <span id="luckMulti">1.00</span>x</div>
         <div class="stat-item">Secret Luck: <span id="secretLuck">1.00</span>x</div>
         <div class="stat-item">Variant Chance: <span id="variantChance">1.00</span>x</div>
         <div class="stat-item">Next Upgrade Cost: <span id="upgradeCost">50.00</span></div>
@@ -325,6 +349,24 @@
         <button onclick="saveGame()">Save Game</button>
     </div>
 
+    <div class="controls" id="shapes-unlock-controls">
+        <button id="unlockShapesBtn" onclick="unlockShapes()">Unlock Shapes GUI (5,000,000.00 Currency)</button>
+    </div>
+    
+    <div id="shapes-gui">
+        <div class="section-header" style="color: #00FF00;">Shapes GUI</div>
+        <div class="stat-item">Current Shape Luck: +<span id="shapeLuckBonus">0.0</span>x</div>
+        <div class="stat-item">Shapes/Spawn: <span id="bulkShapeAmount">1</span> (Lvl <span id="bulkShapeLevel">0</span>)</div>
+        <div class="stat-item">Spawn Cooldown: <span id="shapeCooldown">2.0000</span>s</div>
+        
+        <div class="shape-spawn-output" id="shape-spawn-output">Waiting for first spawn...</div>
+
+        <div class="shapes-upgrades">
+            <button id="buyShapeLuckBtn" onclick="buyShapeLuckUpgrade()">Shape Luck (+0.1x) - Cost: <span id="shapeLuckCost">5.00</span> GMX</button>
+            <button id="buyLuckMultiBtn" onclick="buyLuckMultiUpgrade()">Luck Multiplier (x2.00) - Cost: <span id="luckMultiCost">100.00</span> GMX</button>
+            <button id="buyBulkShapeBtn" onclick="buyBulkShapeUpgrade()">Bulk/Cooldown Lvl <span id="bulkShapeLevelBtn">1</span> - Cost: <span id="bulkShapeCost">50.00</span> GMX</button>
+        </div>
+    </div>
     <div class="main-container">
         <div>
             <div id="terminal"></div>
@@ -478,6 +520,29 @@
         // CALCULATED TOTAL RANKS (24 normal + 16 secret)
         const TOTAL_RANKS = RANK_TIERS.length + SECRET_RANKS_CHANCES.length; // 24 + 16 = 40
 
+        // --- NEW: SHAPES CONSTANTS ---
+        const UNLOCK_SHAPES_COST = 5000000;
+        const SHAPE_SPAWN_INTERVAL_MS = 2000;
+        const MAX_SHAPE_LUCK_LEVEL = 5;
+        const SHAPE_LUCK_BONUS = 0.1;
+        const SHAPE_LUCK_COST_MULTIPLIER = 1.75;
+        const LUCK_MULTI_COST_MULTIPLIER = 1000;
+        const BULK_SHAPE_COST_MULTIPLIER = 5;
+        const MAX_BULK_SHAPE_LEVEL = 4;
+        const SHAPE_COOLDOWN_DECREASE_MS = 333.3333; // 0.3333 seconds
+        
+        const SHAPES = [
+            { name: "Triangle", chance: 1/2, rarity: 2, color: "#FFFF00" },
+            { name: "Square", chance: 1/5, rarity: 5, color: "#00FF00" },
+            { name: "Pentagon", chance: 1/10, rarity: 10, color: "#00FFFF" },
+            { name: "Hexagon", chance: 1/25, rarity: 25, color: "#FF00FF" },
+            { name: "7 Sided Polygon", chance: 1/50, rarity: 50, color: "#FFA500" },
+            { name: "Octagon", chance: 1/100, rarity: 100, color: "#800080" },
+            { name: "Circle", chance: 1/500, rarity: 500, color: "#FF0000" }
+        ];
+        // --- END NEW CONSTANTS ---
+
+
         // --- GAME STATE VARIABLES ---
         let currency = 0;
         let totalUpgrades = 0;
@@ -488,7 +553,7 @@
             baseValue: 0,
             rank: 'None yet',
             variants: [],
-            isSecret: false // New field to track if the rarest roll was a secret
+            isSecret: false
         };
         let autoRollInterval = null;
         let maxInventory = 10;
@@ -508,15 +573,33 @@
         let eventInterval = null;
         let eventCheckChance = 1; 
 
+        // --- NEW: SHAPES VARIABLES ---
+        let geometrix = 0;
+        let shapesUnlocked = false;
+        let shapeLuckLevel = 0;
+        let shapeLuckCost = 5;
+        let luckMultiLevel = 0;
+        let luckMultiCost = 100;
+        let bulkShapeLevel = 0;
+        let bulkShapeCost = 50;
+        let shapeInterval = null;
+        // --- END NEW VARIABLES ---
+
         // --- OPTIMIZATION: CALCULATED STATS (set by updateCalculatedStats) ---
         let currentLuck = 0;
         let secretLuckMultiplier = 1;
         let variantChanceMultiplier = 1;
 
-        // --- NEW EVENT FUNCTIONS (Unchanged from original) ---
+        // --- NEW: CALCULATED STATS ---
+        let luckMultiValue = 1;
+        let shapeLuckBonus = 0;
+        let currentShapeCooldown = SHAPE_SPAWN_INTERVAL_MS;
+        // --- END NEW STATS ---
+
+
+        // --- NEW EVENT FUNCTIONS ---
 
         function startEvent(event) {
-            // If an event is already running, end it first to prevent overlap
             if (currentEvent) {
                 clearTimeout(currentEvent.timeoutId);
                 endEvent(currentEvent);
@@ -528,13 +611,11 @@
             addToTerminal(`🚨 EVENT STARTED: **${event.name}**! ${event.description} for ${event.duration / 1000} seconds!`, true, 'rank-1000-10000'); 
 
             if (event.name === "Lol") {
-                // Apply boost to future event rolls
                 eventCheckChance = event.eventChanceBoost; 
             } else {
-                eventCheckChance = 1; // Ensure it's reset if a non-'Lol' event overrides a 'Lol' event
+                eventCheckChance = 1;
             }
 
-            // Set a timeout to automatically end the event
             event.timeoutId = setTimeout(() => {
                 endEvent(event);
             }, event.duration);
@@ -546,10 +627,9 @@
             addToTerminal(`✅ EVENT ENDED: **${event.name}** is over.`, true);
 
             if (event.name === "Lol") {
-                eventCheckChance = 1; // Reset event chance boost
+                eventCheckChance = 1;
             }
 
-            // Only null out currentEvent if the event that ended is the currently running one
             if (currentEvent && currentEvent.name === event.name) {
                 currentEvent = null;
                 eventEndTime = 0;
@@ -559,11 +639,9 @@
         }
 
         function checkEvent() {
-            // Only check if no event is currently running
             if (currentEvent) return; 
 
             for (const event of EVENTS) {
-                // Apply the 'Lol' boost to the event chance when checking for a NEW event
                 const adjustedChance = event.chance / eventCheckChance;
 
                 if (Math.random() < adjustedChance) {
@@ -575,7 +653,6 @@
 
         function startEventLoop() {
             if (eventInterval) clearInterval(eventInterval);
-            // Start the 2.5 second check loop
             eventInterval = setInterval(checkEvent, EVENT_CHECK_INTERVAL_MS);
         }
 
@@ -588,39 +665,59 @@
             return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         }
         
-        // MODIFIED: Inventory now sorts by the final roll value (a.value), including variant multipliers.
+        // --- NEW: UTILITY FUNCTIONS ---
+        function formatGeometrix(num) {
+            return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+        
+        function formatCooldown(ms) {
+            return (ms / 1000).toFixed(4); // 4 decimal places for cooldown
+        }
+        // --- END NEW UTILITY FUNCTIONS ---
+        
         function sortInventory(type) {
             if (type === 'leastRarest') {
-                // Sorts ascending: smallest final value (least rarest) at the top
                 inventory.sort((a, b) => a.value - b.value);
             } else if (type === 'mostRarest') {
-                // Sorts descending: largest final value (most rarest) at the top
                 inventory.sort((a, b) => b.value - a.value);
             }
-            // Refresh the display to show the newly sorted list
             updateInventoryDisplay();
             addToTerminal(`Inventory sorted by ${type === 'mostRarest' ? 'most rarest' : 'least rarest'} (Variants Applied).`, true);
             saveGame();
         }
 
-        // OPTIMIZATION: Centralized function to calculate multipliers after upgrades
+        // MODIFIED: Centralized function to calculate multipliers after upgrades
         function updateCalculatedStats() {
+            // Base luck from main upgrades
             currentLuck = totalUpgrades * LUCK_PER_UPGRADE;
-            secretLuckMultiplier = Math.min(1 + (totalUpgrades * SECRET_LUCK_PER_UPGRADE), MAX_SECRET_LUCK);
-            variantChanceMultiplier = Math.min(1 + (totalUpgrades * VARIANT_CHANCE_PER_UPGRADE), MAX_VARIANT_CHANCE_MULTIPLIER);
+            
+            // NEW: Shape luck (Upgrade 1) - This is a separate luck stat for shapes
+            shapeLuckBonus = shapeLuckLevel * SHAPE_LUCK_BONUS;
+            
+            // NEW: Luck Multiplier (Upgrade 2)
+            luckMultiValue = Math.pow(2, luckMultiLevel);
+            
+            // Apply Luck Multiplier to main game mechanics (but NOT polygons)
+            // Base luck is modified in generateRoll()
+            secretLuckMultiplier = Math.min(1 + (totalUpgrades * SECRET_LUCK_PER_UPGRADE), MAX_SECRET_LUCK) * luckMultiValue;
+            variantChanceMultiplier = Math.min(1 + (totalUpgrades * VARIANT_CHANCE_PER_UPGRADE), MAX_VARIANT_CHANCE_MULTIPLIER) * luckMultiValue;
+            
+            // NEW: Calculate shape cooldown from Upgrade 3
+            currentShapeCooldown = Math.max(
+                SHAPE_SPAWN_INTERVAL_MS - (bulkShapeLevel * SHAPE_COOLDOWN_DECREASE_MS), 
+                SHAPE_SPAWN_INTERVAL_MS - (MAX_BULK_SHAPE_LEVEL * SHAPE_COOLDOWN_DECREASE_MS) // Cap at Lvl 4
+            );
         }
 
-        // MODIFIED: Allows variants to stack up to MAX_VARIANTS_PER_ROLL
         function getVariants(baseValue) {
             let selectedVariants = [];
             let totalMultiplier = 1;
             
-            // Check variants from rarest to most common
             for (let i = VARIANTS.length - 1; i >= 0; i--) {
                 const variant = VARIANTS[i];
+                // MODIFIED: Use the calculated variantChanceMultiplier
                 const adjustedChance = variant.chance * variantChanceMultiplier;
                 
-                // Allow stacking up to the max limit
                 while (selectedVariants.length < MAX_VARIANTS_PER_ROLL && Math.random() < adjustedChance) {
                     selectedVariants.push(variant);
                     totalMultiplier *= variant.multiplier;
@@ -628,7 +725,6 @@
             }
             
             if (selectedVariants.length > 0) {
-                // Sort variants by multiplier for consistent display/rarest detection (descending)
                 selectedVariants.sort((a, b) => b.multiplier - a.multiplier);
                 return { 
                     variants: selectedVariants, 
@@ -639,32 +735,30 @@
         }
 
         function generateRoll() {
-            // Use pre-calculated global luck value
-            const baseRoll = Math.pow(Math.random(), 3 / POWER_EXPONENT) * (1 + currentLuck);
+            // MODIFIED: Apply the luckMultiValue to the base luck
+            const totalLuck = currentLuck * luckMultiValue;
+            const baseRoll = Math.pow(Math.random(), 3 / POWER_EXPONENT) * (1 + totalLuck);
             return { value: baseRoll, variant: null };
         }
         
-        // MODIFIED: Returns the secret rank object if hit, or null
         function getSecretRank(rankName) {
             const rand = Math.random();
             
             for (const secret of SECRET_RANKS_CHANCES) {
                 let chanceMultiplier = 1;
 
-                // --- NEW: Apply Event Multiplier ---
                 if (currentEvent && currentEvent.targets.includes(secret.name)) {
                     chanceMultiplier = currentEvent.multiplier;
                 }
                 
-                // Use pre-calculated global secret luck multiplier and event multiplier
+                // MODIFIED: Use the calculated secretLuckMultiplier
                 if (rand < secret.chance * secretLuckMultiplier * chanceMultiplier) {
-                    return secret; // Return the full secret object
+                    return secret;
                 }
             }
             return null;
         }
 
-        // OPTIMIZATION: Merged getRankNumber logic here
         function getRankInfo(value) {
             for (let i = 0; i < RANK_TIERS.length; i++) {
                 const tier = RANK_TIERS[i];
@@ -672,43 +766,36 @@
                     return { 
                         name: tier.name, 
                         value: value, 
-                        rankNum: i + 1 // Sequential rank number
+                        rankNum: i + 1
                     };
                 }
             }
-            // Fallback for Improbable (Max Rank)
             return { 
                 name: "Improbable", 
                 value: value, 
-                rankNum: RANK_TIERS.length // Last rank number
+                rankNum: RANK_TIERS.length
             };
         }
 
-        // This function determines the rank class and color based on magnitude (rarity)
-        // It should be called with the value whose magnitude we want to color-code (base or final).
         function getRankClassAndColor(value, variants = []) {
             let color = "#ffffff";
             let className = "rank-1-1000";
             
-            // This logic determines color based purely on magnitude (rarity)
-            if (value >= 1e30) { className = "rank-improbable"; color = "#008080"; } // NEW RANK
-            else if (value >= 1e15) { className = "rank-rainbow"; color = "#ff7f00"; } // Rainbow is multi-colored, picking orange as a default
-            else if (value >= 1e12) { className = "rank-1000000000000-100000000000000"; color = "#ff69b4"; } // Pink
-            // NEW: Gray for 1e11 - 1e12
+            if (value >= 1e30) { className = "rank-improbable"; color = "#008080"; }
+            else if (value >= 1e15) { className = "rank-rainbow"; color = "#ff7f00"; }
+            else if (value >= 1e12) { className = "rank-1000000000000-100000000000000"; color = "#ff69b4"; }
             else if (value >= 1e11) { className = "rank-100000000000-1000000000000"; color = "#a9a9a9"; } 
-            // NEW: Pink for 1e10 - 1e11
             else if (value >= 1e10) { className = "rank-10000000000-100000000000"; color = "#ffc0cb"; } 
-            else if (value >= 1e9) { className = "rank-1000000000-10000000000"; color = "#00ff00"; } // Bright Green (for Infinitude)
-            else if (value >= 1e8) { className = "rank-100000000-1000000000"; color = "#8b0000"; } // Dark Red
-            else if (value >= 1e6) { className = "rank-1000000-100000000"; color = "#ff0000"; } // Red
-            else if (value >= 1e5) { className = "rank-100000-1000000"; color = "#0000cd"; } // Medium Blue
-            else if (value >= 10000) { className = "rank-10000-100000"; color = "#00ffff"; } // Cyan
-            else if (value >= 1000) { className = "rank-1000-10000"; color = "#ffff00"; } // Yellow
+            else if (value >= 1e9) { className = "rank-1000000000-10000000000"; color = "#00ff00"; }
+            else if (value >= 1e8) { className = "rank-100000000-1000000000"; color = "#8b0000"; }
+            else if (value >= 1e6) { className = "rank-1000000-100000000"; color = "#ff0000"; }
+            else if (value >= 1e5) { className = "rank-100000-1000000"; color = "#0000cd"; }
+            else if (value >= 10000) { className = "rank-10000-100000"; color = "#00ffff"; }
+            else if (value >= 1000) { className = "rank-1000-10000"; color = "#ffff00"; }
             
             return { className, color };
         }
 
-        // MODIFIED: Pass variants array
         function getRankClass(value, variants = []) {
             return getRankClassAndColor(value, variants).className;
         }
@@ -720,20 +807,29 @@
             if (isCommand) line.classList.add('command');
             if (className) line.classList.add(className);
             line.innerHTML = text;
+
+            // Optimization: Limit terminal lines
+            if (terminal.children.length > 100) {
+                terminal.removeChild(terminal.firstChild);
+            }
+
             terminal.appendChild(line);
             terminal.scrollTop = terminal.scrollHeight;
         }
 
+        // MODIFIED: To update all new stats
         function updateStats() {
-            document.getElementById('currency').textContent = currency.toFixed(2);
+            document.getElementById('currency').textContent = formatNumber(currency);
+            document.getElementById('geometrix').textContent = formatGeometrix(geometrix); // NEW
             document.getElementById('upgrades').textContent = totalUpgrades;
             
-            // OPTIMIZATION: Use pre-calculated global values
+            // Use pre-calculated global values
             document.getElementById('luck').textContent = currentLuck.toFixed(3);
+            document.getElementById('luckMulti').textContent = luckMultiValue.toFixed(2); // NEW
             document.getElementById('secretLuck').textContent = secretLuckMultiplier.toFixed(2);
             document.getElementById('variantChance').textContent = variantChanceMultiplier.toFixed(2);
             
-            document.getElementById('upgradeCost').textContent = upgradeCost.toFixed(2);
+            document.getElementById('upgradeCost').textContent = formatNumber(upgradeCost);
             document.getElementById('inventoryCount').textContent = inventory.length;
             document.getElementById('inventoryMax').textContent = maxInventory;
             document.getElementById('ranksDiscovered').textContent = discoveredRanks.size;
@@ -754,45 +850,77 @@
             } else {
                 bulkCostEl.textContent = formatNumber(bulkRollCost);
                 if (bulkBtnEl) {
-                    bulkBtnEl.disabled = false;
+                    bulkBtnEl.disabled = currency < bulkRollCost; // Disable if not enough currency
                     bulkBtnEl.textContent = "Buy Bulk Roll";
                 }
             }
             
-            // --- NEW: Dynamic Event Status Display ---
+            // Dynamic Event Status Display
             const statsContainer = document.querySelector('.stats');
             let eventStat = document.getElementById('eventStat');
-
             if (!eventStat) {
                 eventStat = document.createElement('div');
                 eventStat.className = 'stat-item';
                 eventStat.id = 'eventStat';
                 statsContainer.appendChild(eventStat);
             }
-            
             const eventName = currentEvent ? currentEvent.name : "None";
             const timeLeft = currentEvent ? Math.max(0, eventEndTime - Date.now()) : 0;
             const timeLeftFormatted = (timeLeft / 1000).toFixed(1);
-            
             eventStat.innerHTML = `Active Event: <span style="color: ${currentEvent ? '#00FFFF' : '#ffffff'};">${eventName}</span> (${timeLeftFormatted}s)`;
-            // End New Event Status
             
-            // FIX: Use highestFinalRoll.value (the final, variant-modified number) for color determination
+            // Rarest Roll
             if (highestFinalRoll.value > 0) {
                 const { className, color } = getRankClassAndColor(highestFinalRoll.value, highestFinalRoll.variants);
                 let rankClass = className;
                 let rollColor = color;
                 let displayName = highestFinalRoll.rank;
-
-                // Only add the class for potential styling (like a glow), but let rarity determine the color.
                 if (displayName === "~Nonavacious~") {
                     rankClass += " secret-nonavacious";
                 }
-                
-                // Display the final value
                 document.getElementById('rarest').innerHTML = 
                     `<span class="${rankClass}" style="color: ${rollColor};">${formatNumber(highestFinalRoll.value)} [${displayName}]</span>`;
             }
+
+            // --- NEW: Shapes GUI Updates ---
+            document.getElementById('shapes-gui').style.display = shapesUnlocked ? 'block' : 'none';
+            document.getElementById('shapes-unlock-controls').style.display = shapesUnlocked ? 'none' : 'grid'; // Use grid to match other controls
+            document.getElementById('unlockShapesBtn').disabled = currency < UNLOCK_SHAPES_COST;
+
+            if (shapesUnlocked) {
+                document.getElementById('shapeLuckBonus').textContent = shapeLuckBonus.toFixed(1);
+                document.getElementById('bulkShapeAmount').textContent = bulkShapeLevel + 1;
+                document.getElementById('bulkShapeLevel').textContent = bulkShapeLevel;
+                document.getElementById('shapeCooldown').textContent = formatCooldown(currentShapeCooldown);
+                
+                // Shape Luck Button (Upgrade 1)
+                const shapeLuckBtn = document.getElementById('buyShapeLuckBtn');
+                document.getElementById('shapeLuckCost').textContent = formatGeometrix(shapeLuckCost);
+                if (shapeLuckLevel >= MAX_SHAPE_LUCK_LEVEL) {
+                    shapeLuckBtn.disabled = true;
+                    shapeLuckBtn.innerHTML = `Shape Luck (MAXED)`;
+                } else {
+                    shapeLuckBtn.disabled = geometrix < shapeLuckCost;
+                    shapeLuckBtn.innerHTML = `Shape Luck (+0.1x) - Cost: <span id="shapeLuckCost">${formatGeometrix(shapeLuckCost)}</span> GMX`;
+                }
+                
+                // Luck Multi Button (Upgrade 2)
+                const luckMultiBtn = document.getElementById('buyLuckMultiBtn');
+                document.getElementById('luckMultiCost').textContent = formatGeometrix(luckMultiCost);
+                luckMultiBtn.disabled = geometrix < luckMultiCost;
+
+                // Bulk Shape Button (Upgrade 3)
+                const bulkShapeBtn = document.getElementById('buyBulkShapeBtn');
+                document.getElementById('bulkShapeCost').textContent = formatGeometrix(bulkShapeCost);
+                if (bulkShapeLevel >= MAX_BULK_SHAPE_LEVEL) {
+                    bulkShapeBtn.disabled = true;
+                    bulkShapeBtn.innerHTML = `Bulk/Cooldown (MAXED)`;
+                } else {
+                    bulkShapeBtn.disabled = geometrix < bulkShapeCost;
+                    bulkShapeBtn.innerHTML = `Bulk/Cooldown Lvl <span id="bulkShapeLevelBtn">${bulkShapeLevel + 1}</span> - Cost: <span id="bulkShapeCost">${formatGeometrix(bulkShapeCost)}</span> GMX`;
+                }
+            }
+            // --- END NEW UPDATES ---
         }
 
         function updateInventoryDisplay() {
@@ -801,27 +929,20 @@
                 inventoryContent.innerHTML = 'Empty';
             } else {
                 inventoryContent.innerHTML = inventory.map((item, idx) => {
-                    // FIX: Use item.value (the final, variant-modified number) for color determination
                     const { className: rankClass, color: rollColor } = getRankClassAndColor(item.value, item.variants);
-                    
-                    // Only add the class for potential styling (like a glow), but let rarity determine the color.
+                    let displayClass = rankClass;
                     if (item.rank === "~Nonavacious~") {
-                        rankClass += " secret-nonavacious";
+                        displayClass += " secret-nonavacious";
                     }
-
-                    // Handle stacked variants
                     let variantText = '';
                     if (item.variants && item.variants.length > 0) {
                         variantText = item.variants.map(v => `<span style="color: ${v.color}; font-weight: bold;">[${v.name}]</span>`).join('') + ' ';
                     }
-
                     let suffix = "";
                     if (item.rank === "100") suffix = " * 💯";
                     if (item.rank === ":[{(absolute zero)}]:") suffix = " * 0";
-                    
-                    // Display the final, variant-modified value (item.value), using the rollColor style
                     return `<div class="inventory-item" onclick="removeFromInventory(${idx})">
-                        #${item.index}: ${variantText}<span class="${rankClass}" style="color: ${rollColor};">${formatNumber(item.value)} [${item.rank}]${suffix}</span>
+                        #${item.index}: ${variantText}<span class="${displayClass}" style="color: ${rollColor};">${formatNumber(item.value)} [${item.rank}]${suffix}</span>
                     </div>`;
                 }).join('');
             }
@@ -833,14 +954,10 @@
             
             RANK_TIERS.forEach(tier => {
                 const discovered = discoveredRanks.has(tier.name);
-                // Get rank class based on an intermediate value, variants array is empty here
                 let rankClass = getRankClass((tier.min + tier.max) / 2); 
-
-                // Improbable rank class needs to be explicitly added
                 if (tier.name === "Improbable") {
                     rankClass = "rank-improbable";
                 }
-
                 html += `<div class="index-item ${discovered ? 'discovered' : 'locked'}">
                     ${discovered ? `<span class="${rankClass}">${tier.name}</span>` : '???'}
                 </div>`;
@@ -850,10 +967,7 @@
             SECRET_RANKS_CHANCES.forEach(rankInfo => {
                 const rankName = rankInfo.name;
                 const discovered = discoveredRanks.has(rankName);
-                
-                // All secret ranks in the index now use the standard index color.
-                const rankStyle = `color: #ff69b4;`; // Standard secret rank color
-
+                const rankStyle = `color: #ff69b4;`;
                 html += `<div class="index-item ${discovered ? 'discovered' : 'locked'}">
                     ${discovered ? `<span style="${rankStyle}">${rankName}</span>` : '???'}
                 </div>`;
@@ -862,14 +976,11 @@
             indexContent.innerHTML = html;
         }
 
-        // MODIFIED: To handle stacked variants
         function addToInventory(value, rank, index, variants = [], baseValue = null) {
             if (inventory.length >= maxInventory) {
                 addToTerminal('Inventory full! Buy upgrades to increase space.', true);
                 return false;
             }
-            // value is the final, variant-modified value. baseValue is the original roll.
-            // Also store isSecret to maintain the rarest roll info correctly
             const isSecret = SECRET_RANKS_CHANCES.map(r => r.name).includes(rank);
             inventory.push({ value, rank, index, variants, baseValue: baseValue || value, isSecret });
             updateInventoryDisplay();
@@ -881,7 +992,6 @@
         function removeFromInventory(idx) {
             const item = inventory[idx];
             
-            // Handle stacked variants for terminal message
             let variantText = '';
             if (item.variants && item.variants.length > 0) {
                 variantText = item.variants.map(v => `[${v.name}]`).join('') + ' ';
@@ -899,7 +1009,6 @@
                 rollElement.style.opacity = '1';
                 rollElement.style.cursor = 'pointer';
                 
-                // Recreate the function call with stored data
                 rollElement.onclick = function() { 
                     tryAddToInventory(item.value, item.rank, item.index, rollElement); 
                 };
@@ -911,10 +1020,8 @@
             saveGame();
         }
 
-        // MODIFIED: Cutscene Handler to include logic for 6-point and 12-point stars for secrets
         function playCutscene(rollValue, isSecret = false) {
             return new Promise(resolve => {
-                // If in auto-roll, stop it temporarily
                 const wasAutoRolling = autoRollInterval !== null;
                 if (wasAutoRolling) {
                     toggleAutoRoll();
@@ -925,10 +1032,8 @@
                 const overlay = document.getElementById('cutscene-overlay');
                 const starElement = document.getElementById('star-element');
                 
-                // 1. Activate black screen
                 body.classList.add('cutscene-active');
                 
-                // Get color and determine star shape
                 const { color } = getRankClassAndColor(rollValue);
                 starElement.style.color = color;
                 
@@ -939,7 +1044,7 @@
                     starShapeClass = 'star-6';
                 } else if (rollValue >= 1e12) {
                     starShapeClass = 'star-8';
-                } // else 'star-4' (default)
+                }
                 
                 starElement.className = starShapeClass;
                 starElement.style.transform = 'translate(-50%, -50%) rotate(0deg) scale(1)'; 
@@ -948,12 +1053,10 @@
                 let rotationSpeed = 3; 
                 let sizeInterval = null;
                 
-                // 2. Star fade-in at 2s
                 setTimeout(() => {
                     starElement.style.opacity = 1;
                 }, STAR_FADE_IN_MS);
                 
-                // 3. Star spin and size update
                 const spinUpdate = () => {
                     currentRotation += rotationSpeed;
                     starElement.style.transform = `translate(-50%, -50%) rotate(${currentRotation}deg) scale(${currentScale})`; 
@@ -962,48 +1065,41 @@
                     }
                 };
 
-                // Start spinning immediately
                 requestAnimationFrame(spinUpdate);
 
-                // 4. Star speed and size acceleration at 5s
                 setTimeout(() => {
                     rotationSpeed = 15; 
                     
-                    // Start size increase interval (faster now)
                     sizeInterval = setInterval(() => {
                         currentScale *= SIZE_MULTIPLIER_PER_UPDATE;
                     }, SIZE_UPDATE_INTERVAL_MS);
 
                 }, SPIN_ACCEL_MS);
                 
-                // 5. White Flash (1 second before cutscene officially ends)
                 setTimeout(() => {
-                    starElement.style.opacity = 0; // Hide star immediately
-                    body.classList.add('cutscene-flash'); // Change background to white instantly
+                    starElement.style.opacity = 0;
+                    body.classList.add('cutscene-flash');
                     
-                    // 6. Cutscene end and cleanup after flash duration
                     setTimeout(() => {
                         isCutscenePlaying = false;
                         clearInterval(sizeInterval);
                         
-                        body.classList.remove('cutscene-flash'); // Remove white flash
-                        body.classList.remove('cutscene-active'); // Remove black screen/overlay
+                        body.classList.remove('cutscene-flash');
+                        body.classList.remove('cutscene-active');
                         
-                        // Reset star state after transition
                         setTimeout(() => {
                             starElement.style.transform = 'translate(-50%, -50%) rotate(0deg) scale(1)';
                             starElement.style.color = '';
                             starElement.className = '';
-                            // If auto-roll was active, restart it
                             if (wasAutoRolling) {
                                 toggleAutoRoll();
                             }
-                            resolve(); // Resolve the promise once the cutscene is fully over
-                        }, 500); // Wait for fade-out transition
+                            resolve();
+                        }, 500);
                         
                     }, WHITE_FLASH_DURATION_MS);
                     
-                }, CUTSCENE_DURATION_MS - WHITE_FLASH_DURATION_MS); // Flash starts 1s before total duration
+                }, CUTSCENE_DURATION_MS - WHITE_FLASH_DURATION_MS);
             });
         }
 
@@ -1017,7 +1113,6 @@
             let maxRollValueInBulk = 0;
             let isMaxRollSecret = false;
             
-            // Collect all rolls first
             for (let i = 0; i < (bulkRollLevel + 1); i++) {
                 const rollResult = generateRoll();
                 const baseValue = rollResult.value;
@@ -1025,12 +1120,11 @@
                 let displayValue = variantResult ? variantResult.modifiedValue : baseValue;
                 const variants = variantResult ? variantResult.variants : [];
                 
-                const secretResult = getSecretRank(); // Check for secret rank hit
+                const secretResult = getSecretRank();
                 const displayName = secretResult ? secretResult.name : getRankInfo(baseValue).name;
                 const isSecret = !!secretResult;
                 
                 let secretRarityMultiplier = 1;
-                // NEW LOGIC: Apply secret rank rarity as a multiplier
                 if (isSecret) {
                     secretRarityMultiplier = secretResult.rarity;
                     displayValue *= secretRarityMultiplier;
@@ -1038,28 +1132,22 @@
                 
                 rollResults.push({ baseValue, displayValue, variants, displayName, isSecret, secretRarityMultiplier });
                 
-                // Track the highest roll in the bulk set, and whether it was a secret
                 if (displayValue > maxRollValueInBulk) {
                     maxRollValueInBulk = displayValue;
                     isMaxRollSecret = isSecret;
                 }
             }
             
-            // Check for cutscene condition in all collected rolls
             if (maxRollValueInBulk >= 1e9) {
-                // Pass the highest final value and whether it was a secret to playCutscene
                 await playCutscene(maxRollValueInBulk, isMaxRollSecret);
             }
             
-            // Process and display all rolls
             for (const rollData of rollResults) {
                 const { baseValue, displayValue, variants, displayName, isSecret, secretRarityMultiplier } = rollData;
                 
-                // FIX: Currency gain is now based on the *final, modified* displayValue
                 const rankInfo = getRankInfo(displayValue); 
                 const currencyGain = Math.pow(rankInfo.rankNum, 3);
                 
-                // FIX: Get class and color based on the final displayValue (rarity always wins based on visual magnitude)
                 const { className: rankClassBase, color: rollColorBase } = getRankClassAndColor(displayValue, variants);
 
                 let rankClass = rankClassBase;
@@ -1069,11 +1157,9 @@
                 if (displayName === "100") suffix = ` * 💯`;
                 if (displayName === ":[{(absolute zero)}]:") suffix = ` * 0`;
                 
-                // Show the secret multiplier if applicable
                 const secretMultiplierText = isSecret ? ` (x${formatNumber(secretRarityMultiplier)})` : '';
 
 
-                // Only add the class for potential styling (like a glow), but let rarity determine the color.
                 if (displayName === "~Nonavacious~") {
                     rankClass += " secret-nonavacious";
                 }
@@ -1088,34 +1174,29 @@
                 
                 currency += currencyGain;
                 
-                // highestBaseRoll tracks the highest base roll (for legacy internal tracking)
                 if (baseValue > highestBaseRoll) {
                     highestBaseRoll = baseValue;
                 }
 
-                // MODIFIED LOGIC: Update highestFinalRoll if this roll is rarer
                 if (displayValue > highestFinalRoll.value) {
                     highestFinalRoll = {
                         value: displayValue,
                         baseValue: baseValue,
                         rank: displayName,
                         variants: variants,
-                        isSecret: isSecret // Store if it was a secret rank
+                        isSecret: isSecret
                     };
                 }
                 
-                const isSecretRank = isSecret; // Already determined
+                const isSecretRank = isSecret;
                 const shouldStopOnValue = autoStopThreshold > 0 && displayValue >= autoStopThreshold;
                 const shouldStopOnSecret = secretConfig && isSecretRank;
                 
-                // Variants are still displayed using their custom color
                 const variantText = variants.map(v => `<span style="color: ${v.color}; font-weight: bold;">[${v.name}]</span>`).join('') + ' ';
                 
                 const variantDataAttr = variants.length > 0 ? `data-variants='${JSON.stringify(variants)}'` : '';
                 const baseValueAttr = `data-basevalue='${baseValue}'`;
                 
-                // The roll element will use the final value (displayValue) for inventory storage
-                // MODIFIED: Use rollColor for the clickable-roll style
                 addToTerminal(
                     `#${currentIndex}: ${variantText}<span class="clickable-roll ${rankClass}" style="color: ${rollColor};" onclick="tryAddToInventory(${displayValue}, '${displayName}', ${currentIndex}, this)" id="roll-${currentIndex}" ${variantDataAttr} ${baseValueAttr}>${formatNumber(displayValue)} [${displayName}]${secretMultiplierText}${suffix}</span> (+${currencyGain.toFixed(2)} currency)`
                 );
@@ -1130,16 +1211,14 @@
                     const reason = shouldStopOnSecret ? `secret rank [${displayName}]` : `threshold (${formatNumber(displayValue)} ≥ ${autoStopThreshold})`;
                     addToTerminal(`Auto-roll stopped: ${reason} detected!`, true);
                     
-                    // Break the loop so it doesn't keep rolling in this bulk roll
                     break; 
                 }
-            } // End of roll loop
+            }
             
             updateStats();
             saveGame();
         }
 
-        // MODIFIED: To retrieve and store stacked variants and isSecret status
         function tryAddToInventory(value, rank, index, element) {
             if (acceptedRolls.has(index)) {
                 addToTerminal(`Roll #${index} has already been accepted!`, true);
@@ -1147,7 +1226,7 @@
             }
             
             let variants = [];
-            let baseValue = value; // Default to final value if no base is found
+            let baseValue = value;
             
             if (element && element.dataset) {
                 if (element.dataset.variants) {
@@ -1157,7 +1236,6 @@
                         console.error('Error parsing variants:', e);
                     }
                 }
-                // Retrieve the original base value for rank color display
                 if (element.dataset.basevalue) {
                     baseValue = parseFloat(element.dataset.basevalue);
                 }
@@ -1166,7 +1244,6 @@
             if (addToInventory(value, rank, index, variants, baseValue)) {
                 acceptedRolls.add(index);
                 
-                // Handle stacked variants for terminal message
                 const variantText = variants.map(v => `[${v.name}]`).join('') + ' ';
                 
                 let suffix = "";
@@ -1221,7 +1298,6 @@
                 totalUpgrades++;
                 maxInventory += INVENTORY_PER_UPGRADE;
                 
-                // OPTIMIZATION: Update calculated stats only when upgrades change
                 updateCalculatedStats();
                 
                 addToTerminal(
@@ -1229,7 +1305,6 @@
                     true
                 );
                 
-                // MODIFIED: Upgrade cost multiplier changed from 1.25 to 1.15
                 upgradeCost *= UPGRADE_COST_MULTIPLIER;
                 addToTerminal(`Next upgrade cost: ${upgradeCost.toFixed(2)}`);
                 
@@ -1258,7 +1333,6 @@
                     true
                 );
                 
-                // Only update cost if not maxed
                 if (bulkRollLevel < MAX_BULK_ROLL_LEVEL) {
                     bulkRollCost *= BULK_ROLL_COST_MULTIPLIER;
                     addToTerminal(`Next Bulk Roll cost: ${bulkRollCost.toFixed(2)}`);
@@ -1277,22 +1351,18 @@
         }
 
         function showRarest() {
-            // MODIFIED LOGIC: Use highestFinalRoll
             if (highestFinalRoll.value === 0) {
                 addToTerminal('No rolls yet!', true);
             } else {
-                // FIX: Use highestFinalRoll.value (the final, variant-modified number) for color determination
                 const { className, color } = getRankClassAndColor(highestFinalRoll.value, highestFinalRoll.variants);
                 let rankClass = className;
                 let rollColor = color;
                 const displayName = highestFinalRoll.rank;
 
-                // Only add the class for potential styling (like a glow), but let rarity determine the color.
                 if (displayName === "~Nonavacious~") {
                     rankClass += " secret-nonavacious";
                 }
 
-                // Handle stacked variants for terminal message
                 let variantText = '';
                 if (highestFinalRoll.variants && highestFinalRoll.variants.length > 0) {
                     variantText = highestFinalRoll.variants.map(v => `[${v.name}]`).join('') + ' ';
@@ -1314,25 +1384,232 @@
             }
         }
 
+
+        // --- NEW: SHAPE SYSTEM FUNCTIONS ---
+
+        function addToShapeTerminal(text, color = '#00FF00') {
+            const terminal = document.getElementById('shape-spawn-output');
+            const line = document.createElement('div');
+            line.className = 'shape-spawn-line';
+            // Use innerHTML to render colored spans from the spawn message
+            line.innerHTML = text; 
+            
+            if (terminal.children.length > 20) {
+                terminal.removeChild(terminal.firstChild);
+            }
+            
+            terminal.appendChild(line);
+            terminal.scrollTop = terminal.scrollHeight;
+        }
+
+        function calculateGeometrixGain(shape) {
+            if (shape.name === "Circle") {
+                // formula for circle: Math.random() ** -1.5 (starts at 250)
+                const base = Math.pow(Math.random(), -1.5);
+                return base * 250;
+            } else {
+                // formula for others: actual rarity of polygon / 2
+                return shape.rarity / 2;
+            }
+        }
+
+        function spawnShape() {
+            if (!shapesUnlocked) return;
+            
+            let spawnedShapes = [];
+            const spawnCount = bulkShapeLevel + 1; // From Upgrade 3
+
+            for (let j = 0; j < spawnCount; j++) {
+                // Create a weighted list for guaranteed selection
+                const cumulativeChances = [];
+                let cumulativeSum = 0;
+
+                for (const shape of SHAPES) {
+                    // Apply shape luck (Upgrade 1) as a multiplier to the base chance
+                    const adjustedChance = shape.chance * (1 + shapeLuckBonus);
+                    cumulativeSum += adjustedChance;
+                    cumulativeChances.push({ maxChance: cumulativeSum, shape: shape });
+                }
+                
+                let rand = Math.random() * cumulativeSum;
+                let selectedShape = null;
+
+                for (const item of cumulativeChances) {
+                    if (rand < item.maxChance) {
+                        selectedShape = item.shape;
+                        break;
+                    }
+                }
+                
+                // Fallback to the most common shape (Triangle) to guarantee a spawn
+                if (!selectedShape) {
+                    selectedShape = SHAPES[0]; 
+                }
+
+                const gain = calculateGeometrixGain(selectedShape);
+                geometrix += gain;
+                spawnedShapes.push({ shape: selectedShape, gain: gain });
+            }
+
+            // Display results
+            let totalGain = spawnedShapes.reduce((sum, r) => sum + r.gain, 0);
+            
+            // Group by shape for cleaner output
+            const grouped = spawnedShapes.reduce((acc, current) => {
+                const name = current.shape.name;
+                if (!acc[name]) {
+                    acc[name] = { count: 0, totalGain: 0, color: current.shape.color };
+                }
+                acc[name].count++;
+                acc[name].totalGain += current.gain;
+                return acc;
+            }, {});
+
+            let message = `Spawned: `;
+            message += Object.keys(grouped).map(name => {
+                const g = grouped[name];
+                return `<span style="color: ${g.color}; font-weight: bold;">${name} x${g.count}</span>`;
+            }).join(', ');
+
+            message += ` | Total: +${formatGeometrix(totalGain)} GMX`;
+            addToShapeTerminal(message, '#FFFFFF'); // White for bulk total
+            
+            updateStats();
+            // We save on shape spawn to avoid losing currency if the user closes the tab
+            saveGame();
+        }
+        
+        function startShapeInterval() {
+            if (shapeInterval) clearInterval(shapeInterval);
+            if (!shapesUnlocked) return;
+            
+            // Spawn immediately on start, then set interval
+            spawnShape();
+            shapeInterval = setInterval(spawnShape, currentShapeCooldown);
+            
+            addToTerminal(`Shape spawning interval set to ${formatCooldown(currentShapeCooldown)}s.`, true, '#00FF00');
+        }
+
+        function unlockShapes() {
+            if (currency >= UNLOCK_SHAPES_COST) {
+                currency -= UNLOCK_SHAPES_COST;
+                shapesUnlocked = true;
+                addToTerminal(`**Shapes GUI unlocked!** Start earning Geometrix.`, true, '#00FF00');
+                updateCalculatedStats();
+                startShapeInterval(); // Start the spawner
+                updateStats();
+                saveGame();
+            } else {
+                addToTerminal(`Not enough currency! Need ${formatNumber(UNLOCK_SHAPES_COST)} to unlock.`, true);
+            }
+        }
+
+        // Upgrade 1
+        function buyShapeLuckUpgrade() {
+            if (shapeLuckLevel >= MAX_SHAPE_LUCK_LEVEL) {
+                addToTerminal('Shape Luck is maxed out!', true, '#FF00FF');
+                return;
+            }
+            if (geometrix >= shapeLuckCost) {
+                geometrix -= shapeLuckCost;
+                shapeLuckLevel++;
+                
+                addToTerminal(
+                    `Shape Luck purchased! Level: ${shapeLuckLevel}/${MAX_SHAPE_LUCK_LEVEL}`,
+                    true, '#00FF00'
+                );
+                
+                shapeLuckCost *= SHAPE_LUCK_COST_MULTIPLIER;
+                updateCalculatedStats();
+                updateStats();
+                saveGame();
+            } else {
+                addToTerminal(`Not enough Geometrix! Need ${formatGeometrix(shapeLuckCost)} GMX.`, true);
+            }
+        }
+        
+        // Upgrade 2
+        function buyLuckMultiUpgrade() {
+            if (geometrix >= luckMultiCost) {
+                geometrix -= luckMultiCost;
+                luckMultiLevel++;
+                
+                updateCalculatedStats(); // Recalculate multipliers
+
+                addToTerminal(
+                    `Luck Multiplier purchased! Level: ${luckMultiLevel} | New Multi: x${luckMultiValue.toFixed(2)}`,
+                    true, '#00FF00'
+                );
+                
+                luckMultiCost *= LUCK_MULTI_COST_MULTIPLIER;
+                updateStats();
+                saveGame();
+            } else {
+                addToTerminal(`Not enough Geometrix! Need ${formatGeometrix(luckMultiCost)} GMX.`, true);
+            }
+        }
+
+        // Upgrade 3
+        function buyBulkShapeUpgrade() {
+            if (bulkShapeLevel >= MAX_BULK_SHAPE_LEVEL) {
+                addToTerminal('Bulk/Cooldown is maxed out!', true, '#FF00FF');
+                return;
+            }
+            if (geometrix >= bulkShapeCost) {
+                geometrix -= bulkShapeCost;
+                bulkShapeLevel++;
+                
+                updateCalculatedStats(); // Recalculate cooldown
+                
+                addToTerminal(
+                    `Bulk/Cooldown purchased! Level: ${bulkShapeLevel}/${MAX_BULK_SHAPE_LEVEL} | Spawns: ${bulkShapeLevel + 1} | Cooldown: ${formatCooldown(currentShapeCooldown)}s`,
+                    true, '#00FF00'
+                );
+                
+                if (bulkShapeLevel < MAX_BULK_SHAPE_LEVEL) {
+                    bulkShapeCost *= BULK_SHAPE_COST_MULTIPLIER;
+                }
+                
+                startShapeInterval(); // Restart interval with new cooldown
+                updateStats();
+                saveGame();
+            } else {
+                addToTerminal(`Not enough Geometrix! Need ${formatGeometrix(bulkShapeCost)} GMX.`, true);
+            }
+        }
+        // --- END NEW FUNCTIONS ---
+
+
+        // MODIFIED: To include new save data
         function saveGame() {
             const gameState = {
                 currency,
                 totalUpgrades,
                 upgradeCost,
-                // highestRoll is now highestBaseRoll (for internal consistency, but saving highestFinalRoll)
                 highestBaseRoll, 
-                highestFinalRoll, // NEW: Save the entire object
+                highestFinalRoll,
                 maxInventory,
                 inventory,
                 rollIndex,
                 acceptedRolls: Array.from(acceptedRolls),
                 discoveredRanks: Array.from(discoveredRanks),
                 bulkRollLevel: bulkRollLevel,
-                bulkRollCost: bulkRollCost
+                bulkRollCost: bulkRollCost,
+                
+                // NEW: Shapes Save Data
+                geometrix,
+                shapesUnlocked,
+                shapeLuckLevel,
+                shapeLuckCost,
+                luckMultiLevel,
+                luckMultiCost,
+                bulkShapeLevel,
+                bulkShapeCost
             };
             localStorage.setItem('calisRNGGame', JSON.stringify(gameState));
         }
 
+        // MODIFIED: To load new save data
         function loadGame() {
             const saved = localStorage.getItem('calisRNGGame');
             if (saved) {
@@ -1342,15 +1619,12 @@
                     totalUpgrades = gameState.totalUpgrades || 0;
                     upgradeCost = gameState.upgradeCost || 50;
                     
-                    // Handle transition from highestRoll (base value) to highestFinalRoll (full object)
                     if (gameState.highestFinalRoll) {
                         highestFinalRoll = gameState.highestFinalRoll;
-                        // Ensure isSecret flag is present for cutscene logic
                         if (typeof highestFinalRoll.isSecret === 'undefined') {
                              highestFinalRoll.isSecret = SECRET_RANKS_CHANCES.map(r => r.name).includes(highestFinalRoll.rank);
                         }
                     } else {
-                        // For old save files, initialize highestFinalRoll from highestRoll (base)
                         const baseRoll = gameState.highestRoll || 0;
                         const rankInfo = getRankInfo(baseRoll);
                          highestFinalRoll = {
@@ -1366,20 +1640,16 @@
 
                     maxInventory = gameState.maxInventory || 10;
                     
-                    // Handle inventory compatibility with new 'variants' array and 'isSecret'
                     inventory = (gameState.inventory || []).map(item => {
-                        // Ensure 'variants' is an array, falling back or cleaning up old fields
                         if (item.variant && !item.variants) {
                             item.variants = [item.variant];
                             delete item.variant;
                         } else if (!item.variants) {
                             item.variants = [];
                         }
-                        // Ensure 'baseValue' is present
                         if (!item.baseValue) {
                             item.baseValue = item.value;
                         }
-                        // Ensure 'isSecret' is present
                          if (typeof item.isSecret === 'undefined') {
                             item.isSecret = SECRET_RANKS_CHANCES.map(r => r.name).includes(item.rank);
                         }
@@ -1392,8 +1662,23 @@
                     bulkRollLevel = gameState.bulkRollLevel || 0;
                     bulkRollCost = gameState.bulkRollCost || 500000;
                     
-                    // OPTIMIZATION: Call the calculation function here
+                    // NEW: Load Shapes Data
+                    geometrix = gameState.geometrix || 0;
+                    shapesUnlocked = gameState.shapesUnlocked || false;
+                    shapeLuckLevel = gameState.shapeLuckLevel || 0;
+                    shapeLuckCost = gameState.shapeLuckCost || 5;
+                    luckMultiLevel = gameState.luckMultiLevel || 0;
+                    luckMultiCost = gameState.luckMultiCost || 100;
+                    bulkShapeLevel = gameState.bulkShapeLevel || 0;
+                    bulkShapeCost = gameState.bulkShapeCost || 50;
+
+                    // Call the calculation function
                     updateCalculatedStats();
+                    
+                    // Start the shape spawner if it was unlocked
+                    if (shapesUnlocked) {
+                        startShapeInterval();
+                    }
                     
                     updateStats();
                     updateInventoryDisplay();
@@ -1401,9 +1686,14 @@
                     addToTerminal('Game loaded!', true);
                 } catch (e) {
                     console.error('Error loading game:', e);
+                    // Fallback to default state if save is corrupt
+                    updateCalculatedStats();
+                    updateStats();
+                    updateInventoryDisplay();
+                    updateIndexDisplay();
                 }
             } else {
-                 // Ensure calculated stats and highestFinalRoll are initialized if no save exists
+                 // First time load
                 updateCalculatedStats();
                 updateStats();
                 updateInventoryDisplay();
@@ -1416,6 +1706,14 @@
                 e.preventDefault();
                 roll();
             }
+        });
+        
+        // Add listeners for auto-roll settings
+        document.getElementById('autoStopThreshold').addEventListener('change', (e) => {
+            autoStopThreshold = parseFloat(e.target.value) || 0;
+        });
+        document.getElementById('secretConfig').addEventListener('change', (e) => {
+            secretConfig = e.target.checked;
         });
 
         const welcomeLine = document.createElement('div');
