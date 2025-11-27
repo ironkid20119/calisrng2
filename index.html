@@ -1120,6 +1120,10 @@
                 let displayValue = variantResult ? variantResult.modifiedValue : baseValue;
                 const variants = variantResult ? variantResult.variants : [];
                 
+                // CRITICAL FIX FOR RARITY: The secrets must be checked first
+                // Re-sort secrets array in reverse rarity order (rarest first) for accurate checking
+                SECRET_RANKS_CHANCES.sort((a, b) => b.rarity - a.rarity);
+                
                 const secretResult = getSecretRank();
                 const displayName = secretResult ? secretResult.name : getRankInfo(baseValue).name;
                 const isSecret = !!secretResult;
