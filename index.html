@@ -577,12 +577,14 @@
         const BULK_SHAPE_COST_MULTIPLIER = 5;
         const MAX_BULK_SHAPE_LEVEL = 4;
         const SHAPE_COOLDOWN_DECREASE_MS = 333.3333; // 0.3333 seconds
+        // NEW: Shape Despawn Timer
+        const SHAPE_DESPAWN_TIME_MS = 5000; // 5 seconds
         
         const SHAPES = [
             { name: "Triangle", chance: 1/2, rarity: 2, color: "#FFFF00" },
             { name: "Square", chance: 1/5, rarity: 5, color: "#00FF00" },
             { name: "Pentagon", chance: 1/10, rarity: 10, color: "#00FFFF" },
-            { name: "Hexagon", chance: 1/25, rarity: 25, color: "#FF00FF" },
+            { name: "Hexagon", proportionalChance: 1/25, rarity: 25, color: "#FF00FF" },
             { name: "7 Sided Polygon", chance: 1/50, rarity: 50, color: "#FFA500" },
             { name: "Octagon", chance: 1/100, rarity: 100, color: "#800080" },
             { name: "Circle", chance: 1/500, rarity: 500, color: "#FF0000" }
@@ -633,7 +635,7 @@
         let bulkShapeLevel = 0;
         let bulkShapeCost = 50;
         let shapeInterval = null;
-        // ** NEW: Array for active, clickable shapes **
+        // ** NEW: Array for active, clickable shapes (will store timerId on load) **
         let activeShapes = [];
         // --- END NEW VARIABLES ---
 
@@ -1515,13 +1517,60 @@
             }
         }
         
+        // NEW: Function to remove a shape from the array and DOM
+        function despawnShape(shapeId, isCollected = false) {
+            const shapeIndex = activeShapes.findIndex(s => s.id === shapeId);
+            
+            if (shapeIndex === -1) {
+                return; // Already gone
+            }
+
+            const shapeData = activeShapes[shapeIndex];
+            
+            // Clear the timer if it exists (safety)
+            if (shapeData.timerId) {
+                clearTimeout(shapeData.timerId);
+            }
+            
+            // Remove from array
+            activeShapes.splice(shapeIndex, 1);
+            
+            // Remove from DOM
+            const element = document.getElementById(`shape-${shapeId}`);
+            if (element) {
+                 if (isCollected) {
+                    // Visual feedback for collected shape
+                    element.style.transform = 'scale(1.5)';
+                    element.style.opacity = '0';
+                    setTimeout(() => element.remove(), 200);
+                 } else {
+                    element.remove();
+                 }
+            }
+            
+            if (!isCollected) {
+                addToShapeTerminal(`A **${shapeData.name}** despawned (not collected)!`);
+            }
+            
+            saveGame();
+        }
+
         // NEW: Function to re-render shapes after a load (recreates DOM elements from saved data)
         function renderActiveShapes() {
             const shapesField = document.getElementById('shapes-field');
-            // Clear existing DOM elements from previous session if any
             shapesField.innerHTML = ''; 
             
-            activeShapes.forEach(shapeData => {
+            // Filter out expired shapes and create timers for remaining ones
+            activeShapes = activeShapes.filter(shapeData => {
+                const timeElapsed = Date.now() - shapeData.spawnTime;
+                
+                // If expired, skip and log as despawned
+                if (timeElapsed >= SHAPE_DESPAWN_TIME_MS) {
+                    addToShapeTerminal(`A **${shapeData.name}** despawned while you were away!`);
+                    return false;
+                }
+
+                // If not expired, create DOM element
                 const shapeElement = document.createElement('div');
                 shapeElement.id = `shape-${shapeData.id}`;
                 shapeElement.className = `clickable-shape shape-${shapeData.name.replace(/\s/g, '-')}`;
@@ -1532,11 +1581,22 @@
                 shapeElement.onclick = () => collectShape(shapeData.id);
                 
                 shapesField.appendChild(shapeElement);
+
+                // Resume the timer for the remaining duration
+                const remainingTime = SHAPE_DESPAWN_TIME_MS - timeElapsed;
+                shapeData.timerId = setTimeout(() => {
+                    despawnShape(shapeData.id, false); 
+                }, remainingTime);
+
+                return true; // Keep in the activeShapes array
             });
+            
+            // Save to ensure expired shapes are removed from save data immediately
+            saveGame(); 
         }
 
 
-        // MODIFIED: Now creates clickable visual elements
+        // MODIFIED: Now creates clickable visual elements and sets a despawn timer
         function spawnShape() {
             if (!shapesUnlocked) return;
             
@@ -1545,8 +1605,6 @@
             const spawnCount = bulkShapeLevel + 1; 
 
             const shapesField = document.getElementById('shapes-field');
-            const fieldRect = shapesField.getBoundingClientRect();
-            // Get current field dimensions (important for random positioning)
             const fieldWidth = shapesField.clientWidth;
             const fieldHeight = shapesField.clientHeight;
 
@@ -1583,34 +1641,38 @@
                 
                 // --- NEW VISUAL SPAWNING LOGIC ---
                 const shapeId = Date.now().toString() + Math.random().toString(36).substring(2, 9);
-
-                // Calculate random position within the shapes field
                 const shapeSize = 30;
-                // Ensure shape spawns fully inside (max position = field dimension - shape size)
                 const posX = Math.random() * (fieldWidth - shapeSize); 
                 const posY = Math.random() * (fieldHeight - shapeSize); 
 
                 const shapeElement = document.createElement('div');
                 shapeElement.id = `shape-${shapeId}`;
-                // Replace spaces in name with hyphens for CSS class
                 shapeElement.className = `clickable-shape shape-${selectedShape.name.replace(/\s/g, '-')}`; 
                 shapeElement.style.backgroundColor = selectedShape.color;
                 shapeElement.style.left = `${posX}px`;
                 shapeElement.style.top = `${posY}px`;
                 shapeElement.textContent = selectedShape.name[0]; // First letter display
 
-                // Store data and attach click handler
+                // Store data 
                 const shapeData = {
                     id: shapeId,
                     name: selectedShape.name,
                     gain: gain,
                     color: selectedShape.color,
                     posX: posX,
-                    posY: posY
+                    posY: posY,
+                    spawnTime: Date.now(), // NEW: Record spawn time
+                    timerId: null // Placeholder for the timeout ID
                 };
+                
+                // Set the despawn timer and store the ID
+                shapeData.timerId = setTimeout(() => {
+                    despawnShape(shapeId, false); // isCollected = false
+                }, SHAPE_DESPAWN_TIME_MS);
+
                 activeShapes.push(shapeData);
                 
-                // Pass the unique shape ID to the click handler
+                // Attach click handler
                 shapeElement.onclick = () => collectShape(shapeId);
                 
                 shapesField.appendChild(shapeElement);
@@ -1619,40 +1681,28 @@
             
             // Display total GMX that can be collected (not collected yet)
             if (spawnedCount > 0) {
-                // Not saving on spawn, only on collection or main save button click
                 addToShapeTerminal(`Spawned ${spawnedCount} shapes. Max collection: ${formatGeometrix(totalPossibleGain)} GMX.`);
             }
         }
         
-        // NEW: Function to collect a shape when clicked
+        // MODIFIED: Function to collect a shape when clicked
         function collectShape(shapeId) {
-            // Find the index of the shape in the array
             const shapeIndex = activeShapes.findIndex(s => s.id === shapeId);
             
             if (shapeIndex === -1) {
-                return; // Already collected or invalid ID
+                return; 
             }
 
             const shapeData = activeShapes[shapeIndex];
             geometrix += shapeData.gain;
             
-            // Remove from array and DOM
-            activeShapes.splice(shapeIndex, 1);
-            const element = document.getElementById(`shape-${shapeId}`);
-            if (element) {
-                // Simple visual feedback before removal
-                element.style.transform = 'scale(1.5)';
-                element.style.opacity = '0';
-                setTimeout(() => {
-                    element.remove();
-                }, 200);
-            }
-
-            // Add a brief GMX gain message to the main terminal
             addToTerminal(`Collected **${shapeData.name}** (+${formatGeometrix(shapeData.gain)} GMX)!`, true, 'command');
 
+            // Remove the shape and clear its timer
+            // Pass true to indicate it was collected, which adds a short visual transition
+            despawnShape(shapeId, true); 
+            
             updateStats();
-            saveGame(); // Save after collection
         }
 
         // MODIFIED: No immediate spawn on interval start
@@ -1755,7 +1805,7 @@
         // --- END NEW FUNCTIONS ---
 
 
-        // MODIFIED: To include new save data (Cutscene state, Event state, and activeShapes)
+        // MODIFIED: To exclude the volatile timerId from saved data
         function saveGame() {
             const gameState = {
                 currency,
@@ -1795,8 +1845,16 @@
                 luckMultiCost,
                 bulkShapeLevel,
                 bulkShapeCost,
-                // NEW: Active Shapes Array
-                activeShapes 
+                // NEW: Active Shapes Array (only necessary properties)
+                activeShapes: activeShapes.map(shape => ({
+                    id: shape.id,
+                    name: shape.name,
+                    gain: shape.gain,
+                    color: shape.color,
+                    posX: shape.posX,
+                    posY: shape.posY,
+                    spawnTime: shape.spawnTime // Only save the spawn time
+                }))
             };
             localStorage.setItem('calisRNGGame', JSON.stringify(gameState));
         }
@@ -1882,7 +1940,7 @@
                     
                     // Start the shape spawner if it was unlocked
                     if (shapesUnlocked) {
-                        // FIX: Re-render shapes on load
+                        // FIX: Re-render shapes and start/resume despawn timers on load
                         renderActiveShapes();
                         startShapeInterval();
                     }
