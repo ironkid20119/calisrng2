@@ -257,7 +257,7 @@
         }
         
         .star-12 {
-            clip-path: polygon(50% 0%, 55% 15%, 70% 15%, 75% 0%, 80% 15%, 95% 15%, 100% 30%, 95% 45%, 100% 70%, 95% 85%, 80% 85%, 75% 100%, 70% 85%, 55% 85%, 50% 100%, 45% 85%, 30% 85%, 25% 100%, 20% 85%, 5% 85%, 0% 70%, 5% 45%, 0% 30%, 5% 15%, 20% 15%, 25% 0%, 30% 15%, 45% 15%);
+            clip-path: polygon(50% 0%, 55% 15%, 70% 15%, 75% 0%, 80% 15%, 95% 15%, 100% 30%, 95% 45%, 100% 70%, 95% 85%, 100% 85%, 75% 100%, 70% 85%, 55% 85%, 50% 100%, 45% 85%, 30% 85%, 25% 100%, 20% 85%, 5% 85%, 0% 70%, 5% 45%, 0% 30%, 5% 15%, 20% 15%, 25% 0%, 30% 15%, 45% 15%);
         }
 
         /* --- END CUTSCENE STYLES --- */
@@ -271,7 +271,51 @@
             margin-top: 20px;
             display: none; /* Hidden by default */
         }
-        
+
+        /* NEW: Container for clickable shapes */
+        .shapes-field {
+            background-color: #1a0033;
+            border: 1px dashed #00FF00;
+            min-height: 200px;
+            max-height: 300px;
+            overflow: hidden; 
+            position: relative;
+            margin-bottom: 15px;
+        }
+
+        /* NEW: Styles for the individual clickable polygon */
+        .clickable-shape {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+            transition: transform 0.2s, opacity 0.2s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 10px;
+            font-weight: bold;
+            color: #000;
+            text-shadow: 0 0 3px currentColor;
+            border-radius: 2px;
+            animation: float 5s ease-in-out infinite alternate; 
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px) rotate(0deg); }
+            100% { transform: translateY(-5px) rotate(5deg); }
+        }
+
+        /* Shape-specific clip-paths for visual polygons */
+        .shape-Triangle { clip-path: polygon(50% 0%, 0% 100%, 100% 100%); }
+        .shape-Square { clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%); }
+        .shape-Pentagon { clip-path: polygon(50% 0%, 100% 38%, 81% 100%, 19% 100%, 0% 38%); }
+        .shape-Hexagon { clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%); }
+        .shape-7-Sided-Polygon { clip-path: polygon(50% 0%, 90% 20%, 100% 60%, 75% 100%, 25% 100%, 0% 60%, 10% 20%); }
+        .shape-Octagon { clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%); }
+        .shape-Circle { border-radius: 50%; }
+
+        /* Retained for the smaller log */
         .shape-spawn-output {
             background-color: #1a0033;
             border: 1px solid #00FF00;
@@ -356,11 +400,14 @@
     
     <div id="shapes-gui">
         <div class="section-header" style="color: #00FF00;">Shapes GUI</div>
+        
+        <div id="shapes-field" class="shapes-field"></div>
+
         <div class="stat-item">Current Shape Luck: +<span id="shapeLuckBonus">0.0</span>x</div>
         <div class="stat-item">Shapes/Spawn: <span id="bulkShapeAmount">1</span> (Lvl <span id="bulkShapeLevel">0</span>)</div>
         <div class="stat-item">Spawn Cooldown: <span id="shapeCooldown">2.0000</span>s</div>
         
-        <div class="shape-spawn-output" id="shape-spawn-output">Waiting for first spawn...</div>
+        <div class="shape-spawn-output" id="shape-spawn-output" style="height: 50px;">Waiting for first spawn...</div>
 
         <div class="shapes-upgrades">
             <button id="buyShapeLuckBtn" onclick="buyShapeLuckUpgrade()">Shape Luck (+0.1x) - Cost: <span id="shapeLuckCost">5.00</span> GMX</button>
@@ -419,7 +466,8 @@
         const WHITE_FLASH_DURATION_MS = 1000; 
 
         // --- NEW EVENT CONSTANTS ---
-        const EVENT_CHECK_INTERVAL_MS = 2500; // Check every 2.5 seconds
+        // CHANGED: Event check interval from 2500ms to 500ms
+        const EVENT_CHECK_INTERVAL_MS = 500; 
 
         const EVENTS = [
             { 
@@ -468,7 +516,6 @@
         ];
 
         // NEW RANK TIER: Improbable
-        // Total ranks increase due to adding 1e10-1e11 and 1e11-1e12 tiers (22 -> 24 normal tiers)
         const RANK_TIERS = [
             { min: 1, max: 5, name: "Common" },
             { min: 5, max: 25, name: "Natural" },
@@ -485,9 +532,7 @@
             { min: 1e7, max: 5e7, name: "Unattainable" },
             { min: 5e7, max: 1e9, name: "Gigantic" },
             { min: 1e9, max: 1e10, name: "Infinitude" },
-            // NEW TIER: Pink
             { min: 1e10, max: 1e11, name: "Unseeable" }, 
-            // NEW TIER: Gray
             { min: 1e11, max: 1e12, name: "Impassive" }, 
             { min: 1e12, max: 1e15, name: "Unrollable" },
             { min: 1e15, max: 1e18, name: "Imaginary" },
@@ -498,7 +543,6 @@
         ];
 
         // NEW SECRET RANKS ADDED
-        // Storing the original chance (rarity) to be used as a multiplier
         const SECRET_RANKS_CHANCES = [
             { name: "nil", chance: 1/10000, rarity: 10000 }, 
             { name: "Title Label Missing", chance: 1/4040.404, rarity: 4040.404 },
@@ -518,11 +562,9 @@
             { name: "cali^2", chance: 1/1e12, rarity: 1e12 }
         ];
 
-        // ** FIX: Sort by chance ascending (rarest first) to ensure correct secret discovery **
-        // The current iteration logic in getSecretRank relies on this sort order.
+        // FIX: Sort by chance ascending (rarest first) 
         SECRET_RANKS_CHANCES.sort((a, b) => a.chance - b.chance); 
 
-        // CALCULATED TOTAL RANKS (24 normal + 16 secret)
         const TOTAL_RANKS = RANK_TIERS.length + SECRET_RANKS_CHANCES.length; // 24 + 16 = 40
 
         // --- NEW: SHAPES CONSTANTS ---
@@ -572,8 +614,8 @@
         let bulkRollCost = 500000;
         let isCutscenePlaying = false; 
         
-        // ** NEW: Cutscene state variable **
-        let cutscenesEnabled = true; // Default to true
+        // NEW: Cutscene state variable 
+        let cutscenesEnabled = true; 
         
         // --- NEW EVENT VARIABLES ---
         let currentEvent = null; 
@@ -591,7 +633,10 @@
         let bulkShapeLevel = 0;
         let bulkShapeCost = 50;
         let shapeInterval = null;
+        // ** NEW: Array for active, clickable shapes **
+        let activeShapes = [];
         // --- END NEW VARIABLES ---
+
 
         // --- OPTIMIZATION: CALCULATED STATS (set by updateCalculatedStats) ---
         let currentLuck = 0;
@@ -655,7 +700,7 @@
             updateStats();
         }
         
-        // ** NEW: Function to resume an event after loading **
+        // FIX: Function to resume an event after loading 
         function resumeEvent(event, remainingDuration) {
             currentEvent = event;
             // The eventEndTime is already set on load
@@ -665,7 +710,7 @@
                 eventCheckChance = 1;
             }
             
-            // ** FIX: Set a new timeout on load to correctly end the event **
+            // FIX: Set a new timeout on load to correctly end the event 
             currentEvent.timeoutId = setTimeout(() => {
                 endEvent(event);
             }, remainingDuration);
@@ -700,7 +745,7 @@
             return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         }
         
-        // --- NEW: UTILITY FUNCTIONS ---
+        // NEW: UTILITY FUNCTIONS 
         function formatGeometrix(num) {
             return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         }
@@ -853,7 +898,7 @@
             terminal.scrollTop = terminal.scrollHeight;
         }
         
-        // ** NEW: Toggle Cutscenes Function **
+        // NEW: Toggle Cutscenes Function 
         function toggleCutscenes() {
             cutscenesEnabled = !cutscenesEnabled;
             const btn = document.getElementById('cutsceneToggleBtn');
@@ -928,7 +973,7 @@
                     `<span class="${rankClass}" style="color: ${rollColor};">${formatNumber(highestFinalRoll.value)} [${displayName}]</span>`;
             }
 
-            // ** NEW: Update Cutscene Toggle Button **
+            // NEW: Update Cutscene Toggle Button 
             const cutsceneBtn = document.getElementById('cutsceneToggleBtn');
             if (cutsceneBtn) {
                 cutsceneBtn.textContent = `Cutscenes: ${cutscenesEnabled ? 'ON' : 'OFF'}`;
@@ -1073,7 +1118,7 @@
         }
 
         function playCutscene(rollValue, isSecret = false) {
-            // ** NEW: Check if cutscenes are enabled **
+            // NEW: Check if cutscenes are enabled 
             if (!cutscenesEnabled) {
                 return Promise.resolve();
             }
@@ -1445,11 +1490,10 @@
 
         // --- NEW: SHAPE SYSTEM FUNCTIONS ---
 
-        function addToShapeTerminal(text, color = '#00FF00') {
+        function addToShapeTerminal(text) {
             const terminal = document.getElementById('shape-spawn-output');
             const line = document.createElement('div');
             line.className = 'shape-spawn-line';
-            // Use innerHTML to render colored spans from the spawn message
             line.innerHTML = text; 
             
             if (terminal.children.length > 20) {
@@ -1470,15 +1514,44 @@
                 return shape.rarity / 2;
             }
         }
+        
+        // NEW: Function to re-render shapes after a load (recreates DOM elements from saved data)
+        function renderActiveShapes() {
+            const shapesField = document.getElementById('shapes-field');
+            // Clear existing DOM elements from previous session if any
+            shapesField.innerHTML = ''; 
+            
+            activeShapes.forEach(shapeData => {
+                const shapeElement = document.createElement('div');
+                shapeElement.id = `shape-${shapeData.id}`;
+                shapeElement.className = `clickable-shape shape-${shapeData.name.replace(/\s/g, '-')}`;
+                shapeElement.style.backgroundColor = shapeData.color;
+                shapeElement.style.left = `${shapeData.posX}px`;
+                shapeElement.style.top = `${shapeData.posY}px`;
+                shapeElement.textContent = shapeData.name[0];
+                shapeElement.onclick = () => collectShape(shapeData.id);
+                
+                shapesField.appendChild(shapeElement);
+            });
+        }
 
+
+        // MODIFIED: Now creates clickable visual elements
         function spawnShape() {
             if (!shapesUnlocked) return;
             
-            let spawnedShapes = [];
-            const spawnCount = bulkShapeLevel + 1; // From Upgrade 3
+            let totalPossibleGain = 0;
+            let spawnedCount = 0;
+            const spawnCount = bulkShapeLevel + 1; 
+
+            const shapesField = document.getElementById('shapes-field');
+            const fieldRect = shapesField.getBoundingClientRect();
+            // Get current field dimensions (important for random positioning)
+            const fieldWidth = shapesField.clientWidth;
+            const fieldHeight = shapesField.clientHeight;
+
 
             for (let j = 0; j < spawnCount; j++) {
-                // Create a weighted list for guaranteed selection
                 const cumulativeChances = [];
                 let cumulativeSum = 0;
 
@@ -1505,44 +1578,88 @@
                 }
 
                 const gain = calculateGeometrixGain(selectedShape);
-                geometrix += gain;
-                spawnedShapes.push({ shape: selectedShape, gain: gain });
+                totalPossibleGain += gain;
+                spawnedCount++;
+                
+                // --- NEW VISUAL SPAWNING LOGIC ---
+                const shapeId = Date.now().toString() + Math.random().toString(36).substring(2, 9);
+
+                // Calculate random position within the shapes field
+                const shapeSize = 30;
+                // Ensure shape spawns fully inside (max position = field dimension - shape size)
+                const posX = Math.random() * (fieldWidth - shapeSize); 
+                const posY = Math.random() * (fieldHeight - shapeSize); 
+
+                const shapeElement = document.createElement('div');
+                shapeElement.id = `shape-${shapeId}`;
+                // Replace spaces in name with hyphens for CSS class
+                shapeElement.className = `clickable-shape shape-${selectedShape.name.replace(/\s/g, '-')}`; 
+                shapeElement.style.backgroundColor = selectedShape.color;
+                shapeElement.style.left = `${posX}px`;
+                shapeElement.style.top = `${posY}px`;
+                shapeElement.textContent = selectedShape.name[0]; // First letter display
+
+                // Store data and attach click handler
+                const shapeData = {
+                    id: shapeId,
+                    name: selectedShape.name,
+                    gain: gain,
+                    color: selectedShape.color,
+                    posX: posX,
+                    posY: posY
+                };
+                activeShapes.push(shapeData);
+                
+                // Pass the unique shape ID to the click handler
+                shapeElement.onclick = () => collectShape(shapeId);
+                
+                shapesField.appendChild(shapeElement);
+                // --- END NEW VISUAL SPAWNING LOGIC ---
             }
-
-            // Display results
-            let totalGain = spawnedShapes.reduce((sum, r) => sum + r.gain, 0);
             
-            // Group by shape for cleaner output
-            const grouped = spawnedShapes.reduce((acc, current) => {
-                const name = current.shape.name;
-                if (!acc[name]) {
-                    acc[name] = { count: 0, totalGain: 0, color: current.shape.color };
-                }
-                acc[name].count++;
-                acc[name].totalGain += current.gain;
-                return acc;
-            }, {});
-
-            let message = `Spawned: `;
-            message += Object.keys(grouped).map(name => {
-                const g = grouped[name];
-                return `<span style="color: ${g.color}; font-weight: bold;">${name} x${g.count}</span>`;
-            }).join(', ');
-
-            message += ` | Total: +${formatGeometrix(totalGain)} GMX`;
-            addToShapeTerminal(message, '#FFFFFF'); // White for bulk total
-            
-            updateStats();
-            // We save on shape spawn to avoid losing currency if the user closes the tab
-            saveGame();
+            // Display total GMX that can be collected (not collected yet)
+            if (spawnedCount > 0) {
+                // Not saving on spawn, only on collection or main save button click
+                addToShapeTerminal(`Spawned ${spawnedCount} shapes. Max collection: ${formatGeometrix(totalPossibleGain)} GMX.`);
+            }
         }
         
+        // NEW: Function to collect a shape when clicked
+        function collectShape(shapeId) {
+            // Find the index of the shape in the array
+            const shapeIndex = activeShapes.findIndex(s => s.id === shapeId);
+            
+            if (shapeIndex === -1) {
+                return; // Already collected or invalid ID
+            }
+
+            const shapeData = activeShapes[shapeIndex];
+            geometrix += shapeData.gain;
+            
+            // Remove from array and DOM
+            activeShapes.splice(shapeIndex, 1);
+            const element = document.getElementById(`shape-${shapeId}`);
+            if (element) {
+                // Simple visual feedback before removal
+                element.style.transform = 'scale(1.5)';
+                element.style.opacity = '0';
+                setTimeout(() => {
+                    element.remove();
+                }, 200);
+            }
+
+            // Add a brief GMX gain message to the main terminal
+            addToTerminal(`Collected **${shapeData.name}** (+${formatGeometrix(shapeData.gain)} GMX)!`, true, 'command');
+
+            updateStats();
+            saveGame(); // Save after collection
+        }
+
+        // MODIFIED: No immediate spawn on interval start
         function startShapeInterval() {
             if (shapeInterval) clearInterval(shapeInterval);
             if (!shapesUnlocked) return;
             
-            // Spawn immediately on start, then set interval
-            spawnShape();
             shapeInterval = setInterval(spawnShape, currentShapeCooldown);
             
             addToTerminal(`Shape spawning interval set to ${formatCooldown(currentShapeCooldown)}s.`, true, '#00FF00');
@@ -1552,7 +1669,7 @@
             if (currency >= UNLOCK_SHAPES_COST) {
                 currency -= UNLOCK_SHAPES_COST;
                 shapesUnlocked = true;
-                addToTerminal(`**Shapes GUI unlocked!** Start earning Geometrix.`, true, '#00FF00');
+                addToTerminal(`**Shapes GUI unlocked!** Start collecting the clickable polygons.`, true, '#00FF00');
                 updateCalculatedStats();
                 startShapeInterval(); // Start the spawner
                 updateStats();
@@ -1638,14 +1755,14 @@
         // --- END NEW FUNCTIONS ---
 
 
-        // MODIFIED: To include new save data (Cutscene state and Event state)
+        // MODIFIED: To include new save data (Cutscene state, Event state, and activeShapes)
         function saveGame() {
             const gameState = {
                 currency,
                 totalUpgrades,
                 upgradeCost,
                 highestBaseRoll, 
-                // ** FIX: Ensure highestFinalRoll has necessary properties for old saves **
+                // FIX: Ensure highestFinalRoll has necessary properties for old saves 
                 highestFinalRoll: highestFinalRoll || { 
                     value: 0, 
                     baseValue: 0, 
@@ -1661,11 +1778,10 @@
                 bulkRollLevel: bulkRollLevel,
                 bulkRollCost: bulkRollCost,
                 
-                // ** NEW: Cutscene State **
+                // NEW: Cutscene State 
                 cutscenesEnabled: cutscenesEnabled,
 
-                // ** FIX: Event State **
-                // Store a copy of the event without the live timeoutId
+                // FIX: Event State 
                 currentEvent: currentEvent ? { name: currentEvent.name, duration: currentEvent.duration, description: currentEvent.description, targets: currentEvent.targets, multiplier: currentEvent.multiplier, eventChanceBoost: currentEvent.eventChanceBoost } : null,
                 eventEndTime: eventEndTime,
                 eventCheckChance: eventCheckChance,
@@ -1678,12 +1794,14 @@
                 luckMultiLevel,
                 luckMultiCost,
                 bulkShapeLevel,
-                bulkShapeCost
+                bulkShapeCost,
+                // NEW: Active Shapes Array
+                activeShapes 
             };
             localStorage.setItem('calisRNGGame', JSON.stringify(gameState));
         }
 
-        // MODIFIED: To load new save data (Cutscene state and Event state)
+        // MODIFIED: To load new save data (Cutscene state, Event state, and activeShapes)
         function loadGame() {
             const saved = localStorage.getItem('calisRNGGame');
             if (saved) {
@@ -1693,7 +1811,7 @@
                     totalUpgrades = gameState.totalUpgrades || 0;
                     upgradeCost = gameState.upgradeCost || 50;
                     
-                    // ** FIX: Safely load and initialize highestFinalRoll **
+                    // FIX: Safely load and initialize highestFinalRoll 
                     if (gameState.highestFinalRoll) {
                         highestFinalRoll = gameState.highestFinalRoll;
                         // Ensure isSecret property exists for old saves
@@ -1701,7 +1819,6 @@
                              highestFinalRoll.isSecret = SECRET_RANKS_CHANCES.map(r => r.name).includes(highestFinalRoll.rank);
                         }
                     } else {
-                        // Handle pre-highestFinalRoll save format (if any)
                         const baseRoll = gameState.highestRoll || 0;
                         const rankInfo = getRankInfo(baseRoll);
                          highestFinalRoll = {
@@ -1738,10 +1855,10 @@
                     bulkRollLevel = gameState.bulkRollLevel || 0;
                     bulkRollCost = gameState.bulkRollCost || 500000;
                     
-                    // ** NEW: Load Cutscene State **
+                    // NEW: Load Cutscene State 
                     cutscenesEnabled = typeof gameState.cutscenesEnabled === 'boolean' ? gameState.cutscenesEnabled : true; 
 
-                    // ** FIX: Load Event State **
+                    // FIX: Load Event State 
                     currentEvent = gameState.currentEvent || null;
                     eventEndTime = gameState.eventEndTime || 0;
                     eventCheckChance = gameState.eventCheckChance || 1;
@@ -1755,16 +1872,22 @@
                     luckMultiCost = gameState.luckMultiCost || 100;
                     bulkShapeLevel = gameState.bulkShapeLevel || 0;
                     bulkShapeCost = gameState.bulkShapeCost || 50;
+                    
+                    // NEW: Load Active Shapes
+                    activeShapes = gameState.activeShapes || [];
+
 
                     // Call the calculation function
                     updateCalculatedStats();
                     
                     // Start the shape spawner if it was unlocked
                     if (shapesUnlocked) {
+                        // FIX: Re-render shapes on load
+                        renderActiveShapes();
                         startShapeInterval();
                     }
                     
-                    // ** FIX: Check and resume active event **
+                    // FIX: Check and resume active event 
                     if (currentEvent && eventEndTime > Date.now()) {
                         const durationRemaining = eventEndTime - Date.now();
                         resumeEvent(currentEvent, durationRemaining);
