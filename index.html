@@ -519,6 +519,7 @@
         ];
 
         // ** FIX: Sort by chance ascending (rarest first) to ensure correct secret discovery **
+        // The current iteration logic in getSecretRank relies on this sort order.
         SECRET_RANKS_CHANCES.sort((a, b) => a.chance - b.chance); 
 
         // CALCULATED TOTAL RANKS (24 normal + 16 secret)
@@ -612,7 +613,15 @@
                 endEvent(currentEvent);
             }
             
-            currentEvent = event;
+            // Create a simple object for currentEvent to avoid saving the massive timeoutId on all rolls
+            currentEvent = { 
+                name: event.name, 
+                duration: event.duration, 
+                description: event.description, 
+                targets: event.targets, 
+                multiplier: event.multiplier, 
+                eventChanceBoost: event.eventChanceBoost 
+            };
             eventEndTime = Date.now() + event.duration;
 
             addToTerminal(`🚨 EVENT STARTED: **${event.name}**! ${event.description} for ${event.duration / 1000} seconds!`, true, 'rank-1000-10000'); 
@@ -623,7 +632,8 @@
                 eventCheckChance = 1;
             }
 
-            event.timeoutId = setTimeout(() => {
+            // Set the timeout for the actual end
+            currentEvent.timeoutId = setTimeout(() => {
                 endEvent(event);
             }, event.duration);
 
@@ -643,6 +653,24 @@
             }
 
             updateStats();
+        }
+        
+        // ** NEW: Function to resume an event after loading **
+        function resumeEvent(event, remainingDuration) {
+            currentEvent = event;
+            // The eventEndTime is already set on load
+            if (event.name === "Lol") {
+                eventCheckChance = event.eventChanceBoost; 
+            } else {
+                eventCheckChance = 1;
+            }
+            
+            // ** FIX: Set a new timeout on load to correctly end the event **
+            currentEvent.timeoutId = setTimeout(() => {
+                endEvent(event);
+            }, remainingDuration);
+            
+            addToTerminal(`Resuming active event: **${event.name}** (${(remainingDuration / 1000).toFixed(1)}s left).`, true, 'rank-1000-10000');
         }
 
         function checkEvent() {
@@ -748,7 +776,7 @@
             return { value: baseRoll, variant: null };
         }
         
-        function getSecretRank(rankName) {
+        function getSecretRank() {
             const rand = Math.random();
             
             for (const secret of SECRET_RANKS_CHANCES) {
@@ -759,6 +787,7 @@
                 }
                 
                 // MODIFIED: Use the calculated secretLuckMultiplier
+                // This logic is correct: checks from rarest to commonest, returns the rarest success.
                 if (rand < secret.chance * secretLuckMultiplier * chanceMultiplier) {
                     return secret;
                 }
@@ -1148,8 +1177,7 @@
                 let displayValue = variantResult ? variantResult.modifiedValue : baseValue;
                 const variants = variantResult ? variantResult.variants : [];
                 
-                // IMPORTANT: The `getSecretRank` function is now fixed by sorting the array, 
-                // but it should NOT be passed an argument here, as it generates the roll internally.
+                // IMPORTANT: getSecretRank is called with no arguments as it relies on Math.random() internally.
                 const secretResult = getSecretRank(); 
                 const displayName = secretResult ? secretResult.name : getRankInfo(baseValue).name;
                 const isSecret = !!secretResult;
@@ -1610,14 +1638,21 @@
         // --- END NEW FUNCTIONS ---
 
 
-        // MODIFIED: To include new save data
+        // MODIFIED: To include new save data (Cutscene state and Event state)
         function saveGame() {
             const gameState = {
                 currency,
                 totalUpgrades,
                 upgradeCost,
                 highestBaseRoll, 
-                highestFinalRoll,
+                // ** FIX: Ensure highestFinalRoll has necessary properties for old saves **
+                highestFinalRoll: highestFinalRoll || { 
+                    value: 0, 
+                    baseValue: 0, 
+                    rank: 'None yet', 
+                    variants: [], 
+                    isSecret: false 
+                },
                 maxInventory,
                 inventory,
                 rollIndex,
@@ -1628,6 +1663,12 @@
                 
                 // ** NEW: Cutscene State **
                 cutscenesEnabled: cutscenesEnabled,
+
+                // ** FIX: Event State **
+                // Store a copy of the event without the live timeoutId
+                currentEvent: currentEvent ? { name: currentEvent.name, duration: currentEvent.duration, description: currentEvent.description, targets: currentEvent.targets, multiplier: currentEvent.multiplier, eventChanceBoost: currentEvent.eventChanceBoost } : null,
+                eventEndTime: eventEndTime,
+                eventCheckChance: eventCheckChance,
 
                 // NEW: Shapes Save Data
                 geometrix,
@@ -1642,7 +1683,7 @@
             localStorage.setItem('calisRNGGame', JSON.stringify(gameState));
         }
 
-        // MODIFIED: To load new save data
+        // MODIFIED: To load new save data (Cutscene state and Event state)
         function loadGame() {
             const saved = localStorage.getItem('calisRNGGame');
             if (saved) {
@@ -1652,12 +1693,15 @@
                     totalUpgrades = gameState.totalUpgrades || 0;
                     upgradeCost = gameState.upgradeCost || 50;
                     
+                    // ** FIX: Safely load and initialize highestFinalRoll **
                     if (gameState.highestFinalRoll) {
                         highestFinalRoll = gameState.highestFinalRoll;
+                        // Ensure isSecret property exists for old saves
                         if (typeof highestFinalRoll.isSecret === 'undefined') {
                              highestFinalRoll.isSecret = SECRET_RANKS_CHANCES.map(r => r.name).includes(highestFinalRoll.rank);
                         }
                     } else {
+                        // Handle pre-highestFinalRoll save format (if any)
                         const baseRoll = gameState.highestRoll || 0;
                         const rankInfo = getRankInfo(baseRoll);
                          highestFinalRoll = {
@@ -1669,20 +1713,19 @@
                         };
                     }
                     
-                    highestBaseRoll = gameState.highestBaseRoll || highestFinalRoll.baseValue;
+                    highestBaseRoll = gameState.highestBaseRoll || (highestFinalRoll ? highestFinalRoll.baseValue : 0); // Safety check added
 
                     maxInventory = gameState.maxInventory || 10;
                     
                     inventory = (gameState.inventory || []).map(item => {
+                        // Handle variant conversion for older saves
                         if (item.variant && !item.variants) {
                             item.variants = [item.variant];
                             delete item.variant;
                         } else if (!item.variants) {
                             item.variants = [];
                         }
-                        if (!item.baseValue) {
-                            item.baseValue = item.value;
-                        }
+                        // Ensure isSecret property exists for older saves
                          if (typeof item.isSecret === 'undefined') {
                             item.isSecret = SECRET_RANKS_CHANCES.map(r => r.name).includes(item.rank);
                         }
@@ -1697,6 +1740,11 @@
                     
                     // ** NEW: Load Cutscene State **
                     cutscenesEnabled = typeof gameState.cutscenesEnabled === 'boolean' ? gameState.cutscenesEnabled : true; 
+
+                    // ** FIX: Load Event State **
+                    currentEvent = gameState.currentEvent || null;
+                    eventEndTime = gameState.eventEndTime || 0;
+                    eventCheckChance = gameState.eventCheckChance || 1;
 
                     // NEW: Load Shapes Data
                     geometrix = gameState.geometrix || 0;
@@ -1714,6 +1762,15 @@
                     // Start the shape spawner if it was unlocked
                     if (shapesUnlocked) {
                         startShapeInterval();
+                    }
+                    
+                    // ** FIX: Check and resume active event **
+                    if (currentEvent && eventEndTime > Date.now()) {
+                        const durationRemaining = eventEndTime - Date.now();
+                        resumeEvent(currentEvent, durationRemaining);
+                    } else if (currentEvent && eventEndTime <= Date.now()) {
+                        // Event ended while offline - clean up
+                        endEvent({ name: currentEvent.name, eventChanceBoost: currentEvent.eventChanceBoost });
                     }
                     
                     updateStats();
