@@ -268,7 +268,7 @@
             border: 2px solid #00FF00; /* Green border for new UI */
             padding: 20px;
             border-radius: 5px;
-            margin-top: 20px;
+            /* REMOVED: margin-top: 20px; to allow it to sit flush with its new parent grid cell */
             display: none; /* Hidden by default */
         }
 
@@ -394,27 +394,7 @@
         <button id="cutsceneToggleBtn" onclick="toggleCutscenes()">Cutscenes: ON</button>
     </div>
 
-    <div class="controls" id="shapes-unlock-controls">
-        <button id="unlockShapesBtn" onclick="unlockShapes()">Unlock Shapes GUI (5,000,000.00 Currency)</button>
-    </div>
     
-    <div id="shapes-gui">
-        <div class="section-header" style="color: #00FF00;">Shapes GUI</div>
-        
-        <div id="shapes-field" class="shapes-field"></div>
-
-        <div class="stat-item">Current Shape Luck: +<span id="shapeLuckBonus">0.0</span>x</div>
-        <div class="stat-item">Shapes/Spawn: <span id="bulkShapeAmount">1</span> (Lvl <span id="bulkShapeLevel">0</span>)</div>
-        <div class="stat-item">Spawn Cooldown: <span id="shapeCooldown">2.0000</span>s</div>
-        
-        <div class="shape-spawn-output" id="shape-spawn-output" style="height: 50px;">Waiting for first spawn...</div>
-
-        <div class="shapes-upgrades">
-            <button id="buyShapeLuckBtn" onclick="buyShapeLuckUpgrade()">Shape Luck (+0.1x) - Cost: <span id="shapeLuckCost">5.00</span> GMX</button>
-            <button id="buyLuckMultiBtn" onclick="buyLuckMultiUpgrade()">Luck Multiplier (x2.00) - Cost: <span id="luckMultiCost">100.00</span> GMX</button>
-            <button id="buyBulkShapeBtn" onclick="buyBulkShapeUpgrade()">Bulk/Cooldown Lvl <span id="bulkShapeLevelBtn">1</span> - Cost: <span id="bulkShapeCost">50.00</span> GMX</button>
-        </div>
-    </div>
     <div class="main-container">
         <div>
             <div id="terminal"></div>
@@ -434,7 +414,29 @@
                 <div class="section-header">Index (Ranks Discovered)</div>
                 <div id="indexContent">Roll to discover ranks!</div>
             </div>
-        </div>
+            
+            <div class="controls" id="shapes-unlock-controls" style="margin-top: 20px;">
+                <button id="unlockShapesBtn" onclick="unlockShapes()">Unlock Shapes GUI (5,000,000.00 Currency)</button>
+            </div>
+            
+            <div id="shapes-gui">
+                <div class="section-header" style="color: #00FF00;">Shapes GUI</div>
+                
+                <div id="shapes-field" class="shapes-field"></div>
+
+                <div class="stat-item">Current Shape Luck: +<span id="shapeLuckBonus">0.0</span>x</div>
+                <div class="stat-item">Shapes/Spawn: <span id="bulkShapeAmount">1</span> (Lvl <span id="bulkShapeLevel">0</span>)</div>
+                <div class="stat-item">Spawn Cooldown: <span id="shapeCooldown">2.0000</span>s</div>
+                
+                <div class="shape-spawn-output" id="shape-spawn-output" style="height: 50px;">Waiting for first spawn...</div>
+
+                <div class="shapes-upgrades">
+                    <button id="buyShapeLuckBtn" onclick="buyShapeLuckUpgrade()">Shape Luck (+0.1x) - Cost: <span id="shapeLuckCost">5.00</span> GMX</button>
+                    <button id="buyLuckMultiBtn" onclick="buyLuckMultiUpgrade()">Luck Multiplier (x2.00) - Cost: <span id="luckMultiCost">100.00</span> GMX</button>
+                    <button id="buyBulkShapeBtn" onclick="buyBulkShapeUpgrade()">Bulk/Cooldown Lvl <span id="bulkShapeLevelBtn">1</span> - Cost: <span id="bulkShapeCost">50.00</span> GMX</button>
+                </div>
+            </div>
+            </div>
     </div>
 
     <div id="cutscene-overlay">
@@ -584,7 +586,8 @@
             { name: "Triangle", chance: 1/2, rarity: 2, color: "#FFFF00" },
             { name: "Square", chance: 1/5, rarity: 5, color: "#00FF00" },
             { name: "Pentagon", chance: 1/10, rarity: 10, color: "#00FFFF" },
-            { name: "Hexagon", proportionalChance: 1/25, rarity: 25, color: "#FF00FF" },
+            // FIX: Changed proportionalChance to chance to resolve the spawning bug
+            { name: "Hexagon", chance: 1/25, rarity: 25, color: "#FF00FF" }, 
             { name: "7 Sided Polygon", chance: 1/50, rarity: 50, color: "#FFA500" },
             { name: "Octagon", chance: 1/100, rarity: 100, color: "#800080" },
             { name: "Circle", chance: 1/500, rarity: 500, color: "#FF0000" }
@@ -1615,22 +1618,23 @@
 
                 for (const shape of SHAPES) {
                     // Apply shape luck (Upgrade 1) as a multiplier to the base chance
+                    // The 'chance' property is now guaranteed to exist for all shapes.
                     const adjustedChance = shape.chance * (1 + shapeLuckBonus);
                     cumulativeSum += adjustedChance;
                     cumulativeChances.push({ maxChance: cumulativeSum, shape: shape });
                 }
                 
-                let rand = Math.random() * cumulativeSum;
+                let rand = Math.random() * cumulativeSum; 
                 let selectedShape = null;
 
                 for (const item of cumulativeChances) {
-                    if (rand < item.maxChance) {
+                    if (rand < item.maxChance) { 
                         selectedShape = item.shape;
                         break;
                     }
                 }
                 
-                // Fallback to the most common shape (Triangle) to guarantee a spawn
+                // Fallback to the most common shape (Triangle) to guarantee a spawn if something fails
                 if (!selectedShape) {
                     selectedShape = SHAPES[0]; 
                 }
@@ -1673,7 +1677,7 @@
                 activeShapes.push(shapeData);
                 
                 // Attach click handler
-                shapeElement.onclick = () => collectShape(shapeId);
+                shapeElement.onclick = () => collectShape(shapeData.id);
                 
                 shapesField.appendChild(shapeElement);
                 // --- END NEW VISUAL SPAWNING LOGIC ---
