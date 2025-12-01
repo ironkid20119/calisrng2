@@ -343,6 +343,19 @@
         }
         /* --- END NEW STYLES --- */
 
+        /* --- NEW: CLICKER GUI STYLES --- */
+        #clicker-gui {
+            background-color: #2d0051;
+            border: 2px solid #FFD700; /* Gold border */
+            padding: 20px;
+            border-radius: 5px;
+        }
+
+        #clover-clicker:active {
+            transform: scale(0.9);
+        }
+        /* --- END NEW STYLES --- */
+
         @media (max-width: 1200px) {
             .main-container {
                 grid-template-columns: 1fr 1fr;
@@ -378,12 +391,20 @@
     <div class="autoroll-settings">
         <div class="section-header">Auto Roll Settings</div>
         <div class="autoroll-setting-item">
-            <label>Stop on rank ≥:</label>
+            <label>Stop on value ≥:</label>
             <input type="number" id="autoStopThreshold" value="0" step="0.000001" placeholder="Enter minimum value">
         </div>
         <div class="autoroll-setting-item">
-            <input type="checkbox" id="secretConfig">
-            <label for="secretConfig">Secret Config (stop on secret ranks)</label>
+            <label>Stop on base rank ≥:</label>
+            <input type="number" id="autoStopTrueRNG" value="0" step="0.000001" placeholder="Enter minimum base value">
+        </div>
+        <div class="autoroll-setting-item">
+            <label>Stop on secret rarity ≥:</label>
+            <input type="number" id="autoStopSecretThreshold" value="0" step="0.000001" placeholder="Enter minimum rarity">
+        </div>
+        <div class="autoroll-setting-item">
+            <input type="checkbox" id="autoStopNewRank">
+            <label for="autoStopNewRank">Stop on new rank discovery</label>
         </div>
     </div>
 
@@ -438,6 +459,26 @@
                     <button id="buyShapeLuckBtn" onclick="buyShapeLuckUpgrade()">Shape Luck (+0.1x) - Cost: <span id="shapeLuckCost">5.00</span> GMX</button>
                     <button id="buyLuckMultiBtn" onclick="buyLuckMultiUpgrade()">Luck Multiplier (x2.00) - Cost: <span id="luckMultiCost">100.00</span> GMX</button>
                     <button id="buyBulkShapeBtn" onclick="buyBulkShapeUpgrade()">Bulk/Cooldown Lvl <span id="bulkShapeLevelBtn">1</span> - Cost: <span id="bulkShapeCost">50.00</span> GMX</button>
+                    <button id="buyClickerUnlockBtn" onclick="unlockClicker()">Unlock Clicker - Cost: 1,000,000.00 GMX</button>
+                </div>
+            </div>
+            
+            <div id="clicker-gui" style="display: none; margin-top: 20px;">
+                <div class="section-header" style="color: #FFD700;">Clicker</div>
+                
+                <div class="stats" style="background-color: #2d0051; border-color: #FFD700; padding: 10px; margin-bottom: 10px;">
+                    <div class="stat-item">Fortunium: <span id="fortunium">0.00</span></div>
+                    <div class="stat-item">Fortunium Luck: +<span id="fortuniumLuck">0.00</span>x</div>
+                </div>
+
+                <div id="clover-field" style="text-align: center; margin-bottom: 15px;">
+                     <span id="clover-clicker" style="font-size: 80px; cursor: pointer; display: inline-block; transition: transform 0.1s; user-select: none;">🍀</span>
+                </div>
+
+                <div class="clicker-upgrades" style="display: flex; flex-wrap: wrap; gap: 10px;">
+                    <button id="buyGmxMultiBtn" onclick="buyFortuniumUpgrade('gmx')">GMX Multi (+0.5x) - Cost: <span id="gmxMultiCost">75.00</span> FOR</button>
+                    <button id="buyFortuniumLuckBtn" onclick="buyFortuniumUpgrade('fortuniumLuck')">Fortunium Luck (+0.5x) - Cost: <span id="fortuniumLuckCost">125.00</span> FOR</button>
+                    <button id="buyClickerLuckBtn" onclick="buyFortuniumUpgrade('luck')">Luck Multi (+0.5x) - Cost: <span id="clickerLuckCost">1000.00</span> FOR</button>
                 </div>
             </div>
             </div>
@@ -626,6 +667,11 @@
         ];
         // --- END NEW CONSTANTS ---
 
+        // --- NEW: CLICKER CONSTANTS ---
+        const UNLOCK_CLICKER_COST = 1000000;
+        const MAX_CLICKER_LUCK_LEVEL = 4;
+        // --- END NEW CONSTANTS ---
+
 
         // --- GAME STATE VARIABLES ---
         let currency = 0;
@@ -646,7 +692,11 @@
         let acceptedRolls = new Set();
         let discoveredRanks = new Set();
         let autoStopThreshold = 0;
-        let secretConfig = false;
+        // NEW: Autoroll settings
+        let autoStopSecretThresholdValue = 0;
+        let autoStopOnNewRank = false;
+        let autoStopTrueRNGValue = 0;
+        // END NEW
         let bulkRollLevel = 0;
         let bulkRollCost = 500000;
         let isCutscenePlaying = false; 
@@ -673,6 +723,21 @@
         // ** NEW: Array for active, clickable shapes (will store timerId on load) **
         let activeShapes = [];
         // --- END NEW VARIABLES ---
+
+        // --- NEW: CLICKER VARIABLES ---
+        let clickerUnlocked = false;
+        let fortunium = 0;
+        let fortuniumLuck = 0; // This is the "+0.5x"
+        
+        let gmxMultiLevel = 0;
+        let gmxMultiCost = 75;
+        
+        let fortuniumLuckLevel = 0;
+        let fortuniumLuckCost = 125;
+        
+        let clickerLuckLevel = 0;
+        let clickerLuckCost = 1000;
+        // --- END NEW CLICKER VARIABLES ---
 
 
         // --- OPTIMIZATION: CALCULATED STATS (set by updateCalculatedStats) ---
@@ -811,8 +876,11 @@
             // NEW: Shape luck (Upgrade 1) - This is a separate luck stat for shapes
             shapeLuckBonus = shapeLuckLevel * SHAPE_LUCK_BONUS;
             
-            // NEW: Luck Multiplier (Upgrade 2)
-            luckMultiValue = Math.pow(2, luckMultiLevel);
+            // NEW: Clicker Luck (Upgrade 3)
+            const clickerLuckBonus = clickerLuckLevel * 0.5;
+            
+            // NEW: Luck Multiplier (Upgrade 2) + Clicker Luck
+            luckMultiValue = Math.pow(2, luckMultiLevel) + clickerLuckBonus; // Additive bonus
             
             // Apply Luck Multiplier to main game mechanics (but NOT polygons)
             // Base luck is modified in generateRoll()
@@ -1059,8 +1127,51 @@
                     bulkShapeBtn.disabled = geometrix < bulkShapeCost;
                     bulkShapeBtn.innerHTML = `Bulk/Cooldown Lvl <span id="bulkShapeLevelBtn">${bulkShapeLevel + 1}</span> - Cost: <span id="bulkShapeCost">${formatGeometrix(bulkShapeCost)}</span> GMX`;
                 }
+
+                // Clicker Unlock Button (Upgrade 4)
+                const clickerUnlockBtn = document.getElementById('buyClickerUnlockBtn');
+                if (clickerUnlockBtn) {
+                     if (clickerUnlocked) {
+                        clickerUnlockBtn.disabled = true;
+                        clickerUnlockBtn.textContent = "Clicker Unlocked";
+                    } else {
+                        clickerUnlockBtn.disabled = geometrix < UNLOCK_CLICKER_COST;
+                        clickerUnlockBtn.textContent = `Unlock Clicker - Cost: ${formatGeometrix(UNLOCK_CLICKER_COST)} GMX`;
+                    }
+                }
             }
             // --- END NEW UPDATES ---
+
+            // --- NEW: Clicker GUI Updates ---
+            document.getElementById('clicker-gui').style.display = clickerUnlocked ? 'block' : 'none';
+            
+            if (clickerUnlocked) {
+                document.getElementById('fortunium').textContent = formatNumber(fortunium);
+                document.getElementById('fortuniumLuck').textContent = fortuniumLuck.toFixed(2);
+                
+                // GMX Multi Button
+                const gmxMultiBtn = document.getElementById('buyGmxMultiBtn');
+                document.getElementById('gmxMultiCost').textContent = formatNumber(gmxMultiCost);
+                gmxMultiBtn.disabled = fortunium < gmxMultiCost;
+                gmxMultiBtn.innerHTML = `GMX Multi (+0.5x) - Cost: <span id="gmxMultiCost">${formatNumber(gmxMultiCost)}</span> FOR`;
+
+                // Fortunium Luck Button
+                const fortuniumLuckBtn = document.getElementById('buyFortuniumLuckBtn');
+                document.getElementById('fortuniumLuckCost').textContent = formatNumber(fortuniumLuckCost);
+                fortuniumLuckBtn.disabled = fortunium < fortuniumLuckCost;
+
+                // Clicker Luck Button
+                const clickerLuckBtn = document.getElementById('buyClickerLuckBtn');
+                document.getElementById('clickerLuckCost').textContent = formatNumber(clickerLuckCost);
+                if (clickerLuckLevel >= MAX_CLICKER_LUCK_LEVEL) {
+                    clickerLuckBtn.disabled = true;
+                    clickerLuckBtn.innerHTML = `Luck Multi (MAXED)`;
+                } else {
+                    clickerLuckBtn.disabled = fortunium < clickerLuckCost;
+                    clickerLuckBtn.innerHTML = `Luck Multi (+0.5x) - Cost: <span id="clickerLuckCost">${formatNumber(clickerLuckCost)}</span> FOR`;
+                }
+            }
+            // --- END CLICKER UPDATES ---
         }
 
         function updateInventoryDisplay() {
@@ -1312,10 +1423,12 @@
                 
                 const currentIndex = rollIndex++;
                 
+                let newRankDiscovered = false; // Flag
                 if (!discoveredRanks.has(displayName)) {
                     discoveredRanks.add(displayName);
                     addToTerminal(`🎉 NEW RANK DISCOVERED: ${displayName}!`, true);
                     updateIndexDisplay();
+                    newRankDiscovered = true; // Set flag
                 }
                 
                 currency += currencyGain;
@@ -1334,9 +1447,11 @@
                     };
                 }
                 
-                const isSecretRank = isSecret;
                 const shouldStopOnValue = autoStopThreshold > 0 && displayValue >= autoStopThreshold;
-                const shouldStopOnSecret = secretConfig && isSecretRank;
+                const shouldStopOnSecret = autoStopSecretThresholdValue > 0 && isSecret && secretRarityMultiplier >= autoStopSecretThresholdValue;
+                const shouldStopOnNew = autoStopOnNewRank && newRankDiscovered;
+                const shouldStopOnTrueRNG = autoStopTrueRNGValue > 0 && baseValue >= autoStopTrueRNGValue;
+
                 
                 const variantText = variants.map(v => `<span style="color: ${v.color}; font-weight: bold;">[${v.name}]</span>`).join('') + ' ';
                 
@@ -1347,14 +1462,19 @@
                     `#${currentIndex}: ${variantText}<span class="clickable-roll ${rankClass}" style="color: ${rollColor};" onclick="tryAddToInventory(${displayValue}, '${displayName}', ${currentIndex}, this)" id="roll-${currentIndex}" ${variantDataAttr} ${baseValueAttr}>${formatNumber(displayValue)} [${displayName}]${secretMultiplierText}${suffix}</span> (+${currencyGain.toFixed(2)} currency)`
                 );
 
-                if (autoRollInterval && (shouldStopOnValue || shouldStopOnSecret)) {
+                if (autoRollInterval && (shouldStopOnValue || shouldStopOnSecret || shouldStopOnNew || shouldStopOnTrueRNG)) {
                     const btn = document.getElementById('autoRollBtn');
                     clearInterval(autoRollInterval);
                     autoRollInterval = null;
                     btn.textContent = 'Auto Roll';
                     btn.classList.remove('active');
                     
-                    const reason = shouldStopOnSecret ? `secret rank [${displayName}]` : `threshold (${formatNumber(displayValue)} ≥ ${autoStopThreshold})`;
+                    let reason = "threshold";
+                    if (shouldStopOnSecret) reason = `secret rank [${displayName}] (rarity ${secretRarityMultiplier} \geq ${autoStopSecretThresholdValue})`;
+                    else if (shouldStopOnNew) reason = `new rank discovered [${displayName}]`;
+                    else if (shouldStopOnTrueRNG) reason = `base rank (${formatNumber(baseValue)} \geq ${autoStopTrueRNGValue})`;
+                    else if (shouldStopOnValue) reason = `value threshold (${formatNumber(displayValue)} \geq ${autoStopThreshold})`;
+                    
                     addToTerminal(`Auto-roll stopped: ${reason} detected!`, true);
                     
                     break; 
@@ -1423,16 +1543,26 @@
                 addToTerminal('Auto-rolling stopped.', true);
             } else {
                 autoStopThreshold = parseFloat(document.getElementById('autoStopThreshold').value) || 0;
-                secretConfig = document.getElementById('secretConfig').checked;
+                autoStopSecretThresholdValue = parseFloat(document.getElementById('autoStopSecretThreshold').value) || 0;
+                autoStopOnNewRank = document.getElementById('autoStopNewRank').checked;
+                autoStopTrueRNGValue = parseFloat(document.getElementById('autoStopTrueRNG').value) || 0;
+                
                 autoRollInterval = setInterval(roll, AUTO_ROLL_DELAY_MS);
                 btn.textContent = 'Stop Auto Roll';
                 btn.classList.add('active');
+                
                 let message = 'Auto-rolling started...';
                 if (autoStopThreshold > 0) {
-                    message += ` (stop at ≥${autoStopThreshold})`;
+                    message += ` (stop at value \geq ${autoStopThreshold})`;
                 }
-                if (secretConfig) {
-                    message += ` (stop on secret ranks)`;
+                if (autoStopTrueRNGValue > 0) {
+                    message += ` (stop at base rank \geq ${autoStopTrueRNGValue})`;
+                }
+                if (autoStopSecretThresholdValue > 0) {
+                    message += ` (stop at secret rarity \geq ${autoStopSecretThresholdValue})`;
+                }
+                if (autoStopOnNewRank) {
+                    message += ` (stop on new rank)`;
                 }
                 addToTerminal(message, true);
             }
@@ -1548,14 +1678,19 @@
         }
 
         function calculateGeometrixGain(shape) {
+            let baseGain = 0;
             if (shape.name === "Circle") {
                 // formula for circle: Math.random() ** -1.5 (starts at 250)
                 const base = Math.pow(Math.random(), -1.5);
-                return base * 250;
+                baseGain = base * 250;
             } else {
                 // formula for others: actual rarity of polygon / 2
-                return shape.rarity / 2;
+                baseGain = shape.rarity / 2;
             }
+            
+            // NEW: Apply GMX Multiplier from Clicker
+            const gmxMultiplier = 1 + (gmxMultiLevel * 0.5);
+            return baseGain * gmxMultiplier;
         }
         
         // NEW: Function to remove a shape from the array and DOM
@@ -1844,6 +1979,81 @@
                 addToTerminal(`Not enough Geometrix! Need ${formatGeometrix(bulkShapeCost)} GMX.`, true);
             }
         }
+        // --- END SHAPES FUNCTIONS ---
+
+        // --- NEW: CLICKER SYSTEM FUNCTIONS ---
+
+        function unlockClicker() {
+            if (clickerUnlocked) {
+                addToTerminal('Clicker is already unlocked!', true);
+                return;
+            }
+            if (geometrix >= UNLOCK_CLICKER_COST) {
+                geometrix -= UNLOCK_CLICKER_COST;
+                clickerUnlocked = true;
+                addToTerminal(`**Clicker GUI unlocked!** Click the clover!`, true, '#FFD700');
+                updateStats(); // This will show the UI
+                saveGame();
+            } else {
+                addToTerminal(`Not enough Geometrix! Need ${formatGeometrix(UNLOCK_CLICKER_COST)} GMX.`, true);
+            }
+        }
+        
+        function clickClover() {
+            const baseGain = Math.pow(Math.random(), -1.5);
+            const finalGain = baseGain * (1 + fortuniumLuck);
+            fortunium += finalGain;
+            
+            updateStats();
+            // No save on click, that's too much.
+        }
+        
+        function buyFortuniumUpgrade(type) {
+            if (!clickerUnlocked) return;
+            
+            if (type === 'gmx') {
+                if (fortunium >= gmxMultiCost) {
+                    fortunium -= gmxMultiCost;
+                    gmxMultiLevel++;
+                    gmxMultiCost *= 1.5;
+                    addToTerminal(`GMX Multi upgrade purchased! GMX gain is now +${(gmxMultiLevel * 0.5).toFixed(1)}x`, true, '#FFD700');
+                } else {
+                    addToTerminal(`Not enough Fortunium! Need ${formatNumber(gmxMultiCost)} FOR.`, true);
+                    return;
+                }
+            } 
+            else if (type === 'fortuniumLuck') {
+                if (fortunium >= fortuniumLuckCost) {
+                    fortunium -= fortuniumLuckCost;
+                    fortuniumLuckLevel++;
+                    fortuniumLuck += 0.5; // Additive +0.5x
+                    fortuniumLuckCost *= 1.25;
+                    addToTerminal(`Fortunium Luck upgrade purchased! Fortunium Luck is now +${fortuniumLuck.toFixed(1)}x`, true, '#FFD700');
+                } else {
+                    addToTerminal(`Not enough Fortunium! Need ${formatNumber(fortuniumLuckCost)} FOR.`, true);
+                    return;
+                }
+            }
+            else if (type === 'luck') {
+                if (clickerLuckLevel >= MAX_CLICKER_LUCK_LEVEL) {
+                    addToTerminal('Clicker Luck upgrade is MAXED!', true, '#FF00FF');
+                    return;
+                }
+                if (fortunium >= clickerLuckCost) {
+                    fortunium -= clickerLuckCost;
+                    clickerLuckLevel++;
+                    clickerLuckCost *= 50;
+                    addToTerminal(`Clicker Luck upgrade purchased! Level ${clickerLuckLevel}/${MAX_CLICKER_LUCK_LEVEL}.`, true, '#FFD700');
+                    updateCalculatedStats(); // This upgrade affects main luck
+                } else {
+                    addToTerminal(`Not enough Fortunium! Need ${formatNumber(clickerLuckCost)} FOR.`, true);
+                    return;
+                }
+            }
+            
+            updateStats();
+            saveGame();
+        }
         // --- END NEW FUNCTIONS ---
 
 
@@ -1896,12 +2106,23 @@
                     posX: shape.posX,
                     posY: shape.posY,
                     spawnTime: shape.spawnTime // Only save the spawn time
-                }))
+                })),
+                
+                // NEW: Clicker Save Data
+                clickerUnlocked,
+                fortunium,
+                fortuniumLuck,
+                gmxMultiLevel,
+                gmxMultiCost,
+                fortuniumLuckLevel,
+                fortuniumLuckCost,
+                clickerLuckLevel,
+                clickerLuckCost
             };
             localStorage.setItem('calisRNGGame', JSON.stringify(gameState));
         }
 
-        // MODIFIED: To load new save data (Cutscene state, Event state, and activeShapes)
+        // MODIFIED: To load new save data (Cutscene state, Event state, activeShapes, and Clicker)
         function loadGame() {
             const saved = localStorage.getItem('calisRNGGame');
             if (saved) {
@@ -1976,6 +2197,17 @@
                     // NEW: Load Active Shapes
                     activeShapes = gameState.activeShapes || [];
 
+                    // NEW: Load Clicker Data
+                    clickerUnlocked = gameState.clickerUnlocked || false;
+                    fortunium = gameState.fortunium || 0;
+                    fortuniumLuck = gameState.fortuniumLuck || 0;
+                    gmxMultiLevel = gameState.gmxMultiLevel || 0;
+                    gmxMultiCost = gameState.gmxMultiCost || 75;
+                    fortuniumLuckLevel = gameState.fortuniumLuckLevel || 0;
+                    fortuniumLuckCost = gameState.fortuniumLuckCost || 125;
+                    clickerLuckLevel = gameState.clickerLuckLevel || 0;
+                    clickerLuckCost = gameState.clickerLuckCost || 1000;
+
 
                     // Call the calculation function
                     updateCalculatedStats();
@@ -2028,8 +2260,27 @@
         document.getElementById('autoStopThreshold').addEventListener('change', (e) => {
             autoStopThreshold = parseFloat(e.target.value) || 0;
         });
-        document.getElementById('secretConfig').addEventListener('change', (e) => {
-            secretConfig = e.target.checked;
+        document.getElementById('autoStopSecretThreshold').addEventListener('change', (e) => {
+            autoStopSecretThresholdValue = parseFloat(e.target.value) || 0;
+        });
+        document.getElementById('autoStopNewRank').addEventListener('change', (e) => {
+            autoStopOnNewRank = e.target.checked;
+        });
+        document.getElementById('autoStopTrueRNG').addEventListener('change', (e) => {
+            autoStopTrueRNGValue = parseFloat(e.target.value) || 0;
+        });
+
+        // NEW: Add listener for clover click
+        document.getElementById('clover-clicker').addEventListener('click', () => {
+            if (!clickerUnlocked) return;
+            clickClover();
+            
+            // Click animation
+            const clover = document.getElementById('clover-clicker');
+            clover.style.transform = 'scale(0.9)';
+            setTimeout(() => {
+                clover.style.transform = 'scale(1)';
+            }, 100);
         });
 
         const welcomeLine = document.createElement('div');
