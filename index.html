@@ -355,6 +355,16 @@
             transform: scale(0.9);
         }
         /* --- END NEW STYLES --- */
+        
+        /* --- NEW: SATANIC SECRET STYLE --- */
+        .secret-satanic-glyph {
+            color: #ff0000;
+            font-size: 24px; /* A large star, not 500px as that would break layout */
+            text-shadow: 0 0 10px #ff0000;
+            display: inline-block;
+            transform: scale(1.5);
+        }
+        /* --- END NEW STYLE --- */
 
         @media (max-width: 1200px) {
             .main-container {
@@ -582,6 +592,8 @@
             { name: "Monument", chance: 1/55555, multiplier: 55555, color: "#8B4513" }, 
             { name: "ETERNAL DAWN", chance: 1/77777, multiplier: 77777, color: "#FFFFFF" },
             { name: ">Finale<", chance: 1/100000, multiplier: 100000, color: "#D2691E" },
+            // NEW: Solar variant
+            { name: "Solar", chance: 1/250000, multiplier: 250000, color: "#FFA500" },
             // NEW: Atomic variant
             { name: "Atomic", chance: 1/494500, multiplier: 494500, color: "#32CD32" }
         ];
@@ -601,7 +613,12 @@
             { min: 100000, max: 1e6, name: "Iridescent" },
             { min: 1e6, max: 1e7, name: "Heavenly" },
             { min: 1e7, max: 5e7, name: "Unattainable" },
-            { min: 5e7, max: 1e9, name: "Gigantic" },
+            { min: 5e7, max: 1e8, name: "Gigantic" }, // MODIFIED: max changed from 1e9 to 1e8
+            // NEW RANKS START
+            { min: 1e8, max: 2.5e8, name: "Epsilon" },
+            { min: 2.5e8, max: 5e8, name: "Terafined" },
+            { min: 5e8, max: 1e9, name: "Eclipse" },
+            // NEW RANKS END
             { min: 1e9, max: 1e10, name: "Infinitude" },
             { min: 1e10, max: 1e11, name: "Unseeable" }, 
             { min: 1e11, max: 1e12, name: "Impassive" }, 
@@ -634,13 +651,20 @@
             { name: "Insanity", chance: 1/666666, rarity: 666666 }, 
             { name: "Grand", chance: 1/1e6, rarity: 1e6 },
             { name: ":[{(absolute zero)}]:", chance: 1/1e6, rarity: 1e6 },
+            // NEW SECRETS START
+            { name: "Defined", chance: 1/1.5e6, rarity: 1.5e6 },
+            { name: "Finale.. wait, how'd this get here?", chance: 1/2.5e6, rarity: 2.5e6 },
+            { name: "Pseudopseudohypoparathyroidism", chance: 1/5e6, rarity: 5e6 },
+            { name: "Chargoggagoggmanchauggauggagoggchaubunagungamaugg", chance: 1/77777777.77, rarity: 77777777.77 },
+            { name: "Satanic", chance: 1/1e9, rarity: 1e9 },
+            // NEW SECRETS END
             { name: "cali^2", chance: 1/1e12, rarity: 1e12 }
         ];
 
         // FIX: Sort by chance ascending (rarest first) 
         SECRET_RANKS_CHANCES.sort((a, b) => a.chance - b.chance); 
 
-        const TOTAL_RANKS = RANK_TIERS.length + SECRET_RANKS_CHANCES.length; // 24 + 18 = 42
+        const TOTAL_RANKS = RANK_TIERS.length + SECRET_RANKS_CHANCES.length + 1; // MODIFIED: 26 + 23 + 1 (morts luck) = 50
 
         // --- NEW: SHAPES CONSTANTS ---
         const UNLOCK_SHAPES_COST = 5000000;
@@ -945,6 +969,14 @@
                 // MODIFIED: Use the calculated secretLuckMultiplier
                 // This logic is correct: checks from rarest to commonest, returns the rarest success.
                 if (rand < secret.chance * secretLuckMultiplier * chanceMultiplier) {
+                    // NEW LOGIC FOR MORTS LUCK
+                    if (secret.name === 'cali^2') {
+                        if (Math.random() < 1/1e6) {
+                            // 1 in 1 million chance to replace cali^2
+                            return { name: "morts luck", chance: 1/1e18, rarity: 1e18 };
+                        }
+                    }
+                    // END NEW LOGIC
                     return secret;
                 }
             }
@@ -962,8 +994,9 @@
                     };
                 }
             }
+            // MODIFIED: Return the last rank name dynamically
             return { 
-                name: "Improbable", 
+                name: RANK_TIERS[RANK_TIERS.length - 1].name, 
                 value: value, 
                 rankNum: RANK_TIERS.length
             };
@@ -1077,11 +1110,27 @@
                 let rankClass = className;
                 let rollColor = color;
                 let displayName = highestFinalRoll.rank;
+                let displayValue = highestFinalRoll.value; // NEW
+                let suffix = ""; // NEW
+
                 if (displayName === "~Nonavacious~") {
                     rankClass += " secret-nonavacious";
                 }
+                
+                // NEW: Special display for stats
+                if (displayName === "Satanic") {
+                    suffix = ` <span class="secret-satanic-glyph">★</span> (Actual: ${formatNumber(highestFinalRoll.value)})`;
+                    displayValue = -666.66;
+                }
+                if (displayName === "Finale.. wait, how'd this get here?") {
+                    suffix = ` (Actual: ${formatNumber(highestFinalRoll.value)})`;
+                    displayValue = 1e10;
+                }
+                // END NEW
+                
                 document.getElementById('rarest').innerHTML = 
-                    `<span class="${rankClass}" style="color: ${rollColor};">${formatNumber(highestFinalRoll.value)} [${displayName}]</span>`;
+                    // MODIFIED
+                    `<span class="${rankClass}" style="color: ${rollColor};">${formatNumber(displayValue)} [${displayName}]${suffix}</span>`;
             }
 
             // NEW: Update Cutscene Toggle Button 
@@ -1190,11 +1239,24 @@
                         variantText = item.variants.map(v => `<span style="color: ${v.color}; font-weight: bold;">[${v.name}]</span>`).join('') + ' ';
                     }
                     let suffix = "";
+                    let displayValue = item.value; // NEW
                     if (item.rank === "100") suffix = " * 💯";
                     if (item.rank === ":[{(absolute zero)}]:") suffix = " * 0";
+                    
+                    // NEW: Special display for inventory
+                    if (item.rank === "Satanic") {
+                        suffix = ` <span class="secret-satanic-glyph">★</span> (Actual: ${formatNumber(item.value)})`;
+                        displayValue = -666.66;
+                    }
+                    if (item.rank === "Finale.. wait, how'd this get here?") {
+                        suffix = ` (Actual: ${formatNumber(item.value)})`;
+                        displayValue = 1e10;
+                    }
+                    // END NEW
+                    
                     return `<div class="inventory-item" onclick="removeFromInventory(${idx})">
-                        #${item.index}: ${variantText}<span class="${displayClass}" style="color: ${rollColor};">${formatNumber(item.value)} [${item.rank}]${suffix}</span>
-                    </div>`;
+                        #${item.index}: ${variantText}<span class="${displayClass}" style="color: ${rollColor};">${formatNumber(displayValue)} [${item.rank}]${suffix}</span>
+                    </div>`; // MODIFIED: use displayValue
                 }).join('');
             }
         }
@@ -1224,6 +1286,14 @@
                 </div>`;
             });
             
+            // NEW: Manually add morts luck to index
+            const mortsLuckDiscovered = discoveredRanks.has("morts luck");
+            const mortsLuckStyle = `color: #ff0000; font-weight: bold;`; // Make it special
+            html += `<div class="index-item ${mortsLuckDiscovered ? 'discovered' : 'locked'}">
+                ${mortsLuckDiscovered ? `<span style="${mortsLuckStyle}">morts luck</span>` : '???'}
+            </div>`;
+            // END NEW
+            
             indexContent.innerHTML = html;
         }
 
@@ -1232,7 +1302,7 @@
                 addToTerminal('Inventory full! Buy upgrades to increase space.', true);
                 return false;
             }
-            const isSecret = SECRET_RANKS_CHANCES.map(r => r.name).includes(rank);
+            const isSecret = SECRET_RANKS_CHANCES.map(r => r.name).includes(rank) || rank === "morts luck"; // MODIFIED
             inventory.push({ value, rank, index, variants, baseValue: baseValue || value, isSecret });
             updateInventoryDisplay();
             updateStats();
@@ -1249,9 +1319,22 @@
             }
             
             let suffix = "";
+            let displayValue = item.value; // NEW
             if (item.rank === "100") suffix = " * 💯";
             if (item.rank === ":[{(absolute zero)}]:") suffix = " * 0";
-            addToTerminal(`Removed from inventory: #${item.index} ${variantText}${formatNumber(item.value)} [${item.rank}]${suffix}`, true);
+            
+            // NEW: Special display for remove log
+            if (item.rank === "Satanic") {
+                suffix = ` <span class="secret-satanic-glyph">★</span> (Actual: ${formatNumber(item.value)})`;
+                displayValue = -666.66;
+            }
+            if (item.rank === "Finale.. wait, how'd this get here?") {
+                suffix = ` (Actual: ${formatNumber(item.value)})`;
+                displayValue = 1e10;
+            }
+            // END NEW
+            
+            addToTerminal(`Removed from inventory: #${item.index} ${variantText}${formatNumber(displayValue)} [${item.rank}]${suffix}`, true); // MODIFIED
             
             acceptedRolls.delete(item.index);
             
@@ -1378,7 +1461,7 @@
                 
                 // IMPORTANT: getSecretRank is called with no arguments as it relies on Math.random() internally.
                 const secretResult = getSecretRank(); 
-                const displayName = secretResult ? secretResult.name : getRankInfo(baseValue).name;
+                let displayName = secretResult ? secretResult.name : getRankInfo(baseValue).name;
                 const isSecret = !!secretResult;
                 
                 let secretRarityMultiplier = 1;
@@ -1400,7 +1483,7 @@
             }
             
             for (const rollData of rollResults) {
-                const { baseValue, displayValue, variants, displayName, isSecret, secretRarityMultiplier } = rollData;
+                let { baseValue, displayValue, variants, displayName, isSecret, secretRarityMultiplier } = rollData;
                 
                 const rankInfo = getRankInfo(displayValue); 
                 const currencyGain = Math.pow(rankInfo.rankNum, 3);
@@ -1411,8 +1494,25 @@
                 let rollColor = rollColorBase;
 
                 let suffix = "";
+                let finalDisplayValue = displayValue; // NEW: Use a new var for display
+                
                 if (displayName === "100") suffix = ` * 💯`;
                 if (displayName === ":[{(absolute zero)}]:") suffix = ` * 0`;
+                
+                // NEW: Special Display Logic
+                if (displayName === "Satanic") {
+                    suffix = ` <span class="secret-satanic-glyph">★</span> (Actual: ${formatNumber(displayValue)})`;
+                    finalDisplayValue = -666.66;
+                    rankClass = "rank-1000000-100000000"; // Red color
+                    rollColor = "#ff0000";
+                }
+                if (displayName === "Finale.. wait, how'd this get here?") {
+                    suffix = ` (Actual: ${formatNumber(displayValue)})`;
+                    finalDisplayValue = 1e10; 
+                    rankClass = getRankClass(1e10); // Get correct color for 1e10
+                    rollColor = getRankClassAndColor(1e10).color;
+                }
+                // END NEW
                 
                 const secretMultiplierText = isSecret ? ` (x${formatNumber(secretRarityMultiplier)})` : '';
 
@@ -1459,7 +1559,8 @@
                 const baseValueAttr = `data-basevalue='${baseValue}'`;
                 
                 addToTerminal(
-                    `#${currentIndex}: ${variantText}<span class="clickable-roll ${rankClass}" style="color: ${rollColor};" onclick="tryAddToInventory(${displayValue}, '${displayName}', ${currentIndex}, this)" id="roll-${currentIndex}" ${variantDataAttr} ${baseValueAttr}>${formatNumber(displayValue)} [${displayName}]${secretMultiplierText}${suffix}</span> (+${currencyGain.toFixed(2)} currency)`
+                    // MODIFIED: Use finalDisplayValue and pass original displayValue to inventory
+                    `#${currentIndex}: ${variantText}<span class="clickable-roll ${rankClass}" style="color: ${rollColor};" onclick="tryAddToInventory(${displayValue}, '${displayName}', ${currentIndex}, this)" id="roll-${currentIndex}" ${variantDataAttr} ${baseValueAttr}>${formatNumber(finalDisplayValue)} [${displayName}]${secretMultiplierText}${suffix}</span> (+${currencyGain.toFixed(2)} currency)`
                 );
 
                 if (autoRollInterval && (shouldStopOnValue || shouldStopOnSecret || shouldStopOnNew || shouldStopOnTrueRNG)) {
@@ -1513,9 +1614,22 @@
                 const variantText = variants.map(v => `[${v.name}]`).join('') + ' ';
                 
                 let suffix = "";
+                let displayValue = value; // NEW
                 if (rank === "100") suffix = " * 💯";
                 if (rank === ":[{(absolute zero)}]:") suffix = " * 0";
-                addToTerminal(`Added to inventory: #${index} ${variantText}${formatNumber(value)} [${rank}]${suffix}`, true);
+                
+                // NEW: Special display for add log
+                if (rank === "Satanic") {
+                    suffix = ` <span class="secret-satanic-glyph">★</span> (Actual: ${formatNumber(value)})`;
+                    displayValue = -666.66;
+                }
+                if (rank === "Finale.. wait, how'd this get here?") {
+                    suffix = ` (Actual: ${formatNumber(value)})`;
+                    displayValue = 1e10;
+                }
+                // END NEW
+                
+                addToTerminal(`Added to inventory: #${index} ${variantText}${formatNumber(displayValue)} [${rank}]${suffix}`, true); // MODIFIED
                 
                 const rollElement = document.getElementById(`roll-${index}`);
                 if (rollElement) {
@@ -1634,10 +1748,23 @@
                 let rankClass = className;
                 let rollColor = color;
                 const displayName = highestFinalRoll.rank;
+                let displayValue = highestFinalRoll.value; // NEW
+                let suffix = ""; // NEW
 
                 if (displayName === "~Nonavacious~") {
                     rankClass += " secret-nonavacious";
                 }
+                
+                // NEW: Special display for rarest
+                if (displayName === "Satanic") {
+                    suffix = ` <span class="secret-satanic-glyph">★</span> (Actual: ${formatNumber(highestFinalRoll.value)})`;
+                    displayValue = -666.66;
+                }
+                if (displayName === "Finale.. wait, how'd this get here?") {
+                    suffix = ` (Actual: ${formatNumber(highestFinalRoll.value)})`;
+                    displayValue = 1e10;
+                }
+                // END NEW
 
                 let variantText = '';
                 if (highestFinalRoll.variants && highestFinalRoll.variants.length > 0) {
@@ -1645,7 +1772,8 @@
                 }
                 
                 addToTerminal(
-                    `Rarest roll: ${variantText}<span class="${rankClass}" style="color: ${rollColor};">${formatNumber(highestFinalRoll.value)} [${displayName}]</span>`,
+                    // MODIFIED
+                    `Rarest roll: ${variantText}<span class="${rankClass}" style="color: ${rollColor};">${formatNumber(displayValue)} [${displayName}]${suffix}</span>`,
                     true
                 );
             }
@@ -2137,7 +2265,7 @@
                         highestFinalRoll = gameState.highestFinalRoll;
                         // Ensure isSecret property exists for old saves
                         if (typeof highestFinalRoll.isSecret === 'undefined') {
-                             highestFinalRoll.isSecret = SECRET_RANKS_CHANCES.map(r => r.name).includes(highestFinalRoll.rank);
+                             highestFinalRoll.isSecret = SECRET_RANKS_CHANCES.map(r => r.name).includes(highestFinalRoll.rank) || highestFinalRoll.rank === "morts luck"; // MODIFIED
                         }
                     } else {
                         const baseRoll = gameState.highestRoll || 0;
@@ -2165,7 +2293,7 @@
                         }
                         // Ensure isSecret property exists for older saves
                          if (typeof item.isSecret === 'undefined') {
-                            item.isSecret = SECRET_RANKS_CHANCES.map(r => r.name).includes(item.rank);
+                            item.isSecret = SECRET_RANKS_CHANCES.map(r => r.name).includes(item.rank) || item.rank === "morts luck"; // MODIFIED
                         }
                         return item;
                     });
