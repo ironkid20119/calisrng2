@@ -356,15 +356,58 @@
         }
         /* --- END NEW STYLES --- */
         
-        /* --- NEW: SATANIC SECRET STYLE --- */
-        .secret-satanic-glyph {
-            color: #ff0000;
-            font-size: 24px; /* A large star, not 500px as that would break layout */
-            text-shadow: 0 0 10px #ff0000;
-            display: inline-block;
-            transform: scale(1.5);
+        /* --- NEW: SATANIC SECRET STYLE (MODIFIED) --- */
+        .satanic-wrapper {
+            position: relative;
+            display: inline-block; 
+            z-index: 0; /* Create stacking context */
+        }
+        
+        .satanic-wrapper::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 2.5em; /* Scaled with text */
+            height: 2.5em; /* Scaled with text */
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><polygon points="50,5 61,40 98,40 68,62 79,96 50,75 21,96 32,62 2,40 39,40" style="fill:red;"/></svg>');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            
+            /* Center and set behind text */
+            transform: translate(-50%, -50%); 
+            z-index: -1; 
+            opacity: 0.75; /* Make it a bit subtle */
+            
+            /* 6.66 RPM = 9.009 seconds per rotation */
+            animation: rotate-pentagram 9.009s linear infinite;
+        }
+        
+        @keyframes rotate-pentagram {
+            from { transform: translate(-50%, -50%) rotate(0deg); }
+            to { transform: translate(-50%, -50%) rotate(360deg); }
         }
         /* --- END NEW STYLE --- */
+
+        /* --- NEW: CORRUPTED SECRET STYLE --- */
+        .secret-corrupted {
+            display: inline-block; /* Needed for transform */
+            animation: corrupted-shake 30ms linear infinite;
+            filter: invert(100%);
+        }
+        
+        @keyframes corrupted-shake {
+            0%    { transform: rotate(0deg); }
+            16.67% { transform: rotate(22.5deg); }
+            33.33% { transform: rotate(45deg); }
+            50%    { transform: rotate(0deg); }
+            66.67% { transform: rotate(-22.5deg); }
+            83.33% { transform: rotate(-45deg); }
+            100%   { transform: rotate(0deg); }
+        }
+        /* --- END NEW STYLE --- */
+
 
         @media (max-width: 1200px) {
             .main-container {
@@ -398,24 +441,27 @@
         <div class="stat-item">Ranks Discovered: <span id="ranksDiscovered">0</span>/<span id="totalRanks">42</span></div>
     </div>
 
-    <div class="autoroll-settings">
-        <div class="section-header">Auto Roll Settings</div>
+    <div class="autoroll-settings" style="padding-bottom: 5px;">
+        <div class="section-header">Auto Accept Settings</div>
         <div class="autoroll-setting-item">
-            <label>Stop on value ≥:</label>
+            <label>Accept on value ≥:</label>
             <input type="number" id="autoStopThreshold" value="0" step="0.000001" placeholder="Enter minimum value">
         </div>
         <div class="autoroll-setting-item">
-            <label>Stop on base rank ≥:</label>
+            <label>Accept on base rank ≥:</label>
             <input type="number" id="autoStopTrueRNG" value="0" step="0.000001" placeholder="Enter minimum base value">
         </div>
         <div class="autoroll-setting-item">
-            <label>Stop on secret rarity ≥:</label>
+            <label>Accept on secret rarity ≥:</label>
             <input type="number" id="autoStopSecretThreshold" value="0" step="0.000001" placeholder="Enter minimum rarity">
         </div>
         <div class="autoroll-setting-item">
             <input type="checkbox" id="autoStopNewRank">
-            <label for="autoStopNewRank">Stop on new rank discovery</label>
+            <label for="autoStopNewRank">Accept on new rank discovery</label>
         </div>
+        
+        <div class="section-header" style="margin-top: 15px;">Import / Export Save</div>
+        <textarea id="saveDataTextarea" style="width: 95%; height: 60px; background-color: #4a148c; color: #ffffff; border: 1px solid #ff69b4; font-family: 'Courier New', monospace; margin-bottom: 15px; padding: 5px;" placeholder="Paste save data here and click 'Import Save'"></textarea>
     </div>
 
     <div class="controls">
@@ -426,7 +472,7 @@
         <button onclick="showRarest()">Show Rarest</button>
         <button onclick="clearTerminal()">Clear Terminal</button>
         <button onclick="saveGame()">Save Game</button>
-        <button id="cutsceneToggleBtn" onclick="toggleCutscenes()">Cutscenes: ON</button>
+        <button onclick="exportSave()">Export Save</button> <button onclick="importSave()">Import Save</button> <button id="cutsceneToggleBtn" onclick="toggleCutscenes()">Cutscenes: ON</button>
     </div>
 
     
@@ -505,7 +551,8 @@
         const UPGRADE_COST_MULTIPLIER = 1.15;
         // MODIFIED: Luck scaling changed from 1.777 to 2.5
         const LUCK_PER_UPGRADE = 2.5;
-        const INVENTORY_PER_UPGRADE = 5;
+        // MODIFIED: Inventory space per upgrade
+        const INVENTORY_PER_UPGRADE = 10;
         const VARIANT_CHANCE_PER_UPGRADE = 0.05;
         const MAX_VARIANT_CHANCE_MULTIPLIER = 12.5;
         const SECRET_LUCK_PER_UPGRADE = 0.25;
@@ -569,6 +616,24 @@
                 description: "makes cali^2 easier by x777,777.777",
                 targets: ["cali^2"],
                 multiplier: 777777.777
+            },
+            // NEW: Hellish event
+            { 
+                name: "Hellish", 
+                chance: 1/66.66, 
+                duration: 25000, // 25 seconds
+                description: "makes ⛧Satanic⛧, Seize and Insanity x6.66 easier",
+                targets: ["⛧Satanic⛧", "Seize", "Insanity"],
+                multiplier: 6.66 
+            },
+            // NEW: Hidden event
+            { 
+                name: "Hidden", 
+                chance: 1/1000, 
+                duration: 5000, // 5 seconds
+                description: "makes EVERY secret X7.77 easier",
+                targets: ["ALL_SECRETS"], // Special flag
+                multiplier: 7.77
             }
         ];
 
@@ -619,7 +684,9 @@
             { min: 2.5e8, max: 5e8, name: "Terafined" },
             { min: 5e8, max: 1e9, name: "Eclipse" },
             // NEW RANKS END
-            { min: 1e9, max: 1e10, name: "Infinitude" },
+            { min: 1e9, max: 5e9, name: "Infinitude" }, // MODIFIED: max
+            // NEW: Overseer
+            { min: 5e9, max: 1e10, name: "Overseer" },
             { min: 1e10, max: 1e11, name: "Unseeable" }, 
             { min: 1e11, max: 1e12, name: "Impassive" }, 
             { min: 1e12, max: 1e15, name: "Unrollable" },
@@ -656,8 +723,16 @@
             { name: "Pseudopseudohypoparathyroidism", chance: 1/5e6, rarity: 5e6 },
             // --- NEW: !! EUPHORIA !! ---
             { name: "!! EUPHORIA !!", chance: 1/56789000, rarity: 56789000 },
+            // NEW: CORRUPTED
+            { 
+                name: "CORRUPTED", 
+                chance: 1/648236826.394, 
+                rarity: 648236826.394, 
+                eventOnly: "Hellish" // Special flag
+            },
             { name: "Chargoggagoggmanchauggauggagoggchaubunagungamaugg", chance: 1/77777777.77, rarity: 77777777.77 },
-            { name: "Satanic", chance: 1/1e9, rarity: 1e9 },
+            // MODIFIED: Name
+            { name: "⛧Satanic⛧", chance: 1/1e9, rarity: 1e9 },
             { name: "cali^2", chance: 1/1e12, rarity: 1e12 }
         ];
 
@@ -666,7 +741,8 @@
 
         // --- NEW ---
         const EUPHORIA_SYMBOLS = ['%', '@', '#', '^', '$', '*', '&', '>', '<', '?'];
-        const TOTAL_RANKS = RANK_TIERS.length + SECRET_RANKS_CHANCES.length + 1; // 26 + 25 + 1 (morts luck) = 52
+        // MODIFIED: Total ranks count
+        const TOTAL_RANKS = RANK_TIERS.length + SECRET_RANKS_CHANCES.length + 1; // 27 + 26 + 1 (morts luck) = 54
 
         // --- NEW: SHAPES CONSTANTS ---
         const UNLOCK_SHAPES_COST = 5000000;
@@ -694,7 +770,8 @@
         // --- END NEW CONSTANTS ---
 
         // --- NEW: CLICKER CONSTANTS ---
-        const UNLOCK_CLICKER_COST = 1000000;
+        // MODIFIED: Cost nerf
+        const UNLOCK_CLICKER_COST = 333333.33;
         const MAX_CLICKER_LUCK_LEVEL = 4;
         // --- END NEW CONSTANTS ---
 
@@ -718,11 +795,11 @@
         let acceptedRolls = new Set();
         let discoveredRanks = new Set();
         let autoStopThreshold = 0;
-        // NEW: Autoroll settings
+        // MODIFIED: Renamed for "Auto-Accept"
         let autoStopSecretThresholdValue = 0;
         let autoStopOnNewRank = false;
         let autoStopTrueRNGValue = 0;
-        // END NEW
+        // END MODIFIED
         let bulkRollLevel = 0;
         let bulkRollCost = 500000;
         let isCutscenePlaying = false; 
@@ -872,6 +949,11 @@
 
         // --- CORE FUNCTIONS ---
 
+        // NEW: Formatter for integers
+        function formatInteger(num) {
+            return num.toLocaleString('en-US');
+        }
+
         function formatNumber(num) {
             return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         }
@@ -968,13 +1050,28 @@
             return { value: baseRoll, variant: null };
         }
         
-        // --- MODIFIED: To handle time-based 'breaktime' rank ---
+        // --- MODIFIED: To handle time-based 'breaktime', 'eventOnly', and 'ALL_SECRETS' event ---
         function getSecretRank() {
             const rand = Math.random();
+            
+            // --- NEW: Check for "Hidden" event ---
+            let hiddenEventMultiplier = 1;
+            if (currentEvent && currentEvent.targets.includes("ALL_SECRETS")) {
+                hiddenEventMultiplier = currentEvent.multiplier;
+            }
+            // --- END NEW ---
             
             for (const secret of SECRET_RANKS_CHANCES) {
                 let chanceMultiplier = 1;
                 let adjustedChance = secret.chance; // Use this for modifications
+
+                // --- NEW: Event-Only Check ---
+                if (secret.eventOnly) {
+                    if (!currentEvent || currentEvent.name !== secret.eventOnly) {
+                        continue; // Skip this secret if event is not active
+                    }
+                }
+                // --- END NEW ---
 
                 // --- NEW: Time-based logic for 'breaktime' ---
                 if (secret.timeBased && secret.name === "breaktime") {
@@ -996,8 +1093,8 @@
                     chanceMultiplier = currentEvent.multiplier;
                 }
                 
-                // MODIFIED: Use the calculated secretLuckMultiplier and adjustedChance
-                if (rand < adjustedChance * secretLuckMultiplier * chanceMultiplier) {
+                // MODIFIED: Use the calculated secretLuckMultiplier, adjustedChance, and hiddenEventMultiplier
+                if (rand < adjustedChance * secretLuckMultiplier * chanceMultiplier * hiddenEventMultiplier) {
                     // NEW LOGIC FOR MORTS LUCK
                     if (secret.name === 'cali^2') {
                         if (Math.random() < 1/1e6) {
@@ -1134,7 +1231,7 @@
             eventStat.innerHTML = `Active Event: <span style="color: ${currentEvent ? '#00FFFF' : '#ffffff'};">${eventName}</span> (${timeLeftFormatted}s)`;
             
             // Rarest Roll
-            if (highestFinalRoll.value > 0) {
+            if (highestFinalRoll.value > 0 || highestFinalRoll.rank === "CORRUPTED") { // MODIFIED: Allow corrupted
                 const { className, color } = getRankClassAndColor(highestFinalRoll.value, highestFinalRoll.variants);
                 let rankClass = className;
                 let rollColor = color;
@@ -1146,9 +1243,16 @@
                     rankClass += " secret-nonavacious";
                 }
                 
+                // --- NEW: Apply CORRUPTED class ---
+                if (displayName === "CORRUPTED") {
+                    rankClass += " secret-corrupted";
+                    rollColor = "#FFFFFF";
+                }
+                // --- END NEW ---
+                
                 // NEW: Special display for stats
-                if (displayName === "Satanic") {
-                    suffix = ` <span class="secret-satanic-glyph">★</span> (Actual: ${formatNumber(highestFinalRoll.value)})`;
+                if (displayName === "⛧Satanic⛧") {
+                    suffix = ` (Actual: ${formatNumber(highestFinalRoll.value)})`;
                     displayValue = -666.66;
                 }
                 if (displayName === "Finale.. wait, how'd this get here?") {
@@ -1158,8 +1262,8 @@
                 // END NEW
                 
                 document.getElementById('rarest').innerHTML = 
-                    // MODIFIED
-                    `<span class="${rankClass}" style="color: ${rollColor};">${formatNumber(displayValue)} [${displayName}]${suffix}</span>`;
+                    // MODIFIED: Added satanic wrapper
+                    `<span class="satanic-wrapper"><span class="${rankClass}" style="color: ${rollColor};">${formatNumber(displayValue)} [${displayName}]${suffix}</span></span>`;
             }
 
             // NEW: Update Cutscene Toggle Button 
@@ -1214,6 +1318,7 @@
                         clickerUnlockBtn.textContent = "Clicker Unlocked";
                     } else {
                         clickerUnlockBtn.disabled = geometrix < UNLOCK_CLICKER_COST;
+                        // MODIFIED: Use formatGeometrix
                         clickerUnlockBtn.textContent = `Unlock Clicker - Cost: ${formatGeometrix(UNLOCK_CLICKER_COST)} GMX`;
                     }
                 }
@@ -1252,14 +1357,11 @@
             // --- END CLICKER UPDATES ---
         }
 
-        // --- MODIFIED: To handle EUPHORIA animation ---
+        // --- MODIFIED: To handle EUPHORIA animation persistence and new ranks ---
         function updateInventoryDisplay() {
-            // --- NEW: Clear all active animations ---
-            for (const id in activeEuphoriaIntervals) {
-                clearInterval(activeEuphoriaIntervals[id]);
-            }
-            activeEuphoriaIntervals = {};
-            // --- END NEW ---
+            // --- MODIFIED: Remove interval clearing ---
+            // (The self-cleanup in initEuphoriaAnimation will handle this)
+            // --- END MODIFIED ---
 
             const inventoryContent = document.getElementById('inventoryContent');
             if (inventory.length === 0) {
@@ -1271,6 +1373,12 @@
                     if (item.rank === "~Nonavacious~") {
                         displayClass += " secret-nonavacious";
                     }
+                    // --- NEW: Apply CORRUPTED class ---
+                    if (item.rank === "CORRUPTED") {
+                        displayClass += " secret-corrupted";
+                    }
+                    // --- END NEW ---
+                    
                     let variantText = '';
                     if (item.variants && item.variants.length > 0) {
                         variantText = item.variants.map(v => `<span style="color: ${v.color}; font-weight: bold;">[${v.name}]</span>`).join('') + ' ';
@@ -1281,8 +1389,8 @@
                     if (item.rank === ":[{(absolute zero)}]:") suffix = " * 0";
                     
                     // NEW: Special display for inventory
-                    if (item.rank === "Satanic") {
-                        suffix = ` <span class="secret-satanic-glyph">★</span> (Actual: ${formatNumber(item.value)})`;
+                    if (item.rank === "⛧Satanic⛧") {
+                        suffix = ` (Actual: ${formatNumber(item.value)})`;
                         displayValue = -666.66;
                     }
                     if (item.rank === "Finale.. wait, how'd this get here?") {
@@ -1292,19 +1400,27 @@
                     // END NEW
                     
                     // --- FIX: Added id="inv-item-${idx}" for animation targeting ---
+                    // MODIFIED: Added satanic wrapper and formatInteger
+                    let content = `<span class="${displayClass}" style="color: ${rollColor};">${formatNumber(displayValue)} [${item.rank}]${suffix}</span>`;
+                    // Wrap if satanic
+                    if (item.rank === "⛧Satanic⛧") {
+                        content = `<span class="satanic-wrapper">${content}</span>`;
+                    }
+                    
                     return `<div class="inventory-item" onclick="removeFromInventory(${idx})" id="inv-item-${idx}">
-                        #${item.index}: ${variantText}<span class="${displayClass}" style="color: ${rollColor};">${formatNumber(displayValue)} [${item.rank}]${suffix}</span>
-                    </div>`; // MODIFIED: use displayValue
+                        #${formatInteger(item.index)}: ${variantText}${content}
+                    </div>`; 
                 }).join('');
             }
             
-            // --- NEW: Restart animations for inventory items ---
+            // --- MODIFIED: Start animations for inventory items that don't have one ---
             inventory.forEach((item, idx) => {
-                if (item.rank === "!! EUPHORIA !!") {
-                    initEuphoriaAnimation(`inv-item-${idx}`, "!! EUPHORIA !!");
+                const elementId = `inv-item-${idx}`;
+                if (item.rank === "!! EUPHORIA !!" && !activeEuphoriaIntervals[elementId]) {
+                    initEuphoriaAnimation(elementId, "!! EUPHORIA !!");
                 }
             });
-            // --- END NEW ---
+            // --- END MODIFIED ---
         }
 
         // --- MODIFIED: To add new secret ranks to index ---
@@ -1330,7 +1446,14 @@
                 if (rankInfo.timeBased) return;
                 
                 const discovered = discoveredRanks.has(rankName);
-                const rankStyle = `color: #ff69b4;`;
+                let rankStyle = `color: #ff69b4;`;
+                
+                // --- NEW: Style for CORRUPTED ---
+                if (rankName === "CORRUPTED") {
+                    rankStyle = `color: #ffffff; filter: invert(100%); display: inline-block;`;
+                }
+                // --- END NEW ---
+                
                 html += `<div class="index-item ${discovered ? 'discovered' : 'locked'}">
                     ${discovered ? `<span style="${rankStyle}">${rankName}</span>` : '???'}
                 </div>`;
@@ -1380,8 +1503,8 @@
             if (item.rank === ":[{(absolute zero)}]:") suffix = " * 0";
             
             // NEW: Special display for remove log
-            if (item.rank === "Satanic") {
-                suffix = ` <span class="secret-satanic-glyph">★</span> (Actual: ${formatNumber(item.value)})`;
+            if (item.rank === "⛧Satanic⛧") {
+                suffix = ` (Actual: ${formatNumber(item.value)})`;
                 displayValue = -666.66;
             }
             if (item.rank === "Finale.. wait, how'd this get here?") {
@@ -1390,7 +1513,8 @@
             }
             // END NEW
             
-            addToTerminal(`Removed from inventory: #${item.index} ${variantText}${formatNumber(displayValue)} [${item.rank}]${suffix}`, true); // MODIFIED
+            // MODIFIED: Use formatInteger
+            addToTerminal(`Removed from inventory: #${formatInteger(item.index)} ${variantText}${formatNumber(displayValue)} [${item.rank}]${suffix}`, true); 
             
             acceptedRolls.delete(item.index);
             
@@ -1506,7 +1630,7 @@
             });
         }
 
-        // --- MODIFIED: To handle new ranks and start EUPHORIA animation ---
+        // --- MODIFIED: To handle new ranks, CORRUPTED, and Auto-Accept ---
         async function roll() {
             if (isCutscenePlaying) {
                 addToTerminal('Wait for the cutscene to finish!', true);
@@ -1542,6 +1666,12 @@
                     }
                 }
                 
+                // --- NEW: CORRUPTED Logic ---
+                if (displayName === "CORRUPTED") {
+                    displayValue *= -1;
+                }
+                // --- END NEW ---
+                
                 rollResults.push({ baseValue, displayValue, variants, displayName, isSecret, secretRarityMultiplier });
                 
                 if (displayValue > maxRollValueInBulk) {
@@ -1565,6 +1695,13 @@
                 let rankClass = rankClassBase;
                 let rollColor = rollColorBase;
 
+                // --- NEW: Apply CORRUPTED class ---
+                if (displayName === "CORRUPTED") {
+                    rankClass += " secret-corrupted";
+                    rollColor = "#FFFFFF"; 
+                }
+                // --- END NEW ---
+
                 let suffix = "";
                 let finalDisplayValue = displayValue; // NEW: Use a new var for display
                 
@@ -1572,8 +1709,8 @@
                 if (displayName === ":[{(absolute zero)}]:") suffix = ` * 0`;
                 
                 // NEW: Special Display Logic
-                if (displayName === "Satanic") {
-                    suffix = ` <span class="secret-satanic-glyph">★</span> (Actual: ${formatNumber(displayValue)})`;
+                if (displayName === "⛧Satanic⛧") {
+                    suffix = ` (Actual: ${formatNumber(displayValue)})`;
                     finalDisplayValue = -666.66;
                     rankClass = "rank-1000000-100000000"; // Red color
                     rollColor = "#ff0000";
@@ -1609,7 +1746,10 @@
                     highestBaseRoll = baseValue;
                 }
 
-                if (displayValue > highestFinalRoll.value) {
+                if ((displayName !== "CORRUPTED" && displayValue > highestFinalRoll.value) || 
+                    (displayName === "CORRUPTED" && (highestFinalRoll.rank !== "CORRUPTED" || displayValue < highestFinalRoll.value))) {
+                    // ^ Special logic: CORRUPTED is "rarer" the more negative it is.
+                    // This also handles the case where the current rarest is positive.
                     highestFinalRoll = {
                         value: displayValue,
                         baseValue: baseValue,
@@ -1619,10 +1759,13 @@
                     };
                 }
                 
-                const shouldStopOnValue = autoStopThreshold > 0 && displayValue >= autoStopThreshold;
-                const shouldStopOnSecret = autoStopSecretThresholdValue > 0 && isSecret && secretRarityMultiplier >= autoStopSecretThresholdValue;
-                const shouldStopOnNew = autoStopOnNewRank && newRankDiscovered;
-                const shouldStopOnTrueRNG = autoStopTrueRNGValue > 0 && baseValue >= autoStopTrueRNGValue;
+                // MODIFIED: Auto-Accept logic
+                const shouldAcceptOnValue = autoStopThreshold > 0 && displayValue >= autoStopThreshold;
+                const shouldAcceptOnSecret = autoStopSecretThresholdValue > 0 && isSecret && secretRarityMultiplier >= autoStopSecretThresholdValue;
+                const shouldAcceptOnNew = autoStopOnNewRank && newRankDiscovered;
+                const shouldAcceptOnTrueRNG = autoStopTrueRNGValue > 0 && baseValue >= autoStopTrueRNGValue;
+                // --- Special case for CORRUPTED (always accept if threshold is > 0)
+                const shouldAcceptCorrupted = displayName === "CORRUPTED" && (autoStopSecretThresholdValue > 0 || autoStopThreshold > 0);
 
                 
                 const variantText = variants.map(v => `<span style="color: ${v.color}; font-weight: bold;">[${v.name}]</span>`).join('') + ' ';
@@ -1630,9 +1773,18 @@
                 const variantDataAttr = variants.length > 0 ? `data-variants='${JSON.stringify(variants)}'` : '';
                 const baseValueAttr = `data-basevalue='${baseValue}'`;
                 
+                
+                let content = `<span class="clickable-roll ${rankClass}" style="color: ${rollColor};" onclick="tryAddToInventory(${displayValue}, '${escapeHTML(displayName)}', ${currentIndex}, this)" id="roll-${currentIndex}" ${variantDataAttr} ${baseValueAttr}>${formatNumber(finalDisplayValue)} [${displayName}]${secretMultiplierText}${suffix}</span>`;
+                
+                // MODIFIED: Wrap if satanic
+                if (displayName === "⛧Satanic⛧") {
+                    content = `<span class="satanic-wrapper">${content}</span>`;
+                }
+
                 // --- FIX: Use escapeHTML() on displayName for the onclick attribute ---
+                // MODIFIED: Use formatInteger and content var
                 addToTerminal(
-                    `#${currentIndex}: ${variantText}<span class="clickable-roll ${rankClass}" style="color: ${rollColor};" onclick="tryAddToInventory(${displayValue}, '${escapeHTML(displayName)}', ${currentIndex}, this)" id="roll-${currentIndex}" ${variantDataAttr} ${baseValueAttr}>${formatNumber(finalDisplayValue)} [${displayName}]${secretMultiplierText}${suffix}</span> (+${currencyGain.toFixed(2)} currency)`
+                    `#${formatInteger(currentIndex)}: ${variantText}${content} (+${currencyGain.toFixed(2)} currency)`
                 );
 
                 // --- NEW: Start EUPHORIA animation if rolled ---
@@ -1641,23 +1793,45 @@
                 }
                 // --- END NEW ---
 
-                if (autoRollInterval && (shouldStopOnValue || shouldStopOnSecret || shouldStopOnNew || shouldStopOnTrueRNG)) {
-                    const btn = document.getElementById('autoRollBtn');
-                    clearInterval(autoRollInterval);
-                    autoRollInterval = null;
-                    btn.textContent = 'Auto Roll';
-                    btn.classList.remove('active');
+                // --- NEW: Auto-Accept Logic (replaces auto-stop) ---
+                if (autoRollInterval && (shouldAcceptOnValue || shouldAcceptOnSecret || shouldAcceptOnNew || shouldAcceptOnTrueRNG || shouldAcceptCorrupted)) {
                     
-                    let reason = "threshold";
-                    if (shouldStopOnSecret) reason = `secret rank [${displayName}] (rarity ${secretRarityMultiplier} \geq ${autoStopSecretThresholdValue})`;
-                    else if (shouldStopOnNew) reason = `new rank discovered [${displayName}]`;
-                    else if (shouldStopOnTrueRNG) reason = `base rank (${formatNumber(baseValue)} \geq ${autoStopTrueRNGValue})`;
-                    else if (shouldStopOnValue) reason = `value threshold (${formatNumber(displayValue)} \geq ${autoStopThreshold})`;
+                    const rollElement = document.getElementById(`roll-${currentIndex}`);
                     
-                    addToTerminal(`Auto-roll stopped: ${reason} detected!`, true);
-                    
-                    break; 
+                    if (!acceptedRolls.has(currentIndex)) {
+                        if (addToInventory(displayValue, displayName, currentIndex, variants, baseValue)) {
+                            acceptedRolls.add(currentIndex);
+                            
+                            if (activeEuphoriaIntervals[currentIndex]) {
+                                clearInterval(activeEuphoriaIntervals[currentIndex]);
+                                delete activeEuphoriaIntervals[currentIndex];
+                            }
+                            
+                            // Log it
+                            let acceptSuffix = "";
+                            if (displayName === "⛧Satanic⛧") acceptSuffix = ` (Actual: ${formatNumber(displayValue)})`;
+                            if (displayName === "Finale.. wait, how'd this get here?") acceptSuffix = ` (Actual: ${formatNumber(displayValue)})`;
+                            
+                            addToTerminal(`Auto-Accepted: #${formatInteger(currentIndex)} ${variantText}${formatNumber(finalDisplayValue)} [${displayName}]${acceptSuffix}`, true, 'rank-1000-10000');
+                            
+                            // Update the element in the terminal
+                            if (rollElement) {
+                                rollElement.style.opacity = '0.5';
+                                rollElement.style.cursor = 'not-allowed';
+                                rollElement.onclick = null;
+                            }
+                            
+                            saveGame();
+                        } else {
+                            // Inventory was full, so we must stop
+                            toggleAutoRoll(); // This will stop it and log "Auto-rolling stopped."
+                            addToTerminal(`Auto-roll stopped: Inventory is full!`, true, 'rank-1000000-100000000');
+                            break; // Stop the loop
+                        }
+                    }
+                    // Do NOT break; continue rolling (unless inventory was full).
                 }
+                // --- END NEW ---
             }
             
             updateStats();
@@ -1667,7 +1841,8 @@
         // --- MODIFIED: To stop EUPHORIA animation on accept ---
         function tryAddToInventory(value, rank, index, element) {
             if (acceptedRolls.has(index)) {
-                addToTerminal(`Roll #${index} has already been accepted!`, true);
+                // MODIFIED: Use formatInteger
+                addToTerminal(`Roll #${formatInteger(index)} has already been accepted!`, true);
                 return;
             }
             
@@ -1705,8 +1880,8 @@
                 if (rank === ":[{(absolute zero)}]:") suffix = " * 0";
                 
                 // NEW: Special display for add log
-                if (rank === "Satanic") {
-                    suffix = ` <span class="secret-satanic-glyph">★</span> (Actual: ${formatNumber(value)})`;
+                if (rank === "⛧Satanic⛧") {
+                    suffix = ` (Actual: ${formatNumber(value)})`;
                     displayValue = -666.66;
                 }
                 if (rank === "Finale.. wait, how'd this get here?") {
@@ -1715,7 +1890,8 @@
                 }
                 // END NEW
                 
-                addToTerminal(`Added to inventory: #${index} ${variantText}${formatNumber(displayValue)} [${rank}]${suffix}`, true); // MODIFIED
+                // MODIFIED: use formatInteger
+                addToTerminal(`Added to inventory: #${formatInteger(index)} ${variantText}${formatNumber(displayValue)} [${rank}]${suffix}`, true); 
                 
                 const rollElement = document.getElementById(`roll-${index}`);
                 if (rollElement) {
@@ -1728,6 +1904,7 @@
             }
         }
 
+        // MODIFIED: For Auto-Accept
         function toggleAutoRoll() {
             if (isCutscenePlaying) {
                 addToTerminal('Cannot toggle auto-roll during a cutscene!', true);
@@ -1751,18 +1928,19 @@
                 btn.textContent = 'Stop Auto Roll';
                 btn.classList.add('active');
                 
+                // MODIFIED: Log message for auto-accept
                 let message = 'Auto-rolling started...';
                 if (autoStopThreshold > 0) {
-                    message += ` (stop at value \geq ${autoStopThreshold})`;
+                    message += ` (accept at value \geq ${autoStopThreshold})`;
                 }
                 if (autoStopTrueRNGValue > 0) {
-                    message += ` (stop at base rank \geq ${autoStopTrueRNGValue})`;
+                    message += ` (accept at base rank \geq ${autoStopTrueRNGValue})`;
                 }
                 if (autoStopSecretThresholdValue > 0) {
-                    message += ` (stop at secret rarity \geq ${autoStopSecretThresholdValue})`;
+                    message += ` (accept at secret rarity \geq ${autoStopSecretThresholdValue})`;
                 }
                 if (autoStopOnNewRank) {
-                    message += ` (stop on new rank)`;
+                    message += ` (accept on new rank)`;
                 }
                 addToTerminal(message, true);
             }
@@ -1772,6 +1950,7 @@
             if (currency >= upgradeCost) {
                 currency -= upgradeCost;
                 totalUpgrades++;
+                // MODIFIED: Uses new constant
                 maxInventory += INVENTORY_PER_UPGRADE;
                 
                 updateCalculatedStats();
@@ -1826,8 +2005,9 @@
             }
         }
 
+        // MODIFIED: To handle new ranks
         function showRarest() {
-            if (highestFinalRoll.value === 0) {
+            if (highestFinalRoll.value === 0 && highestFinalRoll.rank !== "CORRUPTED") {
                 addToTerminal('No rolls yet!', true);
             } else {
                 const { className, color } = getRankClassAndColor(highestFinalRoll.value, highestFinalRoll.variants);
@@ -1841,9 +2021,16 @@
                     rankClass += " secret-nonavacious";
                 }
                 
+                // --- NEW: Apply CORRUPTED class ---
+                if (displayName === "CORRUPTED") {
+                    rankClass += " secret-corrupted";
+                    rollColor = "#FFFFFF";
+                }
+                // --- END NEW ---
+                
                 // NEW: Special display for rarest
-                if (displayName === "Satanic") {
-                    suffix = ` <span class="secret-satanic-glyph">★</span> (Actual: ${formatNumber(highestFinalRoll.value)})`;
+                if (displayName === "⛧Satanic⛧") {
+                    suffix = ` (Actual: ${formatNumber(highestFinalRoll.value)})`;
                     displayValue = -666.66;
                 }
                 if (displayName === "Finale.. wait, how'd this get here?") {
@@ -1857,9 +2044,9 @@
                     variantText = highestFinalRoll.variants.map(v => `[${v.name}]`).join('') + ' ';
                 }
                 
+                // MODIFIED: Added satanic wrapper
                 addToTerminal(
-                    // MODIFIED
-                    `Rarest roll: ${variantText}<span class="${rankClass}" style="color: ${rollColor};">${formatNumber(displayValue)} [${displayName}]${suffix}</span>`,
+                    `Rarest roll: ${variantText}<span class="satanic-wrapper"><span class="${rankClass}" style="color: ${rollColor};">${formatNumber(displayValue)} [${displayName}]${suffix}</span></span>`,
                     true
                 );
             }
@@ -1873,6 +2060,64 @@
                 terminal.appendChild(welcomeMsg);
             }
         }
+
+        // --- NEW: Import/Export Functions ---
+        
+        function exportSave() {
+            try {
+                saveGame(); // Ensure current state is saved to localStorage first
+                const saveData = localStorage.getItem('calisRNGGame');
+                const encodedData = btoa(saveData); // Base64 encode it
+                document.getElementById('saveDataTextarea').value = encodedData;
+                addToTerminal('Save data exported to text box. Copy it to save it.', true);
+            } catch (e) {
+                console.error('Error exporting save:', e);
+                addToTerminal('Error exporting save data. Check console.', true, 'rank-1000000-100000000');
+            }
+        }
+        
+        function importSave() {
+            if (!confirm("Are you sure you want to import this save? This will OVERWRITE your current progress and reload the page.")) {
+                return;
+            }
+            
+            try {
+                const encodedData = document.getElementById('saveDataTextarea').value;
+                if (!encodedData) {
+                    addToTerminal('Paste save data into the text box first!', true);
+                    return;
+                }
+                const decodedData = atob(encodedData); // Base64 decode
+                
+                // Test if it's valid JSON
+                JSON.parse(decodedData); 
+                
+                // If it is, save it and reload
+                localStorage.setItem('calisRNGGame', decodedData);
+                
+                // Stop all intervals before reloading
+                if (autoRollInterval) clearInterval(autoRollInterval);
+                if (eventInterval) clearInterval(eventInterval);
+                if (shapeInterval) clearInterval(shapeInterval);
+                if (currentEvent && currentEvent.timeoutId) clearTimeout(currentEvent.timeoutId);
+                for (const id in activeEuphoriaIntervals) {
+                    clearInterval(activeEuphoriaIntervals[id]);
+                }
+                
+                addToTerminal('Import successful! Reloading game...', true, 'rank-1000000000-10000000000');
+                
+                // Wait 1 second then reload the page
+                setTimeout(() => {
+                    location.reload();
+                }, 1000);
+                
+            } catch (e) {
+                console.error('Error importing save:', e);
+                addToTerminal('Error importing save data. Data might be corrupt or invalid. Check console.', true, 'rank-1000000-100000000');
+            }
+        }
+        
+        // --- END Import/Export Functions ---
 
 
         // --- NEW: SHAPE SYSTEM FUNCTIONS ---
