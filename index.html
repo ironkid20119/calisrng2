@@ -90,7 +90,7 @@
             background-color: #ff69b4;
             color: #000;
         }
-        #inventory, #index {
+        #inventory, #index, #pending-rolls {
             background-color: #2d0051;
             border: 2px solid #ff69b4;
             border-radius: 5px;
@@ -426,6 +426,58 @@
         }
         /* --- END NEW STYLE --- */
 
+        /* --- NEW: Complex rank animation --- */
+        .rank-complex {
+            background: linear-gradient(90deg, #ff0000, #00ff00, #0000ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: complex-shift 2s linear infinite;
+            background-size: 300% 100%;
+            font-weight: bold;
+        }
+        
+        @keyframes complex-shift {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 300% 50%; }
+        }
+        /* --- END Complex rank animation --- */
+
+        /* --- NEW: Pending rolls styles --- */
+        .pending-roll-item {
+            background-color: #3a0d6e;
+            border: 1px solid #ffff00;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 3px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .pending-roll-buttons {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .pending-accept-btn {
+            background-color: #00ff00;
+            color: #000;
+            border: 1px solid #00ff00;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        
+        .pending-decline-btn {
+            background-color: #ff0000;
+            color: #000;
+            border: 1px solid #ff0000;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        /* --- END Pending rolls styles --- */
 
         @media (max-width: 1200px) {
             .main-container {
@@ -455,8 +507,10 @@
         <div class="stat-item">Bulk Roll (Lvl <span id="bulkRollLevel">0</span>): <span id="bulkRollAmount">1</span> roll/click</div>
         <div class="stat-item">Next Bulk Roll Cost: <span id="bulkRollCost">500,000.00</span></div>
         <div class="stat-item">Inventory: <span id="inventoryCount">0</span>/<span id="inventoryMax">10</span></div>
+        <div class="stat-item">Pending Rolls: <span id="pendingCount">0</span>/<span id="pendingMax">30</span></div>
         <div class="stat-item">Rarest Roll: <span id="rarest">None yet</span></div>
-        <div class="stat-item">Ranks Discovered: <span id="ranksDiscovered">0</span>/<span id="totalRanks">56</span></div>
+        <div class="stat-item">Ranks Discovered: <span id="ranksDiscovered">0</span>/<span id="totalRanks">60</span></div>
+        <div class="stat-item">Secrets Enabled: <span id="secretsEnabled">Yes</span></div>
     </div>
 
     <div class="autoroll-settings" style="padding-bottom: 5px;">
@@ -510,7 +564,10 @@
         <button onclick="showRarest()">Show Rarest</button>
         <button onclick="clearTerminal()">Clear Terminal</button>
         <button onclick="saveGame()">Save Game</button>
-        <button onclick="exportSave()">Export Save</button> <button onclick="importSave()">Import Save</button> <button id="cutsceneToggleBtn" onclick="toggleCutscenes()">Cutscenes: ON</button>
+        <button onclick="exportSave()">Export Save</button>
+        <button onclick="importSave()">Import Save</button>
+        <button id="cutsceneToggleBtn" onclick="toggleCutscenes()">Cutscenes: ON</button>
+        <button id="secretToggleBtn" onclick="toggleSecrets()">Secrets: ON</button>
     </div>
 
     
@@ -532,6 +589,11 @@
             <div id="index">
                 <div class="section-header">Index (Ranks Discovered)</div>
                 <div id="indexContent">Roll to discover ranks!</div>
+            </div>
+            
+            <div id="pending-rolls" style="margin-top: 20px; display: none;">
+                <div class="section-header">Pending Rolls</div>
+                <div id="pendingContent">Empty</div>
             </div>
             
             <div class="controls" id="shapes-unlock-controls" style="margin-top: 20px;">
@@ -585,11 +647,8 @@
         // --- CONSTANTS ---
         const POWER_EXPONENT = -2.5;
         const AUTO_ROLL_DELAY_MS = 12.5;
-        // NERF: Upgrade cost multiplier changed from 1.25 to 1.15
         const UPGRADE_COST_MULTIPLIER = 1.15;
-        // MODIFIED: Luck scaling changed from 1.777 to 2.5
         const LUCK_PER_UPGRADE = 2.5;
-        // MODIFIED: Inventory space per upgrade
         const INVENTORY_PER_UPGRADE = 10;
         const VARIANT_CHANCE_PER_UPGRADE = 0.05;
         const MAX_VARIANT_CHANCE_MULTIPLIER = 12.5;
@@ -608,14 +667,13 @@
         const WHITE_FLASH_DURATION_MS = 1000; 
 
         // --- NEW EVENT CONSTANTS ---
-        // CHANGED: Event check interval from 2500ms to 500ms
         const EVENT_CHECK_INTERVAL_MS = 500; 
 
         const EVENTS = [
             { 
                 name: "Error", 
                 chance: 1/40.4, 
-                duration: 40000, // 40 seconds
+                duration: 40000,
                 description: "makes nil, Title Label Missing and unknown's rarity be easier by x4",
                 targets: ["nil", "Title Label Missing", "?!? unknown ?!?"],
                 multiplier: 4 
@@ -623,61 +681,56 @@
             { 
                 name: "Lol", 
                 chance: 1/69, 
-                duration: 20000, // 20 seconds
+                duration: 20000,
                 description: "makes every meme related secret easier by 6.94x and boosts future event chances",
-                targets: ["r", "fish", "cheese", "?!? bewilderment ?!?"], // UPDATED: Changed from "In im table ?!?!?" to "?!? bewilderment ?!?"
+                targets: ["r", "fish", "cheese", "?!? bewilderment ?!?"],
                 multiplier: 6.94,
                 eventChanceBoost: 69 
             },
             { 
                 name: "UNDEFINED", 
                 chance: 1/300, 
-                duration: 30000, // 30 seconds
+                duration: 30000,
                 description: "makes ranks 'unknown,' 'title label missing' and 'absolute zero' be x5 times easier",
                 targets: ["?!? unknown ?!?", "Title Label Missing", ":[{(absolute zero)}]:"],
                 multiplier: 5
             },
-            // NEW: Modified event
             { 
                 name: "Modified", 
                 chance: 1/750, 
-                duration: 15000, // 15 seconds
+                duration: 15000,
                 description: "makes every variant x5 times easier",
-                targets: [], // Not target-based
+                targets: [],
                 multiplier: 2.5
             },
-            // NEW: Self Insert event
             { 
                 name: "Self Insert", 
                 chance: 1/777, 
-                duration: 77700, // 77.7 seconds
+                duration: 77700,
                 description: "makes cali^2 easier by x777,777.777",
                 targets: ["cali^2"],
                 multiplier: 777777.777
             },
-            // NEW: Hellish event
             { 
                 name: "Hellish", 
                 chance: 1/66.66, 
-                duration: 25000, // 25 seconds
+                duration: 25000,
                 description: "makes ⛧Satanic⛧, Seize and Insanity x6.66 easier",
                 targets: ["⛧Satanic⛧", "Seize", "Insanity"],
                 multiplier: 6.66 
             },
-            // NEW: Hidden event
             { 
                 name: "Hidden", 
                 chance: 1/1000, 
-                duration: 5000, // 5 seconds
+                duration: 5000,
                 description: "makes EVERY secret X7.77 easier",
-                targets: ["ALL_SECRETS"], // Special flag
+                targets: ["ALL_SECRETS"],
                 multiplier: 7.77
             }
         ];
 
         // UPDATED VARIANTS ARRAY
         const VARIANTS = [
-            // MODIFIED: Shiny chance from 1/25 to 1/100 (multiplier remains 25)
             { name: "Shiny", chance: 1/100, multiplier: 25, color: "#FFD700" },
             { name: "Gilded", chance: 1/125, multiplier: 125, color: "#FFA500" },
             { name: "Spectral", chance: 1/625, multiplier: 625, color: "#9400D3" },
@@ -685,23 +738,17 @@
             { name: "Myriad", chance: 1/2500, multiplier: 2500, color: "#00FFFF" },
             { name: "Charred", chance: 1/4000, multiplier: 4000, color: "#FF4500" },
             { name: "Expert", chance: 1/7500, multiplier: 7500, color: "#00BFFF" },
-            // NEW: Wind variant
             { name: "Wind", chance: 1/12500, multiplier: 12500, color: "#ADD8E6" }, 
-            // NEW: Mega variant
             { name: "Mega", chance: 1/25000, multiplier: 25000, color: "#FF00FF" }, 
-            // NEW: Small variant
             { name: "Small", chance: 1/35000, multiplier: 35000, color: "#BEBEBE" }, 
-            // NEW: Monument variant
             { name: "Monument", chance: 1/55555, multiplier: 55555, color: "#8B4513" }, 
             { name: "ETERNAL DAWN", chance: 1/77777, multiplier: 77777, color: "#FFFFFF" },
             { name: ">Finale<", chance: 1/100000, multiplier: 100000, color: "#D2691E" },
-            // NEW: Solar variant
             { name: "Solar", chance: 1/250000, multiplier: 250000, color: "#FFA500" },
-            // NEW: Atomic variant
             { name: "Atomic", chance: 1/494500, multiplier: 494500, color: "#32CD32" }
         ];
 
-        // NEW RANK TIER: Improbable
+        // UPDATED RANK TIERS with Theoretical
         const RANK_TIERS = [
             { min: 1, max: 5, name: "Common" },
             { min: 5, max: 25, name: "Natural" },
@@ -716,15 +763,12 @@
             { min: 100000, max: 1e6, name: "Iridescent" },
             { min: 1e6, max: 1e7, name: "Heavenly" },
             { min: 1e7, max: 5e7, name: "Unattainable" },
-            { min: 5e7, max: 1e8, name: "Gigantic" }, // MODIFIED: max changed from 1e9 to 1e8
-            // NEW RANKS START
+            { min: 5e7, max: 1e8, name: "Gigantic" },
             { min: 1e8, max: 2.5e8, name: "Epsilon" },
             { min: 2.5e8, max: 5e8, name: "Terafined" },
             { min: 5e8, max: 1e9, name: "Eclipse" },
-            // NEW RANKS END
-            { min: 1e9, max: 5e9, name: "Infinitude" }, // MODIFIED: max
-            // NEW: Overseer
-            { min: 5e9, max: 1e10, name: "Overseer" },
+            { min: 1e9, max: 5e9, name: "Infinitude" },
+            { min: 5e9, max: 1e10, name: "Theoretical" },
             { min: 1e10, max: 1e11, name: "Unseeable" }, 
             { min: 1e11, max: 1e12, name: "Impassive" }, 
             { min: 1e12, max: 1e15, name: "Unrollable" },
@@ -741,12 +785,7 @@
             { name: "Title Label Missing", chance: 1/4040.404, rarity: 4040.404 },
             { name: "?!? unknown ?!?", chance: 1/6666.666, rarity: 6666.666 },
             { name: "r", chance: 1/6942, rarity: 6942 },
-            // UPDATED: Changed from "In im table ?!?!?" to "?!? bewilderment ?!?" with new rarity
-            { 
-                name: "?!? bewilderment ?!?", 
-                chance: 1/450285, 
-                rarity: 450285
-            },
+            { name: "?!? bewilderment ?!?", chance: 1/450285, rarity: 450285 },
             { name: "Interminable", chance: 1/7777, rarity: 7777 },
             { name: "fish", chance: 1/7979, rarity: 7979 },
             { name: "cheese", chance: 1/10000, rarity: 10000 },
@@ -755,7 +794,6 @@
             { name: "Seize", chance: 1/97525, rarity: 97525 }, 
             { name: "Florescent", chance: 1/264839, rarity: 264839 },
             { name: "π", chance: 1/314159, rarity: 314159 },
-            // --- NEW: breaktime ---
             { name: "breaktime", chance: 1/705372, rarity: 705372, timeBased: true },
             { name: "~Nonavacious~", chance: 1/575630, rarity: 575630 }, 
             { name: "Insanity", chance: 1/666666, rarity: 666666 }, 
@@ -764,25 +802,13 @@
             { name: "Defined", chance: 1/1.5e6, rarity: 1.5e6 },
             { name: "Finale.. wait, how'd this get here?", chance: 1/2.5e6, rarity: 2.5e6 },
             { name: "Pseudopseudohypoparathyroidism", chance: 1/5e6, rarity: 5e6 },
-            // --- NEW: !! EUPHORIA !! ---
             { name: "!! EUPHORIA !!", chance: 1/56789000, rarity: 56789000 },
-            // NEW: CORRUPTED
-            { 
-                name: "CORRUPTED", 
-                chance: 1/648236826.394, 
-                rarity: 648236826.394, 
-                eventOnly: "Hellish" // Special flag
-            },
+            { name: "CORRUPTED", chance: 1/648236826.394, rarity: 648236826.394, eventOnly: "Hellish" },
             { name: "Chargoggagoggmanchauggauggagoggchaubunagungamaugg", chance: 1/77777777.77, rarity: 77777777.77 },
-            // MODIFIED: Name
             { name: "⛧Satanic⛧", chance: 1/1e9, rarity: 1e9 },
-            // ADDED: New secret rank CATASTROPHIC
-            { 
-                name: "CATASTROPHIC", 
-                chance: 1/575765.565, 
-                rarity: 575765.565,
-                multiplier: 575765.565 // Multiplies RNG by 575,765.565
-            },
+            { name: "CATASTROPHIC", chance: 1/575765.565, rarity: 575765.565, multiplier: 575765.565 },
+            { name: "LEGACY In im table ?!?!?", chance: 1/11111111111111.111, rarity: 11111111111111.111, multiplier: 11111111111111.11 },
+            { name: "Destroyed", chance: 0, rarity: Infinity, eventOnly: "Hidden", eventChance: 1/100000000 },
             { name: "cali^2", chance: 1/1e12, rarity: 1e12 }
         ];
 
@@ -791,8 +817,8 @@
 
         // --- NEW ---
         const EUPHORIA_SYMBOLS = ['%', '@', '#', '^', '$', '*', '&', '>', '<', '?'];
-        // UPDATED: Total ranks count (added 1 for CATASTROPHIC)
-        const TOTAL_RANKS = 56; // Updated from 55
+        // UPDATED: Total ranks count (updated for new ranks)
+        const TOTAL_RANKS = 60;
 
         // --- NEW: SHAPES CONSTANTS ---
         const UNLOCK_SHAPES_COST = 5000000;
@@ -803,27 +829,25 @@
         const LUCK_MULTI_COST_MULTIPLIER = 1000;
         const BULK_SHAPE_COST_MULTIPLIER = 5;
         const MAX_BULK_SHAPE_LEVEL = 4;
-        const SHAPE_COOLDOWN_DECREASE_MS = 333.3333; // 0.3333 seconds
-        // NEW: Shape Despawn Timer
-        const SHAPE_DESPAWN_TIME_MS = 5000; // 5 seconds
+        const SHAPE_COOLDOWN_DECREASE_MS = 333.3333;
+        const SHAPE_DESPAWN_TIME_MS = 5000;
         
         const SHAPES = [
             { name: "Triangle", chance: 1/2, rarity: 2, color: "#FFFF00" },
             { name: "Square", chance: 1/5, rarity: 5, color: "#00FF00" },
             { name: "Pentagon", chance: 1/10, rarity: 10, color: "#00FFFF" },
-            // FIX: Changed proportionalChance to chance to resolve the spawning bug
             { name: "Hexagon", chance: 1/25, rarity: 25, color: "#FF00FF" }, 
             { name: "7 Sided Polygon", chance: 1/50, rarity: 50, color: "#FFA500" },
             { name: "Octagon", chance: 1/100, rarity: 100, color: "#800080" },
             { name: "Circle", chance: 1/500, rarity: 500, color: "#FF0000" }
         ];
-        // --- END NEW CONSTANTS ---
 
         // --- NEW: CLICKER CONSTANTS ---
-        // MODIFIED: Cost nerf
         const UNLOCK_CLICKER_COST = 333333.33;
         const MAX_CLICKER_LUCK_LEVEL = 4;
-        // --- END NEW CONSTANTS ---
+
+        // --- NEW: COMPLEX RANK CONSTANT ---
+        const COMPLEX_CHANCE = 1/150000;
 
 
         // --- GAME STATE VARIABLES ---
@@ -845,13 +869,20 @@
         let acceptedRolls = new Set();
         let discoveredRanks = new Set();
         
+        // NEW: Pending rolls system
+        let pendingRolls = [];
+        let maxPendingRolls = maxInventory * 3;
+        
+        // NEW: Secrets toggle
+        let secretsEnabled = true;
+        
         // Auto-Accept Variables
         let autoAcceptThreshold = 0;
         let autoAcceptSecretThresholdValue = 0;
         let autoAcceptOnNewRank = false;
         let autoAcceptTrueRNGValue = 0;
         
-        // NEW: Auto-Stop Variables
+        // Auto-Stop Variables
         let autoStopThreshold = 0;
         let autoStopSecretThresholdValue = 0;
         let autoStopOnNewRank = false;
@@ -880,14 +911,12 @@
         let bulkShapeLevel = 0;
         let bulkShapeCost = 50;
         let shapeInterval = null;
-        // ** NEW: Array for active, clickable shapes (will store timerId on load) **
         let activeShapes = [];
-        // --- END NEW VARIABLES ---
 
         // --- NEW: CLICKER VARIABLES ---
         let clickerUnlocked = false;
         let fortunium = 0;
-        let fortuniumLuck = 0; // This is the "+0.5x"
+        let fortuniumLuck = 0;
         
         let gmxMultiLevel = 0;
         let gmxMultiCost = 75;
@@ -897,13 +926,15 @@
         
         let clickerLuckLevel = 0;
         let clickerLuckCost = 1000;
-        // --- END NEW CLICKER VARIABLES ---
 
         // --- NEW: EUPHORIA EFFECT ---
         let activeEuphoriaIntervals = {};
 
         // --- NEW: Bewilderment animation intervals ---
         let activeBewildermentIntervals = {};
+
+        // --- NEW: Animation preservation tracking ---
+        let activeAnimationElements = new Set();
 
 
         // --- OPTIMIZATION: CALCULATED STATS (set by updateCalculatedStats) ---
@@ -915,101 +946,8 @@
         let luckMultiValue = 1;
         let shapeLuckBonus = 0;
         let currentShapeCooldown = SHAPE_SPAWN_INTERVAL_MS;
-        // --- END NEW STATS ---
 
-
-        // --- NEW EVENT FUNCTIONS ---
-
-        function startEvent(event) {
-            if (currentEvent) {
-                clearTimeout(currentEvent.timeoutId);
-                endEvent(currentEvent);
-            }
-            
-            // Create a simple object for currentEvent to avoid saving the massive timeoutId on all rolls
-            currentEvent = { 
-                name: event.name, 
-                duration: event.duration, 
-                description: event.description, 
-                targets: event.targets, 
-                multiplier: event.multiplier, 
-                eventChanceBoost: event.eventChanceBoost 
-            };
-            eventEndTime = Date.now() + event.duration;
-
-            addToTerminal(`🚨 EVENT STARTED: **${event.name}**! ${event.description} for ${event.duration / 1000} seconds!`, true, 'rank-1000-10000'); 
-
-            if (event.name === "Lol") {
-                eventCheckChance = event.eventChanceBoost; 
-            } else {
-                eventCheckChance = 1;
-            }
-
-            // Set the timeout for the actual end
-            currentEvent.timeoutId = setTimeout(() => {
-                endEvent(event);
-            }, event.duration);
-
-            updateStats();
-        }
-
-        function endEvent(event) {
-            addToTerminal(`✅ EVENT ENDED: **${event.name}** is over.`, true);
-
-            if (event.name === "Lol") {
-                eventCheckChance = 1;
-            }
-
-            if (currentEvent && currentEvent.name === event.name) {
-                currentEvent = null;
-                eventEndTime = 0;
-            }
-
-            updateStats();
-        }
-        
-        // FIX: Function to resume an event after loading 
-        function resumeEvent(event, remainingDuration) {
-            currentEvent = event;
-            // The eventEndTime is already set on load
-            if (event.name === "Lol") {
-                eventCheckChance = event.eventChanceBoost; 
-            } else {
-                eventCheckChance = 1;
-            }
-            
-            // FIX: Set a new timeout on load to correctly end the event 
-            currentEvent.timeoutId = setTimeout(() => {
-                endEvent(event);
-            }, remainingDuration);
-            
-            addToTerminal(`Resuming active event: **${event.name}** (${(remainingDuration / 1000).toFixed(1)}s left).`, true, 'rank-1000-10000');
-        }
-
-        function checkEvent() {
-            if (currentEvent) return; 
-
-            for (const event of EVENTS) {
-                const adjustedChance = event.chance / eventCheckChance;
-
-                if (Math.random() < adjustedChance) {
-                    startEvent(event);
-                    return; 
-                }
-            }
-        }
-
-        function startEventLoop() {
-            if (eventInterval) clearInterval(eventInterval);
-            eventInterval = setInterval(checkEvent, EVENT_CHECK_INTERVAL_MS);
-        }
-
-        // --- END NEW EVENT FUNCTIONS ---
-
-
-        // --- CORE FUNCTIONS ---
-
-        // NEW: Formatter for integers
+        // --- UTILITY FUNCTIONS ---
         function formatInteger(num) {
             return num.toLocaleString('en-US');
         }
@@ -1018,65 +956,95 @@
             return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         }
         
-        // NEW: UTILITY FUNCTIONS 
         function formatGeometrix(num) {
             return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         }
         
         function formatCooldown(ms) {
-            return (ms / 1000).toFixed(4); // 4 decimal places for cooldown
+            return (ms / 1000).toFixed(4);
         }
 
-        // --- NEW: Utility to escape strings for JS onclick attributes ---
         function escapeHTML(str) {
             if (!str) return '';
-            // Only escape single quotes, as the onclick uses them
             return str.replace(/'/g, "\\'");
         }
-        // --- END NEW UTILITY FUNCTIONS ---
-        
+
+        // --- NEW: Animation preservation system ---
+        function preserveAnimations() {
+            // Store animation states for inventory items
+            inventory.forEach((item, idx) => {
+                const elementId = `inv-item-${idx}`;
+                const element = document.getElementById(elementId);
+                if (element && (item.rank === "!! EUPHORIA !!" || item.rank === "?!? bewilderment ?!?" || item.rank.includes("Complex"))) {
+                    if (!activeAnimationElements.has(elementId)) {
+                        activeAnimationElements.add(elementId);
+                        // Restart animations for this element
+                        if (item.rank === "!! EUPHORIA !!") {
+                            setTimeout(() => initEuphoriaAnimation(elementId, "!! EUPHORIA !!"), 10);
+                        }
+                        if (item.rank === "?!? bewilderment ?!?") {
+                            setTimeout(() => initBewildermentAnimation(elementId), 10);
+                        }
+                    }
+                }
+            });
+            
+            // Store animation states for terminal rolls
+            document.querySelectorAll('.clickable-roll').forEach(el => {
+                if (el.id && (el.textContent.includes("!! EUPHORIA !!") || el.textContent.includes("?!? bewilderment ?!?"))) {
+                    if (!activeAnimationElements.has(el.id)) {
+                        activeAnimationElements.add(el.id);
+                        // The animations should already be running, but we ensure they persist
+                    }
+                }
+            });
+        }
+
+        // --- MODIFIED: Sort inventory functions to use BASE value ---
         function sortInventory(type) {
             if (type === 'leastRarest') {
-                inventory.sort((a, b) => a.value - b.value);
+                inventory.sort((a, b) => (a.baseValue || a.value) - (b.baseValue || b.value));
             } else if (type === 'mostRarest') {
-                inventory.sort((a, b) => b.value - a.value);
+                inventory.sort((a, b) => (b.baseValue || b.value) - (a.baseValue || a.value));
             }
             updateInventoryDisplay();
-            addToTerminal(`Inventory sorted by ${type === 'mostRarest' ? 'most rarest' : 'least rarest'} (Variants Applied).`, true);
+            preserveAnimations(); // Preserve animations after sorting
+            addToTerminal(`Inventory sorted by ${type === 'mostRarest' ? 'most rarest (Base Value)' : 'least rarest (Base Value)'}.`, true);
             saveGame();
         }
 
-        // MODIFIED: Centralized function to calculate multipliers after upgrades
+        // --- MODIFIED: Centralized function to calculate multipliers after upgrades ---
         function updateCalculatedStats() {
             // Base luck from main upgrades
             currentLuck = totalUpgrades * LUCK_PER_UPGRADE;
             
-            // NEW: Shape luck (Upgrade 1) - This is a separate luck stat for shapes
+            // Shape luck (Upgrade 1)
             shapeLuckBonus = shapeLuckLevel * SHAPE_LUCK_BONUS;
             
-            // NEW: Clicker Luck (Upgrade 3)
+            // Clicker Luck (Upgrade 3)
             const clickerLuckBonus = clickerLuckLevel * 0.5;
             
-            // NEW: Luck Multiplier (Upgrade 2) + Clicker Luck
-            luckMultiValue = Math.pow(2, luckMultiLevel) + clickerLuckBonus; // Additive bonus
+            // Luck Multiplier (Upgrade 2) + Clicker Luck
+            luckMultiValue = Math.pow(2, luckMultiLevel) + clickerLuckBonus;
             
-            // Apply Luck Multiplier to main game mechanics (but NOT polygons)
-            // Base luck is modified in generateRoll()
+            // Apply Luck Multiplier to main game mechanics
             secretLuckMultiplier = Math.min(1 + (totalUpgrades * SECRET_LUCK_PER_UPGRADE), MAX_SECRET_LUCK) * luckMultiValue;
             variantChanceMultiplier = Math.min(1 + (totalUpgrades * VARIANT_CHANCE_PER_UPGRADE), MAX_VARIANT_CHANCE_MULTIPLIER) * luckMultiValue;
             
-            // NEW: Calculate shape cooldown from Upgrade 3
+            // Calculate shape cooldown from Upgrade 3
             currentShapeCooldown = Math.max(
                 SHAPE_SPAWN_INTERVAL_MS - (bulkShapeLevel * SHAPE_COOLDOWN_DECREASE_MS), 
-                SHAPE_SPAWN_INTERVAL_MS - (MAX_BULK_SHAPE_LEVEL * SHAPE_COOLDOWN_DECREASE_MS) // Cap at Lvl 4
+                SHAPE_SPAWN_INTERVAL_MS - (MAX_BULK_SHAPE_LEVEL * SHAPE_COOLDOWN_DECREASE_MS)
             );
+            
+            // Update pending rolls max based on current inventory
+            maxPendingRolls = maxInventory * 3;
         }
 
         function getVariants(baseValue) {
             let selectedVariants = [];
             let totalMultiplier = 1;
 
-            // NEW: Check for "Modified" event
             let eventVariantMultiplier = 1;
             if (currentEvent && currentEvent.name === "Modified") {
                 eventVariantMultiplier = currentEvent.multiplier;
@@ -1084,7 +1052,6 @@
             
             for (let i = VARIANTS.length - 1; i >= 0; i--) {
                 const variant = VARIANTS[i];
-                // MODIFIED: Use the calculated variantChanceMultiplier AND event multiplier
                 const adjustedChance = variant.chance * variantChanceMultiplier * eventVariantMultiplier;
                 
                 while (selectedVariants.length < MAX_VARIANTS_PER_ROLL && Math.random() < adjustedChance) {
@@ -1104,7 +1071,6 @@
         }
 
         function generateRoll() {
-            // MODIFIED: Apply the luckMultiValue to the base luck
             const totalLuck = currentLuck * luckMultiValue;
             const baseRoll = Math.pow(Math.random(), 3 / POWER_EXPONENT) * (1 + totalLuck);
             return { value: baseRoll, variant: null };
@@ -1112,57 +1078,55 @@
         
         // --- MODIFIED: To handle time-based 'breaktime', 'eventOnly', 'ALL_SECRETS' event, and new ranks ---
         function getSecretRank() {
+            if (!secretsEnabled) return null; // NEW: Check if secrets are enabled
+            
             const rand = Math.random();
             
-            // --- NEW: Check for "Hidden" event ---
             let hiddenEventMultiplier = 1;
             if (currentEvent && currentEvent.targets.includes("ALL_SECRETS")) {
                 hiddenEventMultiplier = currentEvent.multiplier;
             }
-            // --- END NEW ---
             
             for (const secret of SECRET_RANKS_CHANCES) {
                 let chanceMultiplier = 1;
-                let adjustedChance = secret.chance; // Use this for modifications
+                let adjustedChance = secret.chance;
 
-                // --- NEW: Event-Only Check ---
+                // Event-Only Check
                 if (secret.eventOnly) {
                     if (!currentEvent || currentEvent.name !== secret.eventOnly) {
-                        continue; // Skip this secret if event is not active
+                        continue;
+                    }
+                    // For Destroyed rank during Hidden event
+                    if (secret.name === "Destroyed" && currentEvent.name === "Hidden" && secret.eventChance) {
+                        adjustedChance = secret.eventChance;
                     }
                 }
-                // --- END NEW ---
 
-                // --- NEW: Time-based logic for 'breaktime' ---
+                // Time-based logic for 'breaktime'
                 if (secret.timeBased && secret.name === "breaktime") {
                     const now = new Date();
-                    // UTC-3 offset
                     const utc3OffsetMs = -3 * 60 * 60 * 1000;
                     const utc3Time = new Date(now.getTime() + utc3OffsetMs);
-                    const dayOfWeek = utc3Time.getUTCDay(); // 0=Sun, 1=Mon, ..., 6=Sat
+                    const dayOfWeek = utc3Time.getUTCDay();
 
-                    if (dayOfWeek >= 1 && dayOfWeek <= 5) { // Weekday (Mon-Fri)
-                        adjustedChance = 0; // Impossible
-                    } else { // Weekend (Sat, Sun)
-                        adjustedChance = 1 / 705372; // Use the defined chance
+                    if (dayOfWeek >= 1 && dayOfWeek <= 5) {
+                        adjustedChance = 0;
+                    } else {
+                        adjustedChance = 1 / 705372;
                     }
                 }
-                // --- END NEW LOGIC ---
 
                 if (currentEvent && currentEvent.targets.includes(secret.name)) {
                     chanceMultiplier = currentEvent.multiplier;
                 }
                 
-                // MODIFIED: Use the calculated secretLuckMultiplier, adjustedChance, and hiddenEventMultiplier
                 if (rand < adjustedChance * secretLuckMultiplier * chanceMultiplier * hiddenEventMultiplier) {
-                    // NEW LOGIC FOR MORTS LUCK
+                    // Check for morts luck
                     if (secret.name === 'cali^2') {
                         if (Math.random() < 1/1e6) {
-                            // 1 in 1 million chance to replace cali^2
                             return { name: "morts luck", chance: 1/1e18, rarity: 1e18 };
                         }
                     }
-                    // END NEW LOGIC
                     return secret;
                 }
             }
@@ -1193,7 +1157,6 @@
                     };
                 }
             }
-            // MODIFIED: Return the last rank name dynamically
             return { 
                 name: RANK_TIERS[RANK_TIERS.length - 1].name, 
                 value: value, 
@@ -1210,7 +1173,12 @@
             // Check for Unobtainable first
             if (rankName === "Unobtainable") {
                 className = "rank-unobtainable";
-                color = "#000000"; // Base color for gradient
+                color = "#000000";
+            }
+            // Check for Complex rank
+            else if (rankName && rankName.includes("+")) {
+                className = "rank-complex";
+                color = "#ffffff";
             }
             else if (value >= 1e30) { className = "rank-improbable"; color = "#008080"; }
             else if (value >= 1e15) { className = "rank-rainbow"; color = "#ff7f00"; }
@@ -1239,15 +1207,28 @@
             if (className) line.classList.add(className);
             line.innerHTML = text;
 
-            // Optimization: Limit terminal lines
             if (terminal.children.length > 100) {
                 terminal.removeChild(terminal.firstChild);
             }
 
             terminal.appendChild(line);
             terminal.scrollTop = terminal.scrollHeight;
+            
+            // Preserve animations after adding to terminal
+            setTimeout(preserveAnimations, 50);
         }
         
+        // NEW: Toggle Secrets Function 
+        function toggleSecrets() {
+            secretsEnabled = !secretsEnabled;
+            const btn = document.getElementById('secretToggleBtn');
+            const state = secretsEnabled ? 'ON' : 'OFF';
+            btn.textContent = `Secrets: ${state}`;
+            document.getElementById('secretsEnabled').textContent = secretsEnabled ? 'Yes' : 'No';
+            addToTerminal(`Secrets turned ${state}.`, true);
+            saveGame();
+        }
+
         // NEW: Toggle Cutscenes Function 
         function toggleCutscenes() {
             cutscenesEnabled = !cutscenesEnabled;
@@ -1258,23 +1239,26 @@
             saveGame();
         }
 
-        // MODIFIED: To update all new stats
+        // --- MODIFIED: To update all new stats including pending rolls ---
         function updateStats() {
             document.getElementById('currency').textContent = formatNumber(currency);
-            document.getElementById('geometrix').textContent = formatGeometrix(geometrix); // NEW
+            document.getElementById('geometrix').textContent = formatGeometrix(geometrix);
             document.getElementById('upgrades').textContent = totalUpgrades;
             
             // Use pre-calculated global values
             document.getElementById('luck').textContent = currentLuck.toFixed(3);
-            document.getElementById('luckMulti').textContent = luckMultiValue.toFixed(2); // NEW
+            document.getElementById('luckMulti').textContent = luckMultiValue.toFixed(2);
             document.getElementById('secretLuck').textContent = secretLuckMultiplier.toFixed(2);
             document.getElementById('variantChance').textContent = variantChanceMultiplier.toFixed(2);
             
             document.getElementById('upgradeCost').textContent = formatNumber(upgradeCost);
             document.getElementById('inventoryCount').textContent = inventory.length;
             document.getElementById('inventoryMax').textContent = maxInventory;
+            document.getElementById('pendingCount').textContent = pendingRolls.length;
+            document.getElementById('pendingMax').textContent = maxPendingRolls;
             document.getElementById('ranksDiscovered').textContent = discoveredRanks.size;
-            document.getElementById('totalRanks').textContent = TOTAL_RANKS; 
+            document.getElementById('totalRanks').textContent = TOTAL_RANKS;
+            document.getElementById('secretsEnabled').textContent = secretsEnabled ? 'Yes' : 'No';
             
             document.getElementById('bulkRollLevel').textContent = bulkRollLevel;
             document.getElementById('bulkRollAmount').textContent = bulkRollLevel + 1;
@@ -1291,7 +1275,7 @@
             } else {
                 bulkCostEl.textContent = formatNumber(bulkRollCost);
                 if (bulkBtnEl) {
-                    bulkBtnEl.disabled = currency < bulkRollCost; // Disable if not enough currency
+                    bulkBtnEl.disabled = currency < bulkRollCost;
                     bulkBtnEl.textContent = "Buy Bulk Roll";
                 }
             }
@@ -1311,26 +1295,24 @@
             eventStat.innerHTML = `Active Event: <span style="color: ${currentEvent ? '#00FFFF' : '#ffffff'};">${eventName}</span> (${timeLeftFormatted}s)`;
             
             // Rarest Roll
-            if (highestFinalRoll.value > 0 || highestFinalRoll.rank === "CORRUPTED") { // MODIFIED: Allow corrupted
+            if (highestFinalRoll.value > 0 || highestFinalRoll.rank === "CORRUPTED") {
                 const { className, color } = getRankClassAndColor(highestFinalRoll.value, highestFinalRoll.variants, highestFinalRoll.rank);
                 let rankClass = className;
                 let rollColor = color;
                 let displayName = highestFinalRoll.rank;
-                let displayValue = highestFinalRoll.value; // NEW
-                let suffix = ""; // NEW
+                let displayValue = highestFinalRoll.value;
+                let suffix = "";
 
                 if (displayName === "~Nonavacious~") {
                     rankClass += " secret-nonavacious";
                 }
                 
-                // --- NEW: Apply CORRUPTED class ---
                 if (displayName === "CORRUPTED") {
                     rankClass += " secret-corrupted";
                     rollColor = "#FFFFFF";
                 }
-                // --- END NEW ---
                 
-                // NEW: Special display for stats
+                // Special display for stats
                 if (displayName === "⛧Satanic⛧") {
                     suffix = ` (Actual: ${formatNumber(highestFinalRoll.value)})`;
                     displayValue = -666.66;
@@ -1339,10 +1321,8 @@
                     suffix = ` (Actual: ${formatNumber(highestFinalRoll.value)})`;
                     displayValue = 1e10;
                 }
-                // END NEW
                 
                 document.getElementById('rarest').innerHTML = 
-                    // MODIFIED: Added satanic wrapper
                     `<span class="satanic-wrapper"><span class="${rankClass}" style="color: ${rollColor};">${formatNumber(displayValue)} [${displayName}]${suffix}</span></span>`;
             }
 
@@ -1352,9 +1332,15 @@
                 cutsceneBtn.textContent = `Cutscenes: ${cutscenesEnabled ? 'ON' : 'OFF'}`;
             }
 
-            // --- NEW: Shapes GUI Updates ---
+            // NEW: Update Secrets Toggle Button
+            const secretBtn = document.getElementById('secretToggleBtn');
+            if (secretBtn) {
+                secretBtn.textContent = `Secrets: ${secretsEnabled ? 'ON' : 'OFF'}`;
+            }
+
+            // --- Shapes GUI Updates ---
             document.getElementById('shapes-gui').style.display = shapesUnlocked ? 'block' : 'none';
-            document.getElementById('shapes-unlock-controls').style.display = shapesUnlocked ? 'none' : 'grid'; // Use grid to match other controls
+            document.getElementById('shapes-unlock-controls').style.display = shapesUnlocked ? 'none' : 'grid';
             document.getElementById('unlockShapesBtn').disabled = currency < UNLOCK_SHAPES_COST;
 
             if (shapesUnlocked) {
@@ -1363,7 +1349,7 @@
                 document.getElementById('bulkShapeLevel').textContent = bulkShapeLevel;
                 document.getElementById('shapeCooldown').textContent = formatCooldown(currentShapeCooldown);
                 
-                // Shape Luck Button (Upgrade 1)
+                // Shape Luck Button
                 const shapeLuckBtn = document.getElementById('buyShapeLuckBtn');
                 document.getElementById('shapeLuckCost').textContent = formatGeometrix(shapeLuckCost);
                 if (shapeLuckLevel >= MAX_SHAPE_LUCK_LEVEL) {
@@ -1374,12 +1360,12 @@
                     shapeLuckBtn.innerHTML = `Shape Luck (+0.1x) - Cost: <span id="shapeLuckCost">${formatGeometrix(shapeLuckCost)}</span> GMX`;
                 }
                 
-                // Luck Multi Button (Upgrade 2)
+                // Luck Multi Button
                 const luckMultiBtn = document.getElementById('buyLuckMultiBtn');
                 document.getElementById('luckMultiCost').textContent = formatGeometrix(luckMultiCost);
                 luckMultiBtn.disabled = geometrix < luckMultiCost;
 
-                // Bulk Shape Button (Upgrade 3)
+                // Bulk Shape Button
                 const bulkShapeBtn = document.getElementById('buyBulkShapeBtn');
                 document.getElementById('bulkShapeCost').textContent = formatGeometrix(bulkShapeCost);
                 if (bulkShapeLevel >= MAX_BULK_SHAPE_LEVEL) {
@@ -1390,7 +1376,7 @@
                     bulkShapeBtn.innerHTML = `Bulk/Cooldown Lvl <span id="bulkShapeLevelBtn">${bulkShapeLevel + 1}</span> - Cost: <span id="bulkShapeCost">${formatGeometrix(bulkShapeCost)}</span> GMX`;
                 }
 
-                // Clicker Unlock Button (Upgrade 4)
+                // Clicker Unlock Button
                 const clickerUnlockBtn = document.getElementById('buyClickerUnlockBtn');
                 if (clickerUnlockBtn) {
                      if (clickerUnlocked) {
@@ -1398,14 +1384,12 @@
                         clickerUnlockBtn.textContent = "Clicker Unlocked";
                     } else {
                         clickerUnlockBtn.disabled = geometrix < UNLOCK_CLICKER_COST;
-                        // MODIFIED: Use formatGeometrix
                         clickerUnlockBtn.textContent = `Unlock Clicker - Cost: ${formatGeometrix(UNLOCK_CLICKER_COST)} GMX`;
                     }
                 }
             }
-            // --- END NEW UPDATES ---
 
-            // --- NEW: Clicker GUI Updates ---
+            // --- Clicker GUI Updates ---
             document.getElementById('clicker-gui').style.display = clickerUnlocked ? 'block' : 'none';
             
             if (clickerUnlocked) {
@@ -1434,15 +1418,13 @@
                     clickerLuckBtn.innerHTML = `Luck Multi (+0.5x) - Cost: <span id="clickerLuckCost">${formatNumber(clickerLuckCost)}</span> FOR`;
                 }
             }
-            // --- END CLICKER UPDATES ---
+            
+            // Preserve animations after updating stats
+            preserveAnimations();
         }
 
         // --- MODIFIED: To handle EUPHORIA animation persistence, Unobtainable, and new ranks ---
         function updateInventoryDisplay() {
-            // --- MODIFIED: Remove interval clearing ---
-            // (The self-cleanup in initEuphoriaAnimation will handle this)
-            // --- END MODIFIED ---
-
             const inventoryContent = document.getElementById('inventoryContent');
             if (inventory.length === 0) {
                 inventoryContent.innerHTML = 'Empty';
@@ -1453,22 +1435,20 @@
                     if (item.rank === "~Nonavacious~") {
                         displayClass += " secret-nonavacious";
                     }
-                    // --- NEW: Apply CORRUPTED class ---
                     if (item.rank === "CORRUPTED") {
                         displayClass += " secret-corrupted";
                     }
-                    // --- END NEW ---
                     
                     let variantText = '';
                     if (item.variants && item.variants.length > 0) {
                         variantText = item.variants.map(v => `<span style="color: ${v.color}; font-weight: bold;">[${v.name}]</span>`).join('') + ' ';
                     }
                     let suffix = "";
-                    let displayValue = item.value; // NEW
+                    let displayValue = item.value;
                     if (item.rank === "100") suffix = " * 💯";
                     if (item.rank === ":[{(absolute zero)}]:") suffix = " * 0";
                     
-                    // NEW: Special display for inventory
+                    // Special display for inventory
                     if (item.rank === "⛧Satanic⛧") {
                         suffix = ` (Actual: ${formatNumber(item.value)})`;
                         displayValue = -666.66;
@@ -1477,10 +1457,7 @@
                         suffix = ` (Actual: ${formatNumber(item.value)})`;
                         displayValue = 1e10;
                     }
-                    // END NEW
                     
-                    // --- FIX: Added id="inv-item-${idx}" for animation targeting ---
-                    // MODIFIED: Added satanic wrapper and formatInteger
                     let content = `<span class="${displayClass}" style="color: ${rollColor};">${formatNumber(displayValue)} [${item.rank}]${suffix}</span>`;
                     // Wrap if satanic
                     if (item.rank === "⛧Satanic⛧") {
@@ -1493,7 +1470,7 @@
                 }).join('');
             }
             
-            // --- MODIFIED: Start animations for inventory items that don't have one ---
+            // Initialize animations for inventory items
             inventory.forEach((item, idx) => {
                 const elementId = `inv-item-${idx}`;
                 if (item.rank === "!! EUPHORIA !!" && !activeEuphoriaIntervals[elementId]) {
@@ -1503,15 +1480,21 @@
                     initBewildermentAnimation(elementId);
                 }
             });
-            // --- END MODIFIED ---
         }
 
-        // --- MODIFIED: To add new secret ranks to index ---
+        // --- MODIFIED: To add new secret ranks to index and fix sorting ---
         function updateIndexDisplay() {
             const indexContent = document.getElementById('indexContent');
+            
+            // Sort normal ranks by min value
+            const sortedNormalRanks = [...RANK_TIERS].sort((a, b) => a.min - b.min);
+            
+            // Sort secret ranks by chance (rarity)
+            const sortedSecretRanks = [...SECRET_RANKS_CHANCES].sort((a, b) => a.chance - b.chance);
+            
             let html = '<div style="margin-bottom: 15px;"><strong>Normal Ranks:</strong></div>';
             
-            RANK_TIERS.forEach(tier => {
+            sortedNormalRanks.forEach(tier => {
                 const discovered = discoveredRanks.has(tier.name);
                 let rankClass = getRankClass((tier.min + tier.max) / 2); 
                 if (tier.name === "Improbable") {
@@ -1522,52 +1505,126 @@
                 </div>`;
             });
             
+            // Add Unobtainable separately
+            const unobtainableDiscovered = discoveredRanks.has("Unobtainable");
+            html += `<div class="index-item ${unobtainableDiscovered ? 'discovered' : 'locked'}">
+                ${unobtainableDiscovered ? `<span class="rank-unobtainable">Unobtainable</span>` : '???'}
+            </div>`;
+            
             html += '<div style="margin: 15px 0;"><strong>Secret Ranks:</strong></div>';
-            SECRET_RANKS_CHANCES.forEach(rankInfo => {
+            
+            sortedSecretRanks.forEach(rankInfo => {
                 const rankName = rankInfo.name;
-                // --- NEW: Skip time-based for this view, will be added manually ---
                 if (rankInfo.timeBased) return;
                 
                 const discovered = discoveredRanks.has(rankName);
                 let rankStyle = `color: #ff69b4;`;
                 
-                // --- NEW: Style for CORRUPTED ---
                 if (rankName === "CORRUPTED") {
                     rankStyle = `color: #ffffff; filter: invert(100%); display: inline-block;`;
                 }
-                // --- END NEW ---
                 
                 html += `<div class="index-item ${discovered ? 'discovered' : 'locked'}">
                     ${discovered ? `<span style="${rankStyle}">${rankName}</span>` : '???'}
                 </div>`;
             });
             
-            // --- NEW: Manually add time-based and special ranks to index ---
+            // Add time-based and special ranks
             const breaktimeDiscovered = discoveredRanks.has("breaktime");
             html += `<div class="index-item ${breaktimeDiscovered ? 'discovered' : 'locked'}">
                 ${breaktimeDiscovered ? `<span style="color: #ff69b4;">breaktime</span>` : '???'}
             </div>`;
 
             const mortsLuckDiscovered = discoveredRanks.has("morts luck");
-            const mortsLuckStyle = `color: #ff0000; font-weight: bold;`; // Make it special
+            const mortsLuckStyle = `color: #ff0000; font-weight: bold;`;
             html += `<div class="index-item ${mortsLuckDiscovered ? 'discovered' : 'locked'}">
                 ${mortsLuckDiscovered ? `<span style="${mortsLuckStyle}">morts luck</span>` : '???'}
             </div>`;
-            // --- END NEW ---
             
             indexContent.innerHTML = html;
         }
 
+        // --- NEW: Pending rolls display ---
+        function updatePendingDisplay() {
+            const pendingContent = document.getElementById('pendingContent');
+            const pendingContainer = document.getElementById('pending-rolls');
+            
+            if (pendingRolls.length === 0) {
+                pendingContent.innerHTML = 'Empty';
+                pendingContainer.style.display = 'none';
+            } else {
+                pendingContainer.style.display = 'block';
+                pendingContent.innerHTML = pendingRolls.map((item, idx) => {
+                    const { className: rankClass, color: rollColor } = getRankClassAndColor(item.value, item.variants, item.rank);
+                    let displayClass = rankClass;
+                    
+                    if (item.rank === "~Nonavacious~") displayClass += " secret-nonavacious";
+                    if (item.rank === "CORRUPTED") displayClass += " secret-corrupted";
+                    
+                    let variantText = '';
+                    if (item.variants && item.variants.length > 0) {
+                        variantText = item.variants.map(v => `<span style="color: ${v.color}; font-weight: bold;">[${v.name}]</span>`).join('') + ' ';
+                    }
+                    
+                    return `<div class="pending-roll-item">
+                        <div>
+                            #${formatInteger(item.index)}: ${variantText}<span class="${displayClass}" style="color: ${rollColor};">${formatNumber(item.value)} [${item.rank}]</span>
+                        </div>
+                        <div class="pending-roll-buttons">
+                            <button class="pending-accept-btn" onclick="acceptPendingRoll(${idx})">Accept</button>
+                            <button class="pending-decline-btn" onclick="declinePendingRoll(${idx})">Decline</button>
+                        </div>
+                    </div>`;
+                }).join('');
+            }
+        }
+
+        // --- NEW: Accept pending roll ---
+        function acceptPendingRoll(idx) {
+            const pending = pendingRolls[idx];
+            if (addToInventory(pending.value, pending.rank, pending.index, pending.variants, pending.baseValue)) {
+                pendingRolls.splice(idx, 1);
+                updatePendingDisplay();
+                addToTerminal(`Accepted pending roll #${formatInteger(pending.index)} (${pending.rank})`, true);
+                updateStats();
+                saveGame();
+            } else {
+                addToTerminal('Cannot accept: inventory full!', true);
+            }
+        }
+
+        // --- NEW: Decline pending roll ---
+        function declinePendingRoll(idx) {
+            const pending = pendingRolls[idx];
+            pendingRolls.splice(idx, 1);
+            updatePendingDisplay();
+            addToTerminal(`Declined pending roll #${formatInteger(pending.index)} (${pending.rank})`, true);
+            updateStats();
+            saveGame();
+        }
+
         function addToInventory(value, rank, index, variants = [], baseValue = null) {
             if (inventory.length >= maxInventory) {
-                addToTerminal('Inventory full! Buy upgrades to increase space.', true);
                 return false;
             }
-            const isSecret = SECRET_RANKS_CHANCES.map(r => r.name).includes(rank) || rank === "morts luck" || rank === "breaktime" || rank === "Unobtainable"; // MODIFIED: Added Unobtainable
+            const isSecret = SECRET_RANKS_CHANCES.map(r => r.name).includes(rank) || rank === "morts luck" || rank === "breaktime" || rank === "Unobtainable";
             inventory.push({ value, rank, index, variants, baseValue: baseValue || value, isSecret });
             updateInventoryDisplay();
             updateStats();
             saveGame();
+            return true;
+        }
+
+        // --- NEW: Add to pending rolls ---
+        function addToPendingRolls(value, rank, index, variants = [], baseValue = null) {
+            if (pendingRolls.length >= maxPendingRolls) {
+                return false;
+            }
+            
+            const isSecret = SECRET_RANKS_CHANCES.map(r => r.name).includes(rank) || rank === "morts luck" || rank === "breaktime" || rank === "Unobtainable";
+            pendingRolls.push({ value, rank, index, variants, baseValue: baseValue || value, isSecret });
+            updatePendingDisplay();
+            updateStats();
             return true;
         }
 
@@ -1581,11 +1638,10 @@
             }
             
             let suffix = "";
-            let displayValue = item.value; // NEW
+            let displayValue = item.value;
             if (item.rank === "100") suffix = " * 💯";
             if (item.rank === ":[{(absolute zero)}]:") suffix = " * 0";
             
-            // NEW: Special display for remove log
             if (item.rank === "⛧Satanic⛧") {
                 suffix = ` (Actual: ${formatNumber(item.value)})`;
                 displayValue = -666.66;
@@ -1594,9 +1650,7 @@
                 suffix = ` (Actual: ${formatNumber(item.value)})`;
                 displayValue = 1e10;
             }
-            // END NEW
             
-            // MODIFIED: use formatInteger
             addToTerminal(`Removed from inventory: #${formatInteger(item.index)} ${variantText}${formatNumber(displayValue)} [${item.rank}]${suffix}`, true); 
             
             acceptedRolls.delete(item.index);
@@ -1607,19 +1661,16 @@
                 rollElement.style.cursor = 'pointer';
                 
                 rollElement.onclick = function() { 
-                    // --- FIX: Use escaped name ---
                     tryAddToInventory(item.value, item.rank, item.index, rollElement); 
                 };
 
-                // --- NEW: Restart animation ---
+                // Restart animation
                 if (item.rank === "!! EUPHORIA !!") {
-                    // Use a short timeout to let the DOM update
                     setTimeout(() => initEuphoriaAnimation(`roll-${item.index}`, "!! EUPHORIA !!"), 10);
                 }
                 if (item.rank === "?!? bewilderment ?!?") {
                     setTimeout(() => initBewildermentAnimation(`roll-${item.index}`), 10);
                 }
-                // --- END NEW ---
             }
             
             inventory.splice(idx, 1);
@@ -1629,7 +1680,6 @@
         }
 
         function playCutscene(rollValue, isSecret = false) {
-            // NEW: Check if cutscenes are enabled 
             if (!cutscenesEnabled) {
                 return Promise.resolve();
             }
@@ -1742,12 +1792,37 @@
                     element.innerHTML = originalText;
                 }
                 isQuestionMark = !isQuestionMark;
-            }, 10); // 10 milliseconds
+            }, 10);
             
             activeBewildermentIntervals[elementId] = intervalId;
+            activeAnimationElements.add(elementId);
         }
 
-        // --- MODIFIED: To handle new ranks, CORRUPTED, Auto-Accept, and Auto-Stop ---
+        // --- NEW: Complex rank generation ---
+        function generateComplexRank() {
+            if (Math.random() < COMPLEX_CHANCE) {
+                // Generate two separate rolls with current luck
+                const totalLuck = currentLuck * luckMultiValue;
+                const baseRoll1 = Math.pow(Math.random(), 3 / POWER_EXPONENT) * (1 + totalLuck);
+                const baseRoll2 = Math.pow(Math.random(), 3 / POWER_EXPONENT) * (1 + totalLuck);
+                
+                const rankInfo1 = getRankInfo(baseRoll1);
+                const rankInfo2 = getRankInfo(baseRoll2);
+                
+                return {
+                    isComplex: true,
+                    baseValue1: baseRoll1,
+                    baseValue2: baseRoll2,
+                    totalValue: baseRoll1 + baseRoll2,
+                    rankName1: rankInfo1.name,
+                    rankName2: rankInfo2.name,
+                    displayName: `Complex: ${rankInfo1.name} + ${rankInfo2.name}`
+                };
+            }
+            return null;
+        }
+
+        // --- MODIFIED: To handle new ranks, CORRUPTED, Complex, Auto-Accept, Auto-Stop, and Pending ---
         async function roll() {
             if (isCutscenePlaying) {
                 addToTerminal('Wait for the cutscene to finish!', true);
@@ -1760,13 +1835,50 @@
             let newRankDiscoveredInBulk = false;
             
             for (let i = 0; i < (bulkRollLevel + 1); i++) {
+                // Check for Complex rank
+                const complexResult = generateComplexRank();
+                
+                if (complexResult) {
+                    // Handle complex rank
+                    const baseValue = complexResult.totalValue;
+                    const variantResult = getVariants(baseValue);
+                    let displayValue = variantResult ? variantResult.modifiedValue : baseValue;
+                    const variants = variantResult ? variantResult.variants : [];
+                    
+                    const displayName = complexResult.displayName;
+                    const isSecret = false;
+                    
+                    rollResults.push({ 
+                        baseValue, 
+                        displayValue, 
+                        variants, 
+                        displayName, 
+                        isSecret, 
+                        secretRarityMultiplier: 1,
+                        rankInfo: { name: displayName, rankNum: 999, isUnobtainable: false },
+                        isComplex: true,
+                        complexData: complexResult
+                    });
+                    
+                    if (displayValue > maxRollValueInBulk) {
+                        maxRollValueInBulk = displayValue;
+                        isMaxRollSecret = isSecret;
+                    }
+                    
+                    if (!discoveredRanks.has(displayName)) {
+                        newRankDiscoveredInBulk = true;
+                    }
+                    
+                    continue;
+                }
+                
+                // Normal roll generation
                 const rollResult = generateRoll();
                 const baseValue = rollResult.value;
                 const variantResult = getVariants(baseValue);
                 let displayValue = variantResult ? variantResult.modifiedValue : baseValue;
                 const variants = variantResult ? variantResult.variants : [];
                 
-                // IMPORTANT: getSecretRank is called with no arguments as it relies on Math.random() internally.
                 const secretResult = getSecretRank(); 
                 let rankInfo = getRankInfo(baseValue);
                 let displayName = secretResult ? secretResult.name : rankInfo.name;
@@ -1777,30 +1889,36 @@
                     displayValue *= secretResult.multiplier;
                 }
                 
-                // Apply Unobtainable multiplier if applicable (already applied in getRankInfo)
+                // Apply Unobtainable multiplier if applicable
                 if (rankInfo.isUnobtainable) {
                     displayName = "Unobtainable";
                     displayValue = rankInfo.value;
                 }
                 
+                // Apply LEGACY In im table ?!?!? multiplier
+                if (displayName === "LEGACY In im table ?!?!?" && secretResult.multiplier) {
+                    displayValue *= secretResult.multiplier;
+                }
+                
                 let secretRarityMultiplier = 1;
                 if (isSecret) {
-                    // --- NEW: Don't apply multiplier if chance was 0 (e.g. breaktime on weekday) ---
                     if (secretResult.rarity) {
                         secretRarityMultiplier = secretResult.rarity;
                         displayValue *= secretRarityMultiplier;
                     } else {
-                        // This case handles if getSecretRank returns a result but rarity is 0 or undefined
-                        // e.g. breaktime on a weekday. The roll should be 0.
                         displayValue = 0; 
                     }
                 }
                 
-                // --- NEW: CORRUPTED Logic ---
+                // CORRUPTED Logic
                 if (displayName === "CORRUPTED") {
                     displayValue *= -1;
                 }
-                // --- END NEW ---
+                
+                // Destroyed logic
+                if (displayName === "Destroyed") {
+                    displayValue = 0;
+                }
                 
                 rollResults.push({ 
                     baseValue, 
@@ -1809,7 +1927,8 @@
                     displayName, 
                     isSecret, 
                     secretRarityMultiplier,
-                    rankInfo 
+                    rankInfo,
+                    isComplex: false
                 });
                 
                 if (displayValue > maxRollValueInBulk) {
@@ -1817,7 +1936,6 @@
                     isMaxRollSecret = isSecret;
                 }
                 
-                // Check for new rank discovery
                 if (!discoveredRanks.has(displayName)) {
                     newRankDiscoveredInBulk = true;
                 }
@@ -1828,7 +1946,7 @@
             }
             
             for (const rollData of rollResults) {
-                let { baseValue, displayValue, variants, displayName, isSecret, secretRarityMultiplier, rankInfo } = rollData;
+                let { baseValue, displayValue, variants, displayName, isSecret, secretRarityMultiplier, rankInfo, isComplex, complexData } = rollData;
                 
                 const currencyGain = Math.pow(rankInfo.rankNum, 3);
                 
@@ -1837,33 +1955,35 @@
                 let rankClass = rankClassBase;
                 let rollColor = rollColorBase;
 
-                // --- NEW: Apply CORRUPTED class ---
+                // Apply special classes
                 if (displayName === "CORRUPTED") {
                     rankClass += " secret-corrupted";
                     rollColor = "#FFFFFF"; 
                 }
-                // --- END NEW ---
+                
+                if (isComplex) {
+                    rankClass = "rank-complex";
+                }
 
                 let suffix = "";
-                let finalDisplayValue = displayValue; // NEW: Use a new var for display
+                let finalDisplayValue = displayValue;
                 
                 if (displayName === "100") suffix = ` * 💯`;
                 if (displayName === ":[{(absolute zero)}]:") suffix = ` * 0`;
                 
-                // NEW: Special Display Logic
+                // Special Display Logic
                 if (displayName === "⛧Satanic⛧") {
                     suffix = ` (Actual: ${formatNumber(displayValue)})`;
                     finalDisplayValue = -666.66;
-                    rankClass = "rank-1000000-100000000"; // Red color
+                    rankClass = "rank-1000000-100000000";
                     rollColor = "#ff0000";
                 }
                 if (displayName === "Finale.. wait, how'd this get here?") {
                     suffix = ` (Actual: ${formatNumber(displayValue)})`;
                     finalDisplayValue = 1e10; 
-                    rankClass = getRankClass(1e10); // Get correct color for 1e10
+                    rankClass = getRankClass(1e10);
                     rollColor = getRankClassAndColor(1e10).color;
                 }
-                // END NEW
                 
                 const secretMultiplierText = (isSecret && secretRarityMultiplier > 1) ? ` (x${formatNumber(secretRarityMultiplier)})` : '';
 
@@ -1873,12 +1993,12 @@
                 
                 const currentIndex = rollIndex++;
                 
-                let newRankDiscovered = false; // Flag
+                let newRankDiscovered = false;
                 if (!discoveredRanks.has(displayName)) {
                     discoveredRanks.add(displayName);
                     addToTerminal(`🎉 NEW RANK DISCOVERED: ${displayName}!`, true);
                     updateIndexDisplay();
-                    newRankDiscovered = true; // Set flag
+                    newRankDiscovered = true;
                 }
                 
                 currency += currencyGain;
@@ -1889,8 +2009,6 @@
 
                 if ((displayName !== "CORRUPTED" && displayValue > highestFinalRoll.value) || 
                     (displayName === "CORRUPTED" && (highestFinalRoll.rank !== "CORRUPTED" || displayValue < highestFinalRoll.value))) {
-                    // ^ Special logic: CORRUPTED is "rarer" the more negative it is.
-                    // This also handles the case where the current rarest is positive.
                     highestFinalRoll = {
                         value: displayValue,
                         baseValue: baseValue,
@@ -1929,14 +2047,17 @@
                     `#${formatInteger(currentIndex)}: ${variantText}${content} (+${currencyGain.toFixed(2)} currency)`
                 );
 
-                // Initialize bewilderment animation if applicable
+                // Initialize animations
                 if (displayName === "?!? bewilderment ?!?") {
                     setTimeout(() => initBewildermentAnimation(`roll-${currentIndex}`), 100);
                 }
                 
-                // Initialize EUPHORIA animation if rolled
                 if (displayName === "!! EUPHORIA !!") {
                     initEuphoriaAnimation(`roll-${currentIndex}`, "!! EUPHORIA !!");
+                }
+                
+                if (isComplex) {
+                    activeAnimationElements.add(`roll-${currentIndex}`);
                 }
 
                 // AUTO-ACCEPT Logic
@@ -1945,42 +2066,66 @@
                     const rollElement = document.getElementById(`roll-${currentIndex}`);
                     
                     if (!acceptedRolls.has(currentIndex)) {
-                        if (addToInventory(displayValue, displayName, currentIndex, variants, baseValue)) {
-                            acceptedRolls.add(currentIndex);
-                            
-                            if (activeEuphoriaIntervals[currentIndex]) {
-                                clearInterval(activeEuphoriaIntervals[currentIndex]);
-                                delete activeEuphoriaIntervals[currentIndex];
+                        if (inventory.length >= maxInventory) {
+                            // Send to pending rolls if inventory full
+                            if (addToPendingRolls(displayValue, displayName, currentIndex, variants, baseValue)) {
+                                acceptedRolls.add(currentIndex);
+                                
+                                if (activeEuphoriaIntervals[currentIndex]) {
+                                    clearInterval(activeEuphoriaIntervals[currentIndex]);
+                                    delete activeEuphoriaIntervals[currentIndex];
+                                }
+                                
+                                if (activeBewildermentIntervals[`roll-${currentIndex}`]) {
+                                    clearInterval(activeBewildermentIntervals[`roll-${currentIndex}`]);
+                                    delete activeBewildermentIntervals[`roll-${currentIndex}`];
+                                }
+                                
+                                let acceptSuffix = "";
+                                if (displayName === "⛧Satanic⛧") acceptSuffix = ` (Actual: ${formatNumber(displayValue)})`;
+                                if (displayName === "Finale.. wait, how'd this get here?") acceptSuffix = ` (Actual: ${formatNumber(displayValue)})`;
+                                
+                                addToTerminal(`Auto-Accepted to pending: #${formatInteger(currentIndex)} ${variantText}${formatNumber(finalDisplayValue)} [${displayName}]${acceptSuffix}`, true, 'rank-1000-10000');
+                                
+                                if (rollElement) {
+                                    rollElement.style.opacity = '0.5';
+                                    rollElement.style.cursor = 'not-allowed';
+                                    rollElement.onclick = null;
+                                }
+                                
+                                saveGame();
                             }
-                            
-                            if (activeBewildermentIntervals[`roll-${currentIndex}`]) {
-                                clearInterval(activeBewildermentIntervals[`roll-${currentIndex}`]);
-                                delete activeBewildermentIntervals[`roll-${currentIndex}`];
-                            }
-                            
-                            // Log it
-                            let acceptSuffix = "";
-                            if (displayName === "⛧Satanic⛧") acceptSuffix = ` (Actual: ${formatNumber(displayValue)})`;
-                            if (displayName === "Finale.. wait, how'd this get here?") acceptSuffix = ` (Actual: ${formatNumber(displayValue)})`;
-                            
-                            addToTerminal(`Auto-Accepted: #${formatInteger(currentIndex)} ${variantText}${formatNumber(finalDisplayValue)} [${displayName}]${acceptSuffix}`, true, 'rank-1000-10000');
-                            
-                            // Update the element in the terminal
-                            if (rollElement) {
-                                rollElement.style.opacity = '0.5';
-                                rollElement.style.cursor = 'not-allowed';
-                                rollElement.onclick = null;
-                            }
-                            
-                            saveGame();
                         } else {
-                            // Inventory was full, so we must stop
-                            toggleAutoRoll(); // This will stop it and log "Auto-rolling stopped."
-                            addToTerminal(`Auto-roll stopped: Inventory is full!`, true, 'rank-1000000-100000000');
-                            break; // Stop the loop
+                            // Add directly to inventory
+                            if (addToInventory(displayValue, displayName, currentIndex, variants, baseValue)) {
+                                acceptedRolls.add(currentIndex);
+                                
+                                if (activeEuphoriaIntervals[currentIndex]) {
+                                    clearInterval(activeEuphoriaIntervals[currentIndex]);
+                                    delete activeEuphoriaIntervals[currentIndex];
+                                }
+                                
+                                if (activeBewildermentIntervals[`roll-${currentIndex}`]) {
+                                    clearInterval(activeBewildermentIntervals[`roll-${currentIndex}`]);
+                                    delete activeBewildermentIntervals[`roll-${currentIndex}`];
+                                }
+                                
+                                let acceptSuffix = "";
+                                if (displayName === "⛧Satanic⛧") acceptSuffix = ` (Actual: ${formatNumber(displayValue)})`;
+                                if (displayName === "Finale.. wait, how'd this get here?") acceptSuffix = ` (Actual: ${formatNumber(displayValue)})`;
+                                
+                                addToTerminal(`Auto-Accepted: #${formatInteger(currentIndex)} ${variantText}${formatNumber(finalDisplayValue)} [${displayName}]${acceptSuffix}`, true, 'rank-1000-10000');
+                                
+                                if (rollElement) {
+                                    rollElement.style.opacity = '0.5';
+                                    rollElement.style.cursor = 'not-allowed';
+                                    rollElement.onclick = null;
+                                }
+                                
+                                saveGame();
+                            }
                         }
                     }
-                    // Do NOT break; continue rolling (unless inventory was full).
                 }
                 
                 // AUTO-STOP Logic (stops auto-roll without accepting)
@@ -1992,13 +2137,13 @@
             }
             
             updateStats();
+            preserveAnimations();
             saveGame();
         }
 
-        // --- MODIFIED: To stop animations on accept ---
+        // --- MODIFIED: To stop animations on accept and handle pending rolls ---
         function tryAddToInventory(value, rank, index, element) {
             if (acceptedRolls.has(index)) {
-                // MODIFIED: Use formatInteger
                 addToTerminal(`Roll #${formatInteger(index)} has already been accepted!`, true);
                 return;
             }
@@ -2019,54 +2164,99 @@
                 }
             }
             
-            if (addToInventory(value, rank, index, variants, baseValue)) {
-                acceptedRolls.add(index);
+            // Check if inventory is full
+            if (inventory.length >= maxInventory) {
+                // Try to add to pending rolls
+                if (addToPendingRolls(value, rank, index, variants, baseValue)) {
+                    acceptedRolls.add(index);
 
-                // --- NEW: Stop animations ---
-                if (activeEuphoriaIntervals[index]) {
-                    clearInterval(activeEuphoriaIntervals[index]);
-                    delete activeEuphoriaIntervals[index];
+                    // Stop animations
+                    if (activeEuphoriaIntervals[index]) {
+                        clearInterval(activeEuphoriaIntervals[index]);
+                        delete activeEuphoriaIntervals[index];
+                    }
+                    
+                    if (activeBewildermentIntervals[`roll-${index}`]) {
+                        clearInterval(activeBewildermentIntervals[`roll-${index}`]);
+                        delete activeBewildermentIntervals[`roll-${index}`];
+                    }
+                    
+                    const variantText = variants.map(v => `[${v.name}]`).join('') + ' ';
+                    
+                    let suffix = "";
+                    let displayValue = value;
+                    if (rank === "100") suffix = " * 💯";
+                    if (rank === ":[{(absolute zero)}]:") suffix = " * 0";
+                    
+                    if (rank === "⛧Satanic⛧") {
+                        suffix = ` (Actual: ${formatNumber(value)})`;
+                        displayValue = -666.66;
+                    }
+                    if (rank === "Finale.. wait, how'd this get here?") {
+                        suffix = ` (Actual: ${formatNumber(value)})`;
+                        displayValue = 1e10;
+                    }
+                    
+                    addToTerminal(`Added to pending rolls: #${formatInteger(index)} ${variantText}${formatNumber(displayValue)} [${rank}]${suffix}`, true); 
+                    
+                    const rollElement = document.getElementById(`roll-${index}`);
+                    if (rollElement) {
+                        rollElement.style.opacity = '0.5';
+                        rollElement.style.cursor = 'not-allowed';
+                        rollElement.onclick = null;
+                    }
+                    
+                    saveGame();
+                } else {
+                    addToTerminal(`Cannot add to inventory or pending rolls: both are full!`, true);
                 }
-                
-                if (activeBewildermentIntervals[`roll-${index}`]) {
-                    clearInterval(activeBewildermentIntervals[`roll-${index}`]);
-                    delete activeBewildermentIntervals[`roll-${index}`];
+            } else {
+                // Add to inventory
+                if (addToInventory(value, rank, index, variants, baseValue)) {
+                    acceptedRolls.add(index);
+
+                    // Stop animations
+                    if (activeEuphoriaIntervals[index]) {
+                        clearInterval(activeEuphoriaIntervals[index]);
+                        delete activeEuphoriaIntervals[index];
+                    }
+                    
+                    if (activeBewildermentIntervals[`roll-${index}`]) {
+                        clearInterval(activeBewildermentIntervals[`roll-${index}`]);
+                        delete activeBewildermentIntervals[`roll-${index}`];
+                    }
+                    
+                    const variantText = variants.map(v => `[${v.name}]`).join('') + ' ';
+                    
+                    let suffix = "";
+                    let displayValue = value;
+                    if (rank === "100") suffix = " * 💯";
+                    if (rank === ":[{(absolute zero)}]:") suffix = " * 0";
+                    
+                    if (rank === "⛧Satanic⛧") {
+                        suffix = ` (Actual: ${formatNumber(value)})`;
+                        displayValue = -666.66;
+                    }
+                    if (rank === "Finale.. wait, how'd this get here?") {
+                        suffix = ` (Actual: ${formatNumber(value)})`;
+                        displayValue = 1e10;
+                    }
+                    
+                    addToTerminal(`Added to inventory: #${formatInteger(index)} ${variantText}${formatNumber(displayValue)} [${rank}]${suffix}`, true); 
+                    
+                    const rollElement = document.getElementById(`roll-${index}`);
+                    if (rollElement) {
+                        rollElement.style.opacity = '0.5';
+                        rollElement.style.cursor = 'not-allowed';
+                        rollElement.onclick = null;
+                    }
+                    
+                    saveGame();
                 }
-                // --- END NEW ---
-                
-                const variantText = variants.map(v => `[${v.name}]`).join('') + ' ';
-                
-                let suffix = "";
-                let displayValue = value; // NEW
-                if (rank === "100") suffix = " * 💯";
-                if (rank === ":[{(absolute zero)}]:") suffix = " * 0";
-                
-                // NEW: Special display for add log
-                if (rank === "⛧Satanic⛧") {
-                    suffix = ` (Actual: ${formatNumber(value)})`;
-                    displayValue = -666.66;
-                }
-                if (rank === "Finale.. wait, how'd this get here?") {
-                    suffix = ` (Actual: ${formatNumber(value)})`;
-                    displayValue = 1e10;
-                }
-                // END NEW
-                
-                // MODIFIED: use formatInteger
-                addToTerminal(`Added to inventory: #${formatInteger(index)} ${variantText}${formatNumber(displayValue)} [${rank}]${suffix}`, true); 
-                
-                const rollElement = document.getElementById(`roll-${index}`);
-                if (rollElement) {
-                    rollElement.style.opacity = '0.5';
-                    rollElement.style.cursor = 'not-allowed';
-                    rollElement.onclick = null;
-                }
-                
-                saveGame();
             }
         }
 
-        // MODIFIED: For Auto-Accept and Auto-Stop
+        // --- MODIFIED: For Auto-Accept and Auto-Stop ---
         function toggleAutoRoll() {
             if (isCutscenePlaying) {
                 addToTerminal('Cannot toggle auto-roll during a cutscene!', true);
@@ -2097,7 +2287,6 @@
                 btn.textContent = 'Stop Auto Roll';
                 btn.classList.add('active');
                 
-                // MODIFIED: Log message for auto-accept and auto-stop
                 let message = 'Auto-rolling started...';
                 const acceptConditions = [];
                 const stopConditions = [];
@@ -2128,7 +2317,6 @@
             if (currency >= upgradeCost) {
                 currency -= upgradeCost;
                 totalUpgrades++;
-                // MODIFIED: Uses new constant
                 maxInventory += INVENTORY_PER_UPGRADE;
                 
                 updateCalculatedStats();
@@ -2192,21 +2380,19 @@
                 let rankClass = className;
                 let rollColor = color;
                 const displayName = highestFinalRoll.rank;
-                let displayValue = highestFinalRoll.value; // NEW
-                let suffix = ""; // NEW
+                let displayValue = highestFinalRoll.value;
+                let suffix = "";
 
                 if (displayName === "~Nonavacious~") {
                     rankClass += " secret-nonavacious";
                 }
                 
-                // --- NEW: Apply CORRUPTED class ---
                 if (displayName === "CORRUPTED") {
                     rankClass += " secret-corrupted";
                     rollColor = "#FFFFFF";
                 }
-                // --- END NEW ---
                 
-                // NEW: Special display for rarest
+                // Special display for rarest
                 if (displayName === "⛧Satanic⛧") {
                     suffix = ` (Actual: ${formatNumber(highestFinalRoll.value)})`;
                     displayValue = -666.66;
@@ -2215,14 +2401,12 @@
                     suffix = ` (Actual: ${formatNumber(highestFinalRoll.value)})`;
                     displayValue = 1e10;
                 }
-                // END NEW
 
                 let variantText = '';
                 if (highestFinalRoll.variants && highestFinalRoll.variants.length > 0) {
                     variantText = highestFinalRoll.variants.map(v => `[${v.name}]`).join('') + ' ';
                 }
                 
-                // MODIFIED: Added satanic wrapper
                 addToTerminal(
                     `Rarest roll: ${variantText}<span class="satanic-wrapper"><span class="${rankClass}" style="color: ${rollColor};">${formatNumber(displayValue)} [${displayName}]${suffix}</span></span>`,
                     true
@@ -2240,12 +2424,11 @@
         }
 
         // --- NEW: Import/Export Functions ---
-        
         function exportSave() {
             try {
-                saveGame(); // Ensure current state is saved to localStorage first
+                saveGame();
                 const saveData = localStorage.getItem('calisRNGGame');
-                const encodedData = btoa(saveData); // Base64 encode it
+                const encodedData = btoa(saveData);
                 document.getElementById('saveDataTextarea').value = encodedData;
                 addToTerminal('Save data exported to text box. Copy it to save it.', true);
             } catch (e) {
@@ -2265,15 +2448,12 @@
                     addToTerminal('Paste save data into the text box first!', true);
                     return;
                 }
-                const decodedData = atob(encodedData); // Base64 decode
+                const decodedData = atob(encodedData);
                 
-                // Test if it's valid JSON
                 JSON.parse(decodedData); 
                 
-                // If it is, save it and reload
                 localStorage.setItem('calisRNGGame', decodedData);
                 
-                // Stop all intervals before reloading
                 if (autoRollInterval) clearInterval(autoRollInterval);
                 if (eventInterval) clearInterval(eventInterval);
                 if (shapeInterval) clearInterval(shapeInterval);
@@ -2287,7 +2467,6 @@
                 
                 addToTerminal('Import successful! Reloading game...', true, 'rank-1000000000-10000000000');
                 
-                // Wait 1 second then reload the page
                 setTimeout(() => {
                     location.reload();
                 }, 1000);
@@ -2297,12 +2476,8 @@
                 addToTerminal('Error importing save data. Data might be corrupt or invalid. Check console.', true, 'rank-1000000-100000000');
             }
         }
-        
-        // --- END Import/Export Functions ---
 
-
-        // --- NEW: SHAPE SYSTEM FUNCTIONS ---
-
+        // --- SHAPE SYSTEM FUNCTIONS ---
         function addToShapeTerminal(text) {
             const terminal = document.getElementById('shape-spawn-output');
             const line = document.createElement('div');
@@ -2320,42 +2495,34 @@
         function calculateGeometrixGain(shape) {
             let baseGain = 0;
             if (shape.name === "Circle") {
-                // formula for circle: Math.random() ** -1.5 (starts at 250)
                 const base = Math.pow(Math.random(), -1.5);
                 baseGain = base * 250;
             } else {
-                // formula for others: actual rarity of polygon / 2
                 baseGain = shape.rarity / 2;
             }
             
-            // NEW: Apply GMX Multiplier from Clicker
             const gmxMultiplier = 1 + (gmxMultiLevel * 0.5);
             return baseGain * gmxMultiplier;
         }
         
-        // NEW: Function to remove a shape from the array and DOM
         function despawnShape(shapeId, isCollected = false) {
             const shapeIndex = activeShapes.findIndex(s => s.id === shapeId);
             
             if (shapeIndex === -1) {
-                return; // Already gone
+                return;
             }
 
             const shapeData = activeShapes[shapeIndex];
             
-            // Clear the timer if it exists (safety)
             if (shapeData.timerId) {
                 clearTimeout(shapeData.timerId);
             }
             
-            // Remove from array
             activeShapes.splice(shapeIndex, 1);
             
-            // Remove from DOM
             const element = document.getElementById(`shape-${shapeId}`);
             if (element) {
                  if (isCollected) {
-                    // Visual feedback for collected shape
                     element.style.transform = 'scale(1.5)';
                     element.style.opacity = '0';
                     setTimeout(() => element.remove(), 200);
@@ -2371,22 +2538,18 @@
             saveGame();
         }
 
-        // NEW: Function to re-render shapes after a load (recreates DOM elements from saved data)
         function renderActiveShapes() {
             const shapesField = document.getElementById('shapes-field');
             shapesField.innerHTML = ''; 
             
-            // Filter out expired shapes and create timers for remaining ones
             activeShapes = activeShapes.filter(shapeData => {
                 const timeElapsed = Date.now() - shapeData.spawnTime;
                 
-                // If expired, skip and log as despawned
                 if (timeElapsed >= SHAPE_DESPAWN_TIME_MS) {
                     addToShapeTerminal(`A **${shapeData.name}** despawned while you were away!`);
                     return false;
                 }
 
-                // If not expired, create DOM element
                 const shapeElement = document.createElement('div');
                 shapeElement.id = `shape-${shapeData.id}`;
                 shapeElement.className = `clickable-shape shape-${shapeData.name.replace(/\s/g, '-')}`;
@@ -2398,21 +2561,17 @@
                 
                 shapesField.appendChild(shapeElement);
 
-                // Resume the timer for the remaining duration
                 const remainingTime = SHAPE_DESPAWN_TIME_MS - timeElapsed;
                 shapeData.timerId = setTimeout(() => {
                     despawnShape(shapeData.id, false); 
                 }, remainingTime);
 
-                return true; // Keep in the activeShapes array
+                return true;
             });
             
-            // Save to ensure expired shapes are removed from save data immediately
-            saveGame(); 
+            saveGame();
         }
 
-
-        // MODIFIED: Now creates clickable visual elements and sets a despawn timer
         function spawnShape() {
             if (!shapesUnlocked) return;
             
@@ -2424,14 +2583,11 @@
             const fieldWidth = shapesField.clientWidth;
             const fieldHeight = shapesField.clientHeight;
 
-
             for (let j = 0; j < spawnCount; j++) {
                 const cumulativeChances = [];
                 let cumulativeSum = 0;
 
                 for (const shape of SHAPES) {
-                    // Apply shape luck (Upgrade 1) as a multiplier to the base chance
-                    // The 'chance' property is now guaranteed to exist for all shapes.
                     const adjustedChance = shape.chance * (1 + shapeLuckBonus);
                     cumulativeSum += adjustedChance;
                     cumulativeChances.push({ maxChance: cumulativeSum, shape: shape });
@@ -2447,7 +2603,6 @@
                     }
                 }
                 
-                // Fallback to the most common shape (Triangle) to guarantee a spawn if something fails
                 if (!selectedShape) {
                     selectedShape = SHAPES[0]; 
                 }
@@ -2456,7 +2611,6 @@
                 totalPossibleGain += gain;
                 spawnedCount++;
                 
-                // --- NEW VISUAL SPAWNING LOGIC ---
                 const shapeId = Date.now().toString() + Math.random().toString(36).substring(2, 9);
                 const shapeSize = 30;
                 const posX = Math.random() * (fieldWidth - shapeSize); 
@@ -2464,13 +2618,12 @@
 
                 const shapeElement = document.createElement('div');
                 shapeElement.id = `shape-${shapeId}`;
-                shapeElement.className = `clickable-shape shape-${selectedShape.name.replace(/\s/g, '-')}`; 
+                shapeElement.className = `clickable-shape shape-${selectedShape.name.replace(/\s/g, '-')}`;
                 shapeElement.style.backgroundColor = selectedShape.color;
                 shapeElement.style.left = `${posX}px`;
                 shapeElement.style.top = `${posY}px`;
-                shapeElement.textContent = selectedShape.name[0]; // First letter display
+                shapeElement.textContent = selectedShape.name[0];
 
-                // Store data 
                 const shapeData = {
                     id: shapeId,
                     name: selectedShape.name,
@@ -2478,31 +2631,26 @@
                     color: selectedShape.color,
                     posX: posX,
                     posY: posY,
-                    spawnTime: Date.now(), // NEW: Record spawn time
-                    timerId: null // Placeholder for the timeout ID
+                    spawnTime: Date.now(),
+                    timerId: null
                 };
                 
-                // Set the despawn timer and store the ID
                 shapeData.timerId = setTimeout(() => {
-                    despawnShape(shapeId, false); // isCollected = false
+                    despawnShape(shapeId, false);
                 }, SHAPE_DESPAWN_TIME_MS);
 
                 activeShapes.push(shapeData);
                 
-                // Attach click handler
                 shapeElement.onclick = () => collectShape(shapeData.id);
                 
                 shapesField.appendChild(shapeElement);
-                // --- END NEW VISUAL SPAWNING LOGIC ---
             }
             
-            // Display total GMX that can be collected (not collected yet)
             if (spawnedCount > 0) {
                 addToShapeTerminal(`Spawned ${spawnedCount} shapes. Max collection: ${formatGeometrix(totalPossibleGain)} GMX.`);
             }
         }
         
-        // MODIFIED: Function to collect a shape when clicked
         function collectShape(shapeId) {
             const shapeIndex = activeShapes.findIndex(s => s.id === shapeId);
             
@@ -2515,14 +2663,11 @@
             
             addToTerminal(`Collected **${shapeData.name}** (+${formatGeometrix(shapeData.gain)} GMX)!`, true, 'command');
 
-            // Remove the shape and clear its timer
-            // Pass true to indicate it was collected, which adds a short visual transition
             despawnShape(shapeId, true); 
             
             updateStats();
         }
 
-        // MODIFIED: No immediate spawn on interval start
         function startShapeInterval() {
             if (shapeInterval) clearInterval(shapeInterval);
             if (!shapesUnlocked) return;
@@ -2538,7 +2683,7 @@
                 shapesUnlocked = true;
                 addToTerminal(`**Shapes GUI unlocked!** Start collecting the clickable polygons.`, true, '#00FF00');
                 updateCalculatedStats();
-                startShapeInterval(); // Start the spawner
+                startShapeInterval();
                 updateStats();
                 saveGame();
             } else {
@@ -2576,7 +2721,7 @@
                 geometrix -= luckMultiCost;
                 luckMultiLevel++;
                 
-                updateCalculatedStats(); // Recalculate multipliers
+                updateCalculatedStats();
 
                 addToTerminal(
                     `Luck Multiplier purchased! Level: ${luckMultiLevel} | New Multi: x${luckMultiValue.toFixed(2)}`,
@@ -2601,7 +2746,7 @@
                 geometrix -= bulkShapeCost;
                 bulkShapeLevel++;
                 
-                updateCalculatedStats(); // Recalculate cooldown
+                updateCalculatedStats();
                 
                 addToTerminal(
                     `Bulk/Cooldown purchased! Level: ${bulkShapeLevel}/${MAX_BULK_SHAPE_LEVEL} | Spawns: ${bulkShapeLevel + 1} | Cooldown: ${formatCooldown(currentShapeCooldown)}s`,
@@ -2612,17 +2757,15 @@
                     bulkShapeCost *= BULK_SHAPE_COST_MULTIPLIER;
                 }
                 
-                startShapeInterval(); // Restart interval with new cooldown
+                startShapeInterval();
                 updateStats();
                 saveGame();
             } else {
                 addToTerminal(`Not enough Geometrix! Need ${formatGeometrix(bulkShapeCost)} GMX.`, true);
             }
         }
-        // --- END SHAPES FUNCTIONS ---
 
-        // --- NEW: CLICKER SYSTEM FUNCTIONS ---
-
+        // --- CLICKER SYSTEM FUNCTIONS ---
         function unlockClicker() {
             if (clickerUnlocked) {
                 addToTerminal('Clicker is already unlocked!', true);
@@ -2632,7 +2775,7 @@
                 geometrix -= UNLOCK_CLICKER_COST;
                 clickerUnlocked = true;
                 addToTerminal(`**Clicker GUI unlocked!** Click the clover!`, true, '#FFD700');
-                updateStats(); // This will show the UI
+                updateStats();
                 saveGame();
             } else {
                 addToTerminal(`Not enough Geometrix! Need ${formatGeometrix(UNLOCK_CLICKER_COST)} GMX.`, true);
@@ -2645,10 +2788,8 @@
             fortunium += finalGain;
             
             updateStats();
-            // No save on click, that's too much.
         }
         
-        // --- FIX: Refactored to move updateStats() and saveGame() into success blocks ---
         function buyFortuniumUpgrade(type) {
             if (!clickerUnlocked) return;
             
@@ -2669,7 +2810,7 @@
                 if (fortunium >= fortuniumLuckCost) {
                     fortunium -= fortuniumLuckCost;
                     fortuniumLuckLevel++;
-                    fortuniumLuck += 0.5; // Additive +0.5x
+                    fortuniumLuck += 0.5;
                     fortuniumLuckCost *= 1.25;
                     addToTerminal(`Fortunium Luck upgrade purchased! Fortunium Luck is now +${fortuniumLuck.toFixed(1)}x`, true, '#FFD700');
                     updateStats();
@@ -2689,7 +2830,7 @@
                     clickerLuckLevel++;
                     clickerLuckCost *= 50;
                     addToTerminal(`Clicker Luck upgrade purchased! Level ${clickerLuckLevel}/${MAX_CLICKER_LUCK_LEVEL}.`, true, '#FFD700');
-                    updateCalculatedStats(); // This upgrade affects main luck
+                    updateCalculatedStats();
                     updateStats();
                     saveGame();
                 } else {
@@ -2698,14 +2839,12 @@
                 }
             }
         }
-        // --- END NEW FUNCTIONS ---
 
         // --- NEW: EUPHORIA Animation Function ---
         function initEuphoriaAnimation(elementId, baseText) {
             const element = document.getElementById(elementId);
             if (!element) return;
             
-            // Clear existing interval for this element to prevent duplicates
             if (activeEuphoriaIntervals[elementId]) {
                 clearInterval(activeEuphoriaIntervals[elementId]);
             }
@@ -2715,67 +2854,136 @@
             
             const intervalId = setInterval(() => {
                 const currentElement = document.getElementById(elementId);
-                // Stop if element is gone
                 if (!currentElement) {
                     clearInterval(activeEuphoriaIntervals[elementId]);
                     delete activeEuphoriaIntervals[elementId];
                     return;
                 }
                 
-                // Find baseText in the full HTML
                 const textIndex = currentElement.innerHTML.indexOf(baseText);
                 if (textIndex === -1) {
-                    // Text not found (maybe it was mid-animation), reset it
                     currentElement.innerHTML = originalHtml;
                     return;
                 }
                 
-                // Get the parts of the string before and after the text to animate
                 const prefix = currentElement.innerHTML.substring(0, textIndex);
                 const suffix = currentElement.innerHTML.substring(textIndex + baseText.length);
 
                 const newChars = [...textChars];
                 
-                // Pick 2 random, unique indices within the baseText
                 let idx1 = Math.floor(Math.random() * newChars.length);
                 let idx2 = Math.floor(Math.random() * newChars.length);
                 while (idx1 === idx2) {
                     idx2 = Math.floor(Math.random() * newChars.length);
                 }
 
-                // Replace with symbols
                 const sym1 = EUPHORIA_SYMBOLS[Math.floor(Math.random() * EUPHORIA_SYMBOLS.length)];
                 const sym2 = EUPHORIA_SYMBOLS[Math.floor(Math.random() * EUPHORIA_SYMBOLS.length)];
                 newChars[idx1] = `<span style="opacity: 0.7; display: inline-block; transform: scale(1.1);">${sym1}</span>`;
                 newChars[idx2] = `<span style="opacity: 0.7; display: inline-block; transform: scale(1.1);">${sym2}</span>`;
                 
-                // Reconstruct the HTML
                 currentElement.innerHTML = prefix + newChars.join('') + suffix;
 
-                // Set a timeout to revert back to the original HTML
                 setTimeout(() => {
                     const stillExists = document.getElementById(elementId);
                     if (stillExists && activeEuphoriaIntervals[elementId]) {
-                        // Just reset to original HTML, it's safer and flicker-free
                         stillExists.innerHTML = originalHtml;
                     }
-                }, 25); // Revert after 25ms
+                }, 25);
 
-            }, 100); // Repeat the flicker every 100ms
+            }, 100);
             
             activeEuphoriaIntervals[elementId] = intervalId;
+            activeAnimationElements.add(elementId);
         }
-        // --- END NEW FUNCTION ---
 
+        // --- EVENT FUNCTIONS ---
+        function startEvent(event) {
+            if (currentEvent) {
+                clearTimeout(currentEvent.timeoutId);
+                endEvent(currentEvent);
+            }
+            
+            currentEvent = { 
+                name: event.name, 
+                duration: event.duration, 
+                description: event.description, 
+                targets: event.targets, 
+                multiplier: event.multiplier, 
+                eventChanceBoost: event.eventChanceBoost 
+            };
+            eventEndTime = Date.now() + event.duration;
 
-        // MODIFIED: To exclude the volatile timerId from saved data and include new settings
+            addToTerminal(`🚨 EVENT STARTED: **${event.name}**! ${event.description} for ${event.duration / 1000} seconds!`, true, 'rank-1000-10000'); 
+
+            if (event.name === "Lol") {
+                eventCheckChance = event.eventChanceBoost; 
+            } else {
+                eventCheckChance = 1;
+            }
+
+            currentEvent.timeoutId = setTimeout(() => {
+                endEvent(event);
+            }, event.duration);
+
+            updateStats();
+        }
+
+        function endEvent(event) {
+            addToTerminal(`✅ EVENT ENDED: **${event.name}** is over.`, true);
+
+            if (event.name === "Lol") {
+                eventCheckChance = 1;
+            }
+
+            if (currentEvent && currentEvent.name === event.name) {
+                currentEvent = null;
+                eventEndTime = 0;
+            }
+
+            updateStats();
+        }
+        
+        function resumeEvent(event, remainingDuration) {
+            currentEvent = event;
+            if (event.name === "Lol") {
+                eventCheckChance = event.eventChanceBoost; 
+            } else {
+                eventCheckChance = 1;
+            }
+            
+            currentEvent.timeoutId = setTimeout(() => {
+                endEvent(event);
+            }, remainingDuration);
+            
+            addToTerminal(`Resuming active event: **${event.name}** (${(remainingDuration / 1000).toFixed(1)}s left).`, true, 'rank-1000-10000');
+        }
+
+        function checkEvent() {
+            if (currentEvent) return; 
+
+            for (const event of EVENTS) {
+                const adjustedChance = event.chance / eventCheckChance;
+
+                if (Math.random() < adjustedChance) {
+                    startEvent(event);
+                    return; 
+                }
+            }
+        }
+
+        function startEventLoop() {
+            if (eventInterval) clearInterval(eventInterval);
+            eventInterval = setInterval(checkEvent, EVENT_CHECK_INTERVAL_MS);
+        }
+
+        // --- MODIFIED: saveGame to include new data ---
         function saveGame() {
             const gameState = {
                 currency,
                 totalUpgrades,
                 upgradeCost,
                 highestBaseRoll, 
-                // FIX: Ensure highestFinalRoll has necessary properties for old saves 
                 highestFinalRoll: highestFinalRoll || { 
                     value: 0, 
                     baseValue: 0, 
@@ -2788,18 +2996,25 @@
                 rollIndex,
                 acceptedRolls: Array.from(acceptedRolls),
                 discoveredRanks: Array.from(discoveredRanks),
-                bulkRollLevel: bulkRollLevel,
-                bulkRollCost: bulkRollCost,
+                bulkRollLevel,
+                bulkRollCost,
                 
-                // NEW: Cutscene State 
-                cutscenesEnabled: cutscenesEnabled,
+                // NEW: Pending rolls
+                pendingRolls,
+                maxPendingRolls,
+                
+                // NEW: Secrets toggle
+                secretsEnabled,
 
-                // FIX: Event State 
+                // Cutscene State
+                cutscenesEnabled,
+
+                // Event State
                 currentEvent: currentEvent ? { name: currentEvent.name, duration: currentEvent.duration, description: currentEvent.description, targets: currentEvent.targets, multiplier: currentEvent.multiplier, eventChanceBoost: currentEvent.eventChanceBoost } : null,
-                eventEndTime: eventEndTime,
-                eventCheckChance: eventCheckChance,
+                eventEndTime,
+                eventCheckChance,
 
-                // NEW: Auto-Accept and Auto-Stop Settings
+                // Auto-Accept and Auto-Stop Settings
                 autoAcceptThreshold,
                 autoAcceptTrueRNGValue,
                 autoAcceptSecretThresholdValue,
@@ -2809,7 +3024,7 @@
                 autoStopSecretThresholdValue,
                 autoStopOnNewRank,
 
-                // NEW: Shapes Save Data
+                // Shapes Save Data
                 geometrix,
                 shapesUnlocked,
                 shapeLuckLevel,
@@ -2818,7 +3033,6 @@
                 luckMultiCost,
                 bulkShapeLevel,
                 bulkShapeCost,
-                // NEW: Active Shapes Array (only necessary properties)
                 activeShapes: activeShapes.map(shape => ({
                     id: shape.id,
                     name: shape.name,
@@ -2826,10 +3040,10 @@
                     color: shape.color,
                     posX: shape.posX,
                     posY: shape.posY,
-                    spawnTime: shape.spawnTime // Only save the spawn time
+                    spawnTime: shape.spawnTime
                 })),
                 
-                // NEW: Clicker Save Data
+                // Clicker Save Data
                 clickerUnlocked,
                 fortunium,
                 fortuniumLuck,
@@ -2843,7 +3057,7 @@
             localStorage.setItem('calisRNGGame', JSON.stringify(gameState));
         }
 
-        // MODIFIED: To load new save data (Cutscene state, Event state, activeShapes, Clicker, and new settings)
+        // --- MODIFIED: loadGame to include new data ---
         function loadGame() {
             const saved = localStorage.getItem('calisRNGGame');
             if (saved) {
@@ -2853,12 +3067,10 @@
                     totalUpgrades = gameState.totalUpgrades || 0;
                     upgradeCost = gameState.upgradeCost || 50;
                     
-                    // FIX: Safely load and initialize highestFinalRoll 
                     if (gameState.highestFinalRoll) {
                         highestFinalRoll = gameState.highestFinalRoll;
-                        // Ensure isSecret property exists for old saves
                         if (typeof highestFinalRoll.isSecret === 'undefined') {
-                             highestFinalRoll.isSecret = SECRET_RANKS_CHANCES.map(r => r.name).includes(highestFinalRoll.rank) || highestFinalRoll.rank === "morts luck" || highestFinalRoll.rank === "Unobtainable"; // MODIFIED: Added Unobtainable
+                             highestFinalRoll.isSecret = SECRET_RANKS_CHANCES.map(r => r.name).includes(highestFinalRoll.rank) || highestFinalRoll.rank === "morts luck" || highestFinalRoll.rank === "Unobtainable";
                         }
                     } else {
                         const baseRoll = gameState.highestRoll || 0;
@@ -2872,21 +3084,18 @@
                         };
                     }
                     
-                    highestBaseRoll = gameState.highestBaseRoll || (highestFinalRoll ? highestFinalRoll.baseValue : 0); // Safety check added
-
+                    highestBaseRoll = gameState.highestBaseRoll || (highestFinalRoll ? highestFinalRoll.baseValue : 0);
                     maxInventory = gameState.maxInventory || 10;
                     
                     inventory = (gameState.inventory || []).map(item => {
-                        // Handle variant conversion for older saves
                         if (item.variant && !item.variants) {
                             item.variants = [item.variant];
                             delete item.variant;
                         } else if (!item.variants) {
                             item.variants = [];
                         }
-                        // Ensure isSecret property exists for older saves
                          if (typeof item.isSecret === 'undefined') {
-                            item.isSecret = SECRET_RANKS_CHANCES.map(r => r.name).includes(item.rank) || item.rank === "morts luck" || item.rank === "breaktime" || item.rank === "Unobtainable"; // MODIFIED: Added Unobtainable
+                            item.isSecret = SECRET_RANKS_CHANCES.map(r => r.name).includes(item.rank) || item.rank === "morts luck" || item.rank === "breaktime" || item.rank === "Unobtainable";
                         }
                         return item;
                     });
@@ -2897,15 +3106,22 @@
                     bulkRollLevel = gameState.bulkRollLevel || 0;
                     bulkRollCost = gameState.bulkRollCost || 500000;
                     
-                    // NEW: Load Cutscene State 
-                    cutscenesEnabled = typeof gameState.cutscenesEnabled === 'boolean' ? gameState.cutscenesEnabled : true; 
+                    // NEW: Load pending rolls
+                    pendingRolls = gameState.pendingRolls || [];
+                    maxPendingRolls = gameState.maxPendingRolls || maxInventory * 3;
+                    
+                    // NEW: Load secrets enabled
+                    secretsEnabled = typeof gameState.secretsEnabled !== 'undefined' ? gameState.secretsEnabled : true;
+                    
+                    // Load Cutscene State
+                    cutscenesEnabled = typeof gameState.cutscenesEnabled === 'boolean' ? gameState.cutscenesEnabled : true;
 
-                    // FIX: Load Event State 
+                    // Load Event State
                     currentEvent = gameState.currentEvent || null;
                     eventEndTime = gameState.eventEndTime || 0;
                     eventCheckChance = gameState.eventCheckChance || 1;
 
-                    // NEW: Load Auto-Accept and Auto-Stop Settings
+                    // Load Auto-Accept and Auto-Stop Settings
                     autoAcceptThreshold = gameState.autoAcceptThreshold || 0;
                     autoAcceptTrueRNGValue = gameState.autoAcceptTrueRNGValue || 0;
                     autoAcceptSecretThresholdValue = gameState.autoAcceptSecretThresholdValue || 0;
@@ -2916,7 +3132,7 @@
                     autoStopSecretThresholdValue = gameState.autoStopSecretThresholdValue || 0;
                     autoStopOnNewRank = gameState.autoStopOnNewRank || false;
 
-                    // NEW: Load Shapes Data
+                    // Load Shapes Data
                     geometrix = gameState.geometrix || 0;
                     shapesUnlocked = gameState.shapesUnlocked || false;
                     shapeLuckLevel = gameState.shapeLuckLevel || 0;
@@ -2926,10 +3142,10 @@
                     bulkShapeLevel = gameState.bulkShapeLevel || 0;
                     bulkShapeCost = gameState.bulkShapeCost || 50;
                     
-                    // NEW: Load Active Shapes
+                    // Load Active Shapes
                     activeShapes = gameState.activeShapes || [];
 
-                    // NEW: Load Clicker Data
+                    // Load Clicker Data
                     clickerUnlocked = gameState.clickerUnlocked || false;
                     fortunium = gameState.fortunium || 0;
                     fortuniumLuck = gameState.fortuniumLuck || 0;
@@ -2940,23 +3156,20 @@
                     clickerLuckLevel = gameState.clickerLuckLevel || 0;
                     clickerLuckCost = gameState.clickerLuckCost || 1000;
 
-
                     // Call the calculation function
                     updateCalculatedStats();
                     
                     // Start the shape spawner if it was unlocked
                     if (shapesUnlocked) {
-                        // FIX: Re-render shapes and start/resume despawn timers on load
                         renderActiveShapes();
                         startShapeInterval();
                     }
                     
-                    // FIX: Check and resume active event 
+                    // Check and resume active event
                     if (currentEvent && eventEndTime > Date.now()) {
                         const durationRemaining = eventEndTime - Date.now();
                         resumeEvent(currentEvent, durationRemaining);
                     } else if (currentEvent && eventEndTime <= Date.now()) {
-                        // Event ended while offline - clean up
                         endEvent({ name: currentEvent.name, eventChanceBoost: currentEvent.eventChanceBoost });
                     }
                     
@@ -2974,14 +3187,17 @@
                     updateStats();
                     updateInventoryDisplay();
                     updateIndexDisplay();
+                    updatePendingDisplay();
+                    preserveAnimations();
                     addToTerminal('Game loaded!', true);
                 } catch (e) {
                     console.error('Error loading game:', e);
-                    // Fallback to default state if save is corrupt
                     updateCalculatedStats();
                     updateStats();
                     updateInventoryDisplay();
                     updateIndexDisplay();
+                    updatePendingDisplay();
+                    preserveAnimations();
                 }
             } else {
                  // First time load
@@ -2989,9 +3205,12 @@
                 updateStats();
                 updateInventoryDisplay();
                 updateIndexDisplay();
+                updatePendingDisplay();
+                preserveAnimations();
             }
         }
 
+        // Initialize the game
         document.addEventListener('keydown', function(e) {
             if (e.key === 'r' && e.target.tagName !== 'INPUT') {
                 e.preventDefault();
@@ -3027,12 +3246,11 @@
             autoStopTrueRNGValue = parseFloat(e.target.value) || 0;
         });
 
-        // NEW: Add listener for clover click
+        // Add listener for clover click
         document.getElementById('clover-clicker').addEventListener('click', () => {
             if (!clickerUnlocked) return;
             clickClover();
             
-            // Click animation
             const clover = document.getElementById('clover-clicker');
             clover.style.transform = 'scale(0.9)';
             setTimeout(() => {
@@ -3047,8 +3265,11 @@
         addToTerminal('Click rolls to add them to your inventory!');
         
         loadGame();
-        updateInventoryDisplay(); updateIndexDisplay();
-        startEventLoop(); 
+        updateInventoryDisplay();
+        updateIndexDisplay();
+        updatePendingDisplay();
+        preserveAnimations();
+        startEventLoop();
     </script>
     
     <script>
