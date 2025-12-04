@@ -760,7 +760,9 @@
             { min: 2500, max: 7500, name: "Unreal" },
             { min: 7500, max: 25000, name: "Cosmic" },
             { min: 25000, max: 100000, name: "Eternal" },
-            { min: 100000, max: 1e6, name: "Iridescent" },
+            { min: 100000, max: 500000, name: "Iridescent" },
+            { min: 500000, max: 777777.77, name: "Exceptional" },
+            { min: 777777.77, max: 788888.78, name: "???" },
             { min: 1e6, max: 1e7, name: "Heavenly" },
             { min: 1e7, max: 5e7, name: "Unattainable" },
             { min: 5e7, max: 1e8, name: "Gigantic" },
@@ -776,21 +778,22 @@
             { min: 1e18, max: 1e21, name: "Impossible" },
             { min: 1e21, max: 1e24, name: "Astronomical" },
             { min: 1e24, max: 1e30, name: "Colossal" }, 
-            { min: 1e30, max: Infinity, name: "Improbable" } 
+            { min: 1e30, max: Infinity, name: "Improbable" }
         ];
 
         // UPDATED SECRET RANKS WITH NEW ADDITIONS
         const SECRET_RANKS_CHANCES = [
-            { name: "nil", chance: 1/10000, rarity: 10000 }, 
+            { name: "nil", chance: 1/15000, rarity: 15000 }, 
             { name: "Title Label Missing", chance: 1/4040.404, rarity: 4040.404 },
             { name: "?!? unknown ?!?", chance: 1/6666.666, rarity: 6666.666 },
             { name: "r", chance: 1/6942, rarity: 6942 },
             { name: "?!? bewilderment ?!?", chance: 1/450285, rarity: 450285 },
             { name: "Interminable", chance: 1/7777, rarity: 7777 },
             { name: "fish", chance: 1/7979, rarity: 7979 },
-            { name: "cheese", chance: 1/10000, rarity: 10000 },
+            { name: "cheese", chance: 1/9995, rarity: 9995 },
             { name: "💯", chance: 1/10000, rarity: 10000 },
             { name: "Minimal", chance: 1/15000, rarity: 15000 },
+            { name: "c", chance: 1/33333, rarity: 33333 },
             { name: "Seize", chance: 1/97525, rarity: 97525 }, 
             { name: "Florescent", chance: 1/264839, rarity: 264839 },
             { name: "π", chance: 1/314159, rarity: 314159 },
@@ -809,7 +812,8 @@
             { name: "CATASTROPHIC", chance: 1/575765.565, rarity: 575765.565, multiplier: 575765.565 },
             { name: "LEGACY In im table ?!?!?", chance: 1/11111111111111.111, rarity: 11111111111111.111, multiplier: 11111111111111.11 },
             { name: "Destroyed", chance: 0, rarity: Infinity, eventOnly: "Hidden", eventChance: 1/100000000 },
-            { name: "cali^2", chance: 1/1e12, rarity: 1e12 }
+            { name: "cali^2", chance: 1/1e12, rarity: 1e12 },
+            { name: "WHAT THE FUCK", chance: 1/1e50, rarity: 1e50, multiplier: 1e50 }
         ];
 
         // FIX: Sort by chance ascending (rarest first) 
