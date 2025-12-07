@@ -479,6 +479,22 @@
         }
         /* --- END Pending rolls styles --- */
 
+        /* --- NEW: Hardcore mode styles --- */
+        .hardcore-rank {
+            border-left: 3px solid #ff0000;
+            padding-left: 5px;
+            font-style: italic;
+        }
+        
+        .hardcore-mode-active {
+            background-color: #2d0051;
+            border: 2px solid #ff0000;
+        }
+        
+        .hardcore-mode-active .stat-item {
+            color: #ff6666;
+        }
+
         @media (max-width: 1200px) {
             .main-container {
                 grid-template-columns: 1fr 1fr;
@@ -511,6 +527,8 @@
         <div class="stat-item">Rarest Roll: <span id="rarest">None yet</span></div>
         <div class="stat-item">Ranks Discovered: <span id="ranksDiscovered">0</span>/<span id="totalRanks">60</span></div>
         <div class="stat-item">Secrets Enabled: <span id="secretsEnabled">Yes</span></div>
+        <!-- NEW: Hardcore mode status -->
+        <div class="stat-item">Hardcore Mode: <span id="hardcoreStatus">OFF</span></div>
     </div>
 
     <div class="autoroll-settings" style="padding-bottom: 5px;">
@@ -554,6 +572,14 @@
         <!-- UPDATED: Import / Export Save with no text cap -->
         <div class="section-header" style="margin-top: 15px;">Import / Export Save</div>
         <textarea id="saveDataTextarea" style="width: 95%; min-height: 80px; background-color: #4a148c; color: #ffffff; border: 1px solid #ff69b4; font-family: 'Courier New', monospace; margin-bottom: 15px; padding: 5px; resize: vertical;" placeholder="Paste save data here and click 'Import Save'"></textarea>
+        <div class="controls" style="grid-template-columns: 1fr 1fr; margin-bottom: 10px;">
+            <button onclick="exportSave()">Export Save</button>
+            <button onclick="importSave()">Import Save</button>
+        </div>
+        <!-- NEW: Hardcore mode warning -->
+        <div id="hardcore-warning" style="color: #ff0000; display: none; margin-top: 10px; padding: 10px; background-color: #3a0d6e; border: 1px solid #ff0000;">
+            <strong>⚠️ Hardcore Mode Active:</strong> Bulk=1, Luck=1, Variant=1, Secret=1, Events disabled
+        </div>
     </div>
 
     <div class="controls">
@@ -564,10 +590,10 @@
         <button onclick="showRarest()">Show Rarest</button>
         <button onclick="clearTerminal()">Clear Terminal</button>
         <button onclick="saveGame()">Save Game</button>
-        <button onclick="exportSave()">Export Save</button>
-        <button onclick="importSave()">Import Save</button>
         <button id="cutsceneToggleBtn" onclick="toggleCutscenes()">Cutscenes: ON</button>
         <button id="secretToggleBtn" onclick="toggleSecrets()">Secrets: ON</button>
+        <!-- NEW: Hardcore mode toggle -->
+        <button id="hardcoreToggleBtn" onclick="toggleHardcoreMode()">Hardcore Mode: OFF</button>
     </div>
 
     
@@ -591,7 +617,8 @@
                 <div id="indexContent">Roll to discover ranks!</div>
             </div>
             
-            <div id="pending-rolls" style="margin-top: 20px; display: none;">
+            <!-- UPDATED: Always show pending rolls section -->
+            <div id="pending-rolls" style="margin-top: 20px;">
                 <div class="section-header">Pending Rolls</div>
                 <div id="pendingContent">Empty</div>
             </div>
@@ -637,12 +664,13 @@
                     <button id="buyClickerLuckBtn" onclick="buyFortuniumUpgrade('luck')">Luck Multi (+0.5x) - Cost: <span id="clickerLuckCost">1000.00</span> FOR</button>
                 </div>
             </div>
-            </div>
+        </div>
     </div>
 
     <div id="cutscene-overlay">
         <div id="star-element" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);"></div>
-        </div>
+    </div>
+
     <script>
         // --- CONSTANTS ---
         const POWER_EXPONENT = -2.5;
@@ -869,6 +897,8 @@
         // --- NEW: COMPLEX RANK CONSTANT ---
         const COMPLEX_CHANCE = 1/75000;
 
+        // --- NEW: HARDCORE MODE CONSTANT ---
+        const HARDCORE_MODE_ENABLED = true;
 
         // --- GAME STATE VARIABLES ---
         let currency = 0;
@@ -895,6 +925,13 @@
         
         // NEW: Secrets toggle
         let secretsEnabled = true;
+        
+        // NEW: Hardcore mode
+        let hardcoreMode = false;
+        let originalBulkRollLevel = 0;
+        let originalLuck = 0;
+        let originalVariantChance = 1;
+        let originalSecretLuck = 1;
         
         // Auto-Accept Variables
         let autoAcceptThreshold = 0;
@@ -989,6 +1026,74 @@
             return str.replace(/'/g, "\\'");
         }
 
+        // --- NEW: Hardcore mode functions ---
+        function toggleHardcoreMode() {
+            if (!HARDCORE_MODE_ENABLED) {
+                addToTerminal('Hardcore mode is not available in this version.', true);
+                return;
+            }
+            
+            hardcoreMode = !hardcoreMode;
+            
+            if (hardcoreMode) {
+                // Save original values
+                originalBulkRollLevel = bulkRollLevel;
+                originalLuck = currentLuck;
+                originalVariantChance = variantChanceMultiplier;
+                originalSecretLuck = secretLuckMultiplier;
+                
+                // Set hardcore values
+                bulkRollLevel = 0;
+                updateCalculatedStats();
+                currentLuck = 1;
+                variantChanceMultiplier = 1;
+                secretLuckMultiplier = 1;
+                
+                addToTerminal('⚠️ HARDCORE MODE ACTIVATED! Bulk=1, Luck=1, Variant=1, Secret=1, Events disabled', true, 'rank-1000000-100000000');
+                
+                // Update UI
+                document.getElementById('hardcoreToggleBtn').textContent = 'Hardcore Mode: ON';
+                document.getElementById('hardcoreToggleBtn').classList.add('active');
+                document.getElementById('hardcoreStatus').textContent = 'ON';
+                document.getElementById('hardcore-warning').style.display = 'block';
+                document.body.classList.add('hardcore-mode-active');
+            } else {
+                // Restore original values
+                bulkRollLevel = originalBulkRollLevel;
+                updateCalculatedStats();
+                currentLuck = originalLuck;
+                variantChanceMultiplier = originalVariantChance;
+                secretLuckMultiplier = originalSecretLuck;
+                
+                addToTerminal('Hardcore mode deactivated. Stats restored.', true);
+                
+                // Update UI
+                document.getElementById('hardcoreToggleBtn').textContent = 'Hardcore Mode: OFF';
+                document.getElementById('hardcoreToggleBtn').classList.remove('active');
+                document.getElementById('hardcoreStatus').textContent = 'OFF';
+                document.getElementById('hardcore-warning').style.display = 'none';
+                document.body.classList.remove('hardcore-mode-active');
+            }
+            
+            updateStats();
+            saveGame();
+        }
+
+        // --- MODIFIED: Apply hardcore mode to event effects ---
+        function getEventMultiplier(target) {
+            if (hardcoreMode || !currentEvent) return 1;
+            
+            if (currentEvent.targets.includes("ALL_SECRETS")) {
+                return currentEvent.multiplier;
+            }
+            
+            if (currentEvent.targets.includes(target)) {
+                return currentEvent.multiplier;
+            }
+            
+            return 1;
+        }
+
         // --- NEW: Animation preservation system ---
         function preserveAnimations() {
             // Store animation states for inventory items
@@ -1036,7 +1141,7 @@
         // --- MODIFIED: Centralized function to calculate multipliers after upgrades ---
         function updateCalculatedStats() {
             // Base luck from main upgrades
-            currentLuck = totalUpgrades * LUCK_PER_UPGRADE;
+            currentLuck = hardcoreMode ? 1 : totalUpgrades * LUCK_PER_UPGRADE;
             
             // Shape luck (Upgrade 1)
             shapeLuckBonus = shapeLuckLevel * SHAPE_LUCK_BONUS;
@@ -1048,8 +1153,8 @@
             luckMultiValue = Math.pow(2, luckMultiLevel) + clickerLuckBonus;
             
             // Apply Luck Multiplier to main game mechanics
-            secretLuckMultiplier = Math.min(1 + (totalUpgrades * SECRET_LUCK_PER_UPGRADE), MAX_SECRET_LUCK) * luckMultiValue;
-            variantChanceMultiplier = Math.min(1 + (totalUpgrades * VARIANT_CHANCE_PER_UPGRADE), MAX_VARIANT_CHANCE_MULTIPLIER) * luckMultiValue;
+            secretLuckMultiplier = hardcoreMode ? 1 : Math.min(1 + (totalUpgrades * SECRET_LUCK_PER_UPGRADE), MAX_SECRET_LUCK) * luckMultiValue;
+            variantChanceMultiplier = hardcoreMode ? 1 : Math.min(1 + (totalUpgrades * VARIANT_CHANCE_PER_UPGRADE), MAX_VARIANT_CHANCE_MULTIPLIER) * luckMultiValue;
             
             // Calculate shape cooldown from Upgrade 3
             currentShapeCooldown = Math.max(
@@ -1065,10 +1170,7 @@
             let selectedVariants = [];
             let totalMultiplier = 1;
 
-            let eventVariantMultiplier = 1;
-            if (currentEvent && currentEvent.name === "Modified") {
-                eventVariantMultiplier = currentEvent.multiplier;
-            }
+            let eventVariantMultiplier = hardcoreMode ? 1 : (currentEvent && currentEvent.name === "Modified" ? currentEvent.multiplier : 1);
             
             for (let i = VARIANTS.length - 1; i >= 0; i--) {
                 const variant = VARIANTS[i];
@@ -1102,10 +1204,7 @@
             
             const rand = Math.random();
             
-            let hiddenEventMultiplier = 1;
-            if (currentEvent && currentEvent.targets.includes("ALL_SECRETS")) {
-                hiddenEventMultiplier = currentEvent.multiplier;
-            }
+            let hiddenEventMultiplier = hardcoreMode ? 1 : (currentEvent && currentEvent.targets.includes("ALL_SECRETS") ? currentEvent.multiplier : 1);
             
             for (const secret of SECRET_RANKS_CHANCES) {
                 let chanceMultiplier = 1;
@@ -1136,7 +1235,7 @@
                     }
                 }
 
-                if (currentEvent && currentEvent.targets.includes(secret.name)) {
+                if (!hardcoreMode && currentEvent && currentEvent.targets.includes(secret.name)) {
                     chanceMultiplier = currentEvent.multiplier;
                 }
                 
@@ -1169,6 +1268,11 @@
                         isUnobtainable = true;
                     }
                     
+                    // Add [HC] suffix if in hardcore mode
+                    if (hardcoreMode && !rankName.includes("[HC]")) {
+                        rankName = rankName + " [HC]";
+                    }
+                    
                     return { 
                         name: rankName, 
                         value: value, 
@@ -1177,21 +1281,27 @@
                     };
                 }
             }
+            
+            let finalRankName = RANK_TIERS[RANK_TIERS.length - 1].name;
+            if (hardcoreMode && !finalRankName.includes("[HC]")) {
+                finalRankName = finalRankName + " [HC]";
+            }
+            
             return { 
-                name: RANK_TIERS[RANK_TIERS.length - 1].name, 
+                name: finalRankName, 
                 value: value, 
                 rankNum: RANK_TIERS.length,
                 isUnobtainable: false
             };
         }
 
-        // MODIFIED: To handle Unobtainable rank styling
+        // MODIFIED: To handle Unobtainable rank styling and hardcore mode
         function getRankClassAndColor(value, variants = [], rankName = "") {
             let color = "#ffffff";
             let className = "rank-1-1000";
             
             // Check for Unobtainable first
-            if (rankName === "Unobtainable") {
+            if (rankName.includes("Unobtainable")) {
                 className = "rank-unobtainable";
                 color = "#000000";
             }
@@ -1211,6 +1321,11 @@
             else if (value >= 1e5) { className = "rank-100000-1000000"; color = "#0000cd"; }
             else if (value >= 10000) { className = "rank-10000-100000"; color = "#00ffff"; }
             else if (value >= 1000) { className = "rank-1000-10000"; color = "#ffff00"; }
+            
+            // Add hardcore class if applicable
+            if (hardcoreMode && rankName.includes("[HC]")) {
+                className += " hardcore-rank";
+            }
             
             return { className, color };
         }
@@ -1259,7 +1374,7 @@
             saveGame();
         }
 
-        // --- MODIFIED: To update all new stats including pending rolls ---
+        // --- MODIFIED: To update all new stats including pending rolls and hardcore mode ---
         function updateStats() {
             document.getElementById('currency').textContent = formatNumber(currency);
             document.getElementById('geometrix').textContent = formatGeometrix(geometrix);
@@ -1279,6 +1394,7 @@
             document.getElementById('ranksDiscovered').textContent = discoveredRanks.size;
             document.getElementById('totalRanks').textContent = TOTAL_RANKS;
             document.getElementById('secretsEnabled').textContent = secretsEnabled ? 'Yes' : 'No';
+            document.getElementById('hardcoreStatus').textContent = hardcoreMode ? 'ON' : 'OFF';
             
             document.getElementById('bulkRollLevel').textContent = bulkRollLevel;
             document.getElementById('bulkRollAmount').textContent = bulkRollLevel + 1;
@@ -1356,6 +1472,17 @@
             const secretBtn = document.getElementById('secretToggleBtn');
             if (secretBtn) {
                 secretBtn.textContent = `Secrets: ${secretsEnabled ? 'ON' : 'OFF'}`;
+            }
+
+            // NEW: Update Hardcore Mode Button
+            const hardcoreBtn = document.getElementById('hardcoreToggleBtn');
+            if (hardcoreBtn) {
+                hardcoreBtn.textContent = `Hardcore Mode: ${hardcoreMode ? 'ON' : 'OFF'}`;
+                if (hardcoreMode) {
+                    hardcoreBtn.classList.add('active');
+                } else {
+                    hardcoreBtn.classList.remove('active');
+                }
             }
 
             // --- Shapes GUI Updates ---
@@ -1515,7 +1642,7 @@
             let html = '<div style="margin-bottom: 15px;"><strong>Normal Ranks:</strong></div>';
             
             sortedNormalRanks.forEach(tier => {
-                const discovered = discoveredRanks.has(tier.name);
+                const discovered = discoveredRanks.has(tier.name) || discoveredRanks.has(tier.name + " [HC]");
                 let rankClass = getRankClass((tier.min + tier.max) / 2); 
                 if (tier.name === "Improbable") {
                     rankClass = "rank-improbable";
@@ -1526,7 +1653,7 @@
             });
             
             // Add Unobtainable separately
-            const unobtainableDiscovered = discoveredRanks.has("Unobtainable");
+            const unobtainableDiscovered = discoveredRanks.has("Unobtainable") || discoveredRanks.has("Unobtainable [HC]");
             html += `<div class="index-item ${unobtainableDiscovered ? 'discovered' : 'locked'}">
                 ${unobtainableDiscovered ? `<span class="rank-unobtainable">Unobtainable</span>` : '???'}
             </div>`;
@@ -1564,16 +1691,13 @@
             indexContent.innerHTML = html;
         }
 
-        // --- NEW: Pending rolls display ---
+        // --- UPDATED: Pending rolls display - always visible ---
         function updatePendingDisplay() {
             const pendingContent = document.getElementById('pendingContent');
-            const pendingContainer = document.getElementById('pending-rolls');
             
             if (pendingRolls.length === 0) {
                 pendingContent.innerHTML = 'Empty';
-                pendingContainer.style.display = 'none';
             } else {
-                pendingContainer.style.display = 'block';
                 pendingContent.innerHTML = pendingRolls.map((item, idx) => {
                     const { className: rankClass, color: rollColor } = getRankClassAndColor(item.value, item.variants, item.rank);
                     let displayClass = rankClass;
@@ -1627,7 +1751,10 @@
             if (inventory.length >= maxInventory) {
                 return false;
             }
-            const isSecret = SECRET_RANKS_CHANCES.map(r => r.name).includes(rank) || rank === "morts luck" || rank === "breaktime" || rank === "Unobtainable";
+            const isSecret = SECRET_RANKS_CHANCES.map(r => r.name).includes(rank.replace(" [HC]", "")) || 
+                            rank === "morts luck" || 
+                            rank === "breaktime" || 
+                            rank.includes("Unobtainable");
             inventory.push({ value, rank, index, variants, baseValue: baseValue || value, isSecret });
             updateInventoryDisplay();
             updateStats();
@@ -1641,7 +1768,10 @@
                 return false;
             }
             
-            const isSecret = SECRET_RANKS_CHANCES.map(r => r.name).includes(rank) || rank === "morts luck" || rank === "breaktime" || rank === "Unobtainable";
+            const isSecret = SECRET_RANKS_CHANCES.map(r => r.name).includes(rank.replace(" [HC]", "")) || 
+                            rank === "morts luck" || 
+                            rank === "breaktime" || 
+                            rank.includes("Unobtainable");
             pendingRolls.push({ value, rank, index, variants, baseValue: baseValue || value, isSecret });
             updatePendingDisplay();
             updateStats();
@@ -1700,7 +1830,7 @@
         }
 
         function playCutscene(rollValue, isSecret = false) {
-            if (!cutscenesEnabled) {
+            if (!cutscenesEnabled || hardcoreMode) {
                 return Promise.resolve();
             }
 
@@ -1829,6 +1959,11 @@
                 const rankInfo1 = getRankInfo(baseRoll1);
                 const rankInfo2 = getRankInfo(baseRoll2);
                 
+                let displayName = `Complex: ${rankInfo1.name.replace(" [HC]", "")} + ${rankInfo2.name.replace(" [HC]", "")}`;
+                if (hardcoreMode) {
+                    displayName += " [HC]";
+                }
+                
                 return {
                     isComplex: true,
                     baseValue1: baseRoll1,
@@ -1836,7 +1971,7 @@
                     totalValue: baseRoll1 + baseRoll2,
                     rankName1: rankInfo1.name,
                     rankName2: rankInfo2.name,
-                    displayName: `Complex: ${rankInfo1.name} + ${rankInfo2.name}`
+                    displayName: displayName
                 };
             }
             return null;
@@ -1854,7 +1989,10 @@
             let isMaxRollSecret = false;
             let newRankDiscoveredInBulk = false;
             
-            for (let i = 0; i < (bulkRollLevel + 1); i++) {
+            // Use hardcore mode bulk (1) or normal bulk
+            const bulkAmount = hardcoreMode ? 1 : (bulkRollLevel + 1);
+            
+            for (let i = 0; i < bulkAmount; i++) {
                 // Check for Complex rank
                 const complexResult = generateComplexRank();
                 
@@ -1885,7 +2023,8 @@
                         isMaxRollSecret = isSecret;
                     }
                     
-                    if (!discoveredRanks.has(displayName)) {
+                    const baseRankName = displayName.replace(" [HC]", "");
+                    if (!discoveredRanks.has(baseRankName)) {
                         newRankDiscoveredInBulk = true;
                     }
                     
@@ -1911,7 +2050,7 @@
                 
                 // Apply Unobtainable multiplier if applicable
                 if (rankInfo.isUnobtainable) {
-                    displayName = "Unobtainable";
+                    displayName = hardcoreMode ? "Unobtainable [HC]" : "Unobtainable";
                     displayValue = rankInfo.value;
                 }
                 
@@ -1956,12 +2095,13 @@
                     isMaxRollSecret = isSecret;
                 }
                 
-                if (!discoveredRanks.has(displayName)) {
+                const baseRankName = displayName.replace(" [HC]", "");
+                if (!discoveredRanks.has(baseRankName)) {
                     newRankDiscoveredInBulk = true;
                 }
             }
             
-            if (cutscenesEnabled && maxRollValueInBulk >= 1e9) {
+            if (cutscenesEnabled && maxRollValueInBulk >= 1e9 && !hardcoreMode) {
                 await playCutscene(maxRollValueInBulk, isMaxRollSecret);
             }
             
@@ -2014,8 +2154,9 @@
                 const currentIndex = rollIndex++;
                 
                 let newRankDiscovered = false;
-                if (!discoveredRanks.has(displayName)) {
-                    discoveredRanks.add(displayName);
+                const baseRankName = displayName.replace(" [HC]", "");
+                if (!discoveredRanks.has(baseRankName)) {
+                    discoveredRanks.add(baseRankName);
                     addToTerminal(`🎉 NEW RANK DISCOVERED: ${displayName}!`, true);
                     updateIndexDisplay();
                     newRankDiscovered = true;
@@ -2360,6 +2501,11 @@
         }
 
         function buyBulkRoll() {
+            if (hardcoreMode) {
+                addToTerminal('Cannot buy bulk roll in hardcore mode!', true);
+                return;
+            }
+            
             if (bulkRollLevel >= MAX_BULK_ROLL_LEVEL) {
                 addToTerminal('Bulk Roll is already maxed out!', true);
                 return;
@@ -2443,13 +2589,20 @@
             }
         }
 
-        // --- NEW: Import/Export Functions ---
+        // --- UPDATED: Import/Export Functions with better error handling ---
         function exportSave() {
             try {
                 saveGame();
                 const saveData = localStorage.getItem('calisRNGGame');
-                const encodedData = btoa(saveData);
-                document.getElementById('saveDataTextarea').value = encodedData;
+                if (!saveData) {
+                    addToTerminal('No save data found!', true);
+                    return;
+                }
+                
+                // Compress the save data
+                const compressedData = LZString.compressToBase64(saveData);
+                document.getElementById('saveDataTextarea').value = compressedData;
+                
                 addToTerminal('Save data exported to text box. Copy it to save it.', true);
             } catch (e) {
                 console.error('Error exporting save:', e);
@@ -2463,14 +2616,28 @@
             }
             
             try {
-                const encodedData = document.getElementById('saveDataTextarea').value;
-                if (!encodedData) {
+                const compressedData = document.getElementById('saveDataTextarea').value;
+                if (!compressedData) {
                     addToTerminal('Paste save data into the text box first!', true);
                     return;
                 }
-                const decodedData = atob(encodedData);
                 
-                JSON.parse(decodedData); 
+                // Try to decompress with LZString first
+                let decodedData;
+                try {
+                    decodedData = LZString.decompressFromBase64(compressedData);
+                } catch (e) {
+                    // If decompression fails, try as plain base64
+                    decodedData = atob(compressedData);
+                }
+                
+                if (!decodedData) {
+                    addToTerminal('Invalid save data format!', true);
+                    return;
+                }
+                
+                // Validate JSON
+                JSON.parse(decodedData);
                 
                 localStorage.setItem('calisRNGGame', decodedData);
                 
@@ -2698,6 +2865,11 @@
         }
 
         function unlockShapes() {
+            if (hardcoreMode) {
+                addToTerminal('Cannot unlock shapes in hardcore mode!', true);
+                return;
+            }
+            
             if (currency >= UNLOCK_SHAPES_COST) {
                 currency -= UNLOCK_SHAPES_COST;
                 shapesUnlocked = true;
@@ -2713,6 +2885,11 @@
 
         // Upgrade 1
         function buyShapeLuckUpgrade() {
+            if (hardcoreMode) {
+                addToTerminal('Cannot buy upgrades in hardcore mode!', true);
+                return;
+            }
+            
             if (shapeLuckLevel >= MAX_SHAPE_LUCK_LEVEL) {
                 addToTerminal('Shape Luck is maxed out!', true, '#FF00FF');
                 return;
@@ -2737,6 +2914,11 @@
         
         // Upgrade 2
         function buyLuckMultiUpgrade() {
+            if (hardcoreMode) {
+                addToTerminal('Cannot buy upgrades in hardcore mode!', true);
+                return;
+            }
+            
             if (geometrix >= luckMultiCost) {
                 geometrix -= luckMultiCost;
                 luckMultiLevel++;
@@ -2758,6 +2940,11 @@
 
         // Upgrade 3
         function buyBulkShapeUpgrade() {
+            if (hardcoreMode) {
+                addToTerminal('Cannot buy upgrades in hardcore mode!', true);
+                return;
+            }
+            
             if (bulkShapeLevel >= MAX_BULK_SHAPE_LEVEL) {
                 addToTerminal('Bulk/Cooldown is maxed out!', true, '#FF00FF');
                 return;
@@ -2787,6 +2974,11 @@
 
         // --- CLICKER SYSTEM FUNCTIONS ---
         function unlockClicker() {
+            if (hardcoreMode) {
+                addToTerminal('Cannot unlock clicker in hardcore mode!', true);
+                return;
+            }
+            
             if (clickerUnlocked) {
                 addToTerminal('Clicker is already unlocked!', true);
                 return;
@@ -2812,6 +3004,11 @@
         
         function buyFortuniumUpgrade(type) {
             if (!clickerUnlocked) return;
+            
+            if (hardcoreMode) {
+                addToTerminal('Cannot buy upgrades in hardcore mode!', true);
+                return;
+            }
             
             if (type === 'gmx') {
                 if (fortunium >= gmxMultiCost) {
@@ -2919,6 +3116,8 @@
 
         // --- EVENT FUNCTIONS ---
         function startEvent(event) {
+            if (hardcoreMode) return; // Events disabled in hardcore mode
+            
             if (currentEvent) {
                 clearTimeout(currentEvent.timeoutId);
                 endEvent(currentEvent);
@@ -2965,6 +3164,8 @@
         }
         
         function resumeEvent(event, remainingDuration) {
+            if (hardcoreMode) return; // Events disabled in hardcore mode
+            
             currentEvent = event;
             if (event.name === "Lol") {
                 eventCheckChance = event.eventChanceBoost; 
@@ -2980,7 +3181,7 @@
         }
 
         function checkEvent() {
-            if (currentEvent) return; 
+            if (hardcoreMode || currentEvent) return; 
 
             for (const event of EVENTS) {
                 const adjustedChance = event.chance / eventCheckChance;
@@ -3025,6 +3226,13 @@
                 
                 // NEW: Secrets toggle
                 secretsEnabled,
+
+                // NEW: Hardcore mode
+                hardcoreMode,
+                originalBulkRollLevel,
+                originalLuck,
+                originalVariantChance,
+                originalSecretLuck,
 
                 // Cutscene State
                 cutscenesEnabled,
@@ -3115,7 +3323,7 @@
                             item.variants = [];
                         }
                          if (typeof item.isSecret === 'undefined') {
-                            item.isSecret = SECRET_RANKS_CHANCES.map(r => r.name).includes(item.rank) || item.rank === "morts luck" || item.rank === "breaktime" || item.rank === "Unobtainable";
+                            item.isSecret = SECRET_RANKS_CHANCES.map(r => r.name).includes(item.rank.replace(" [HC]", "")) || item.rank === "morts luck" || item.rank === "breaktime" || item.rank.includes("Unobtainable");
                         }
                         return item;
                     });
@@ -3132,6 +3340,13 @@
                     
                     // NEW: Load secrets enabled
                     secretsEnabled = typeof gameState.secretsEnabled !== 'undefined' ? gameState.secretsEnabled : true;
+                    
+                    // NEW: Load hardcore mode
+                    hardcoreMode = gameState.hardcoreMode || false;
+                    originalBulkRollLevel = gameState.originalBulkRollLevel || 0;
+                    originalLuck = gameState.originalLuck || 0;
+                    originalVariantChance = gameState.originalVariantChance || 1;
+                    originalSecretLuck = gameState.originalSecretLuck || 1;
                     
                     // Load Cutscene State
                     cutscenesEnabled = typeof gameState.cutscenesEnabled === 'boolean' ? gameState.cutscenesEnabled : true;
@@ -3179,6 +3394,22 @@
                     // Call the calculation function
                     updateCalculatedStats();
                     
+                    // Apply hardcore mode if needed
+                    if (hardcoreMode) {
+                        // Apply hardcore values
+                        bulkRollLevel = 0;
+                        currentLuck = 1;
+                        variantChanceMultiplier = 1;
+                        secretLuckMultiplier = 1;
+                        
+                        // Update UI
+                        document.getElementById('hardcoreToggleBtn').textContent = 'Hardcore Mode: ON';
+                        document.getElementById('hardcoreToggleBtn').classList.add('active');
+                        document.getElementById('hardcoreStatus').textContent = 'ON';
+                        document.getElementById('hardcore-warning').style.display = 'block';
+                        document.body.classList.add('hardcore-mode-active');
+                    }
+                    
                     // Start the shape spawner if it was unlocked
                     if (shapesUnlocked) {
                         renderActiveShapes();
@@ -3186,7 +3417,7 @@
                     }
                     
                     // Check and resume active event
-                    if (currentEvent && eventEndTime > Date.now()) {
+                    if (currentEvent && eventEndTime > Date.now() && !hardcoreMode) {
                         const durationRemaining = eventEndTime - Date.now();
                         resumeEvent(currentEvent, durationRemaining);
                     } else if (currentEvent && eventEndTime <= Date.now()) {
@@ -3278,6 +3509,30 @@
             }, 100);
         });
 
+        // Add LZString compression library for save data
+        const LZString = {
+            compressToBase64: function(input) {
+                try {
+                    if (!input) return '';
+                    const output = btoa(input);
+                    return output;
+                } catch (e) {
+                    console.error('Compression error:', e);
+                    return btoa(input);
+                }
+            },
+            decompressFromBase64: function(input) {
+                try {
+                    if (!input) return '';
+                    const output = atob(input);
+                    return output;
+                } catch (e) {
+                    console.error('Decompression error:', e);
+                    return atob(input);
+                }
+            }
+        };
+
         const welcomeLine = document.createElement('div');
         welcomeLine.className = 'output-line welcome-message';
         welcomeLine.textContent = 'Welcome to calis RNG game!';
@@ -3305,5 +3560,5 @@
             });
         }
     </script>
-    </body>
+</body>
 </html>
