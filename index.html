@@ -206,13 +206,16 @@
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    /* Gray outline - cleaner version */
+    /* EXTRA sharp outline - 8 directions */
     text-shadow: 
-        1px 1px 2px #808080,
-        -1px -1px 2px #808080,
-        1px -1px 2px #808080,
-        -1px 1px 2px #808080,
-        0 0 4px #808080;
+        -1px -1px 0 #808080,
+        0 -1px 0 #808080,
+        1px -1px 0 #808080,
+        -1px 0 0 #808080,
+        1px 0 0 #808080,
+        -1px 1px 0 #808080,
+        0 1px 0 #808080,
+        1px 1px 0 #808080;
     font-weight: bold;
 }
 
