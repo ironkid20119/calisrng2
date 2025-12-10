@@ -9,7 +9,6 @@
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icons/icon-192x192.png">
     <style>
-        /* CSS is unchanged, but included for completeness */
         body {
             font-family: 'Courier New', monospace;
             background-color: #4a148c;
@@ -175,6 +174,37 @@
             width: 20px;
             height: 20px;
             cursor: pointer;
+        }
+        
+        /* NEW: Scientific Notation Settings */
+        .scientific-setting {
+            background-color: #2d0051;
+            border: 2px solid #00ffff;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        
+        .scientific-setting-item {
+            margin: 10px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .scientific-setting-item label {
+            flex-shrink: 0;
+            min-width: 250px;
+        }
+        
+        .scientific-setting-item input[type="number"] {
+            background-color: #4a148c;
+            color: #ffffff;
+            border: 1px solid #00ffff;
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            width: 200px;
         }
         
         /* Rank colors */
@@ -529,6 +559,23 @@
         <div class="stat-item">Secrets Enabled: <span id="secretsEnabled">Yes</span></div>
         <!-- NEW: Hardcore mode status -->
         <div class="stat-item">Hardcore Mode: <span id="hardcoreStatus">OFF</span></div>
+        <!-- NEW: Scientific Notation Status -->
+        <div class="stat-item">Scientific Notation: <span id="sciNotationStat">ON (≥1e18)</span></div>
+    </div>
+
+    <!-- NEW: Scientific Notation Settings -->
+    <div class="scientific-setting">
+        <div class="section-header">Scientific Notation Settings</div>
+        <div class="scientific-setting-item">
+            <label>Scientific notation threshold (≥):</label>
+            <input type="number" id="sciNotationThreshold" value="1000000000000000000" min="1" step="0.000001">
+        </div>
+        <div class="scientific-setting-item">
+            <button onclick="toggleScientificNotation()">Toggle Scientific Notation: <span id="sciNotationStatus">ON</span></button>
+        </div>
+        <div class="scientific-setting-item" style="color: #00ffff; font-size: 12px;">
+            Note: Numbers ≥ threshold will display in scientific notation (e.g., 1.23e18)
+        </div>
     </div>
 
     <div class="autoroll-settings" style="padding-bottom: 5px;">
@@ -711,7 +758,7 @@
                 chance: 1/69, 
                 duration: 20000,
                 description: "makes every meme related secret easier by 6.94x and boosts future event chances",
-                targets: ["r", "fish", "cheese", "c", "cheese : cheddar", "LEGACY In im table ?!?!?", "QHAR ?!?"],
+                targets: ["r", "fish", "cheese", "c", "cheese : cheddar", "LEGACY In im table ?!?!?", "QHAR ?!?", "7 GRAND DAD"],
                 multiplier: 6.94,
                 eventChanceBoost: 69 
             },
@@ -765,7 +812,7 @@
             }
         ];
 
-        // UPDATED VARIANTS ARRAY
+        // UPDATED VARIANTS ARRAY WITH NEW VARIANTS
         const VARIANTS = [
             { name: "Shiny", chance: 1/100, multiplier: 25, color: "#FFD700" },
             { name: "Gilded", chance: 1/125, multiplier: 125, color: "#FFA500" },
@@ -786,7 +833,24 @@
             { name: "Luminous", chance: 1/625000, multiplier: 625000, color: "#90ccdb" },
             { name: "Charged", chance: 1/750000, multiplier: 750000, color: "#90db90" },
             { name: "Ultimate", chance: 1/1e6, multiplier: 1e6, color: "#1e4259" },
-            { name: "Ionized", chance: 1/2.5e6, multiplier: 2.5e6, color: "#c29bdb" }
+            { name: "Ionized", chance: 1/2.5e6, multiplier: 2.5e6, color: "#c29bdb" },
+            // NEW VARIANTS
+            { 
+                name: "Negative", 
+                chance: 1/5625, 
+                multiplier: -1, 
+                color: "#000000", 
+                bypassCap: true,
+                isNegative: true 
+            },
+            { 
+                name: "Dull", 
+                chance: 1/147382, 
+                power: -1, 
+                color: "#666666", 
+                bypassCap: true,
+                isDull: true
+            }
         ];
 
         // UPDATED RANK TIERS with Theoretical
@@ -842,6 +906,7 @@
             { name: "~Nonavacious~", chance: 1/575630, rarity: 575630 }, 
             { name: "Insanity", chance: 1/666666, rarity: 666666 }, 
             { name: "Grand", chance: 1/1e6, rarity: 1e6 },
+            { name: "7 GRAND DAD", chance: 1/7.77, rarity: 7.77, requiresGrand: true },
             { name: ":[{(absolute zero)}]:", chance: 1/1e6, rarity: 1e6 },
             { name: "Defined", chance: 1/1.5e6, rarity: 1.5e6 },
             { name: "Finale.. wait, how'd this get here?", chance: 1/2.5e6, rarity: 2.5e6 },
@@ -866,7 +931,7 @@
         // --- NEW ---
         const EUPHORIA_SYMBOLS = ['%', '@', '#', '^', '$', '*', '&', '>', '<', '?'];
         // UPDATED: Total ranks count (updated for new ranks)
-        const TOTAL_RANKS = 66;
+        const TOTAL_RANKS = 67;
 
         // --- NEW: SHAPES CONSTANTS ---
         const UNLOCK_SHAPES_COST = 5000000;
@@ -900,6 +965,9 @@
         // --- NEW: HARDCORE MODE CONSTANT ---
         const HARDCORE_MODE_ENABLED = true;
 
+        // --- NEW: SCIENTIFIC NOTATION CONSTANTS ---
+        const DEFAULT_SCI_THRESHOLD = 1e18;
+
         // --- GAME STATE VARIABLES ---
         let currency = 0;
         let totalUpgrades = 0;
@@ -932,6 +1000,10 @@
         let originalLuck = 0;
         let originalVariantChance = 1;
         let originalSecretLuck = 1;
+        
+        // NEW: Scientific notation settings
+        let sciNotationThreshold = DEFAULT_SCI_THRESHOLD;
+        let sciNotationEnabled = true;
         
         // Auto-Accept Variables
         let autoAcceptThreshold = 0;
@@ -1010,10 +1082,27 @@
         }
 
         function formatNumber(num) {
-            return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            // Handle negative numbers
+            if (num < 0) {
+                return "-" + formatNumber(Math.abs(num));
+            }
+            
+            // Check for scientific notation threshold
+            if (sciNotationEnabled && Math.abs(num) >= sciNotationThreshold) {
+                return num.toExponential(2);
+            }
+            
+            // Original formatting
+            return num.toLocaleString('en-US', { 
+                minimumFractionDigits: 2, 
+                maximumFractionDigits: 2 
+            });
         }
         
         function formatGeometrix(num) {
+            if (sciNotationEnabled && Math.abs(num) >= sciNotationThreshold) {
+                return num.toExponential(2);
+            }
             return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         }
         
@@ -1024,6 +1113,20 @@
         function escapeHTML(str) {
             if (!str) return '';
             return str.replace(/'/g, "\\'");
+        }
+
+        // --- NEW: Scientific notation functions ---
+        function toggleScientificNotation() {
+            sciNotationEnabled = !sciNotationEnabled;
+            const statusEl = document.getElementById('sciNotationStatus');
+            statusEl.textContent = sciNotationEnabled ? 'ON' : 'OFF';
+            statusEl.style.color = sciNotationEnabled ? '#00ff00' : '#ff0000';
+            
+            updateStats();
+            preserveAnimations();
+            saveGame();
+            
+            addToTerminal(`Scientific notation ${sciNotationEnabled ? 'enabled' : 'disabled'} for numbers ≥ ${formatNumber(sciNotationThreshold)}`, true);
         }
 
         // --- NEW: Hardcore mode functions ---
@@ -1042,14 +1145,15 @@
                 originalVariantChance = variantChanceMultiplier;
                 originalSecretLuck = secretLuckMultiplier;
                 
-                // Set hardcore values
+                // Set hardcore values (default x1, +0)
                 bulkRollLevel = 0;
                 updateCalculatedStats();
-                currentLuck = 1;
-                variantChanceMultiplier = 1;
-                secretLuckMultiplier = 1;
+                currentLuck = 0; // +0 luck
+                variantChanceMultiplier = 1; // x1
+                secretLuckMultiplier = 1; // x1
+                luckMultiValue = 1; // x1 multiplier
                 
-                addToTerminal('⚠️ HARDCORE MODE ACTIVATED! Bulk=1, Luck=1, Variant=1, Secret=1, Events disabled', true, 'rank-1000000-100000000');
+                addToTerminal('⚠️ HARDCORE MODE ACTIVATED! Bulk=1, Luck=0, Variant=1, Secret=1, Events disabled', true, 'rank-1000000-100000000');
                 
                 // Update UI
                 document.getElementById('hardcoreToggleBtn').textContent = 'Hardcore Mode: ON';
@@ -1141,7 +1245,7 @@
         // --- MODIFIED: Centralized function to calculate multipliers after upgrades ---
         function updateCalculatedStats() {
             // Base luck from main upgrades
-            currentLuck = hardcoreMode ? 1 : totalUpgrades * LUCK_PER_UPGRADE;
+            currentLuck = hardcoreMode ? 0 : totalUpgrades * LUCK_PER_UPGRADE; // Changed to 0 for HC
             
             // Shape luck (Upgrade 1)
             shapeLuckBonus = shapeLuckLevel * SHAPE_LUCK_BONUS;
@@ -1150,7 +1254,7 @@
             const clickerLuckBonus = clickerLuckLevel * 0.5;
             
             // Luck Multiplier (Upgrade 2) + Clicker Luck
-            luckMultiValue = Math.pow(2, luckMultiLevel) + clickerLuckBonus;
+            luckMultiValue = hardcoreMode ? 1 : (Math.pow(2, luckMultiLevel) + clickerLuckBonus); // Changed for HC
             
             // Apply Luck Multiplier to main game mechanics
             secretLuckMultiplier = hardcoreMode ? 1 : Math.min(1 + (totalUpgrades * SECRET_LUCK_PER_UPGRADE), MAX_SECRET_LUCK) * luckMultiValue;
@@ -1166,14 +1270,45 @@
             maxPendingRolls = maxInventory * 3;
         }
 
+        // --- MODIFIED: getVariants to handle new variants ---
         function getVariants(baseValue) {
             let selectedVariants = [];
             let totalMultiplier = 1;
+            let hasNegative = false;
+            let hasDull = false;
 
             let eventVariantMultiplier = hardcoreMode ? 1 : (currentEvent && currentEvent.name === "Modified" ? currentEvent.multiplier : 1);
             
+            // First check for special bypass-cap variants
             for (let i = VARIANTS.length - 1; i >= 0; i--) {
                 const variant = VARIANTS[i];
+                
+                // Skip regular variants if we're checking for bypass variants
+                if (!variant.bypassCap) continue;
+                
+                const adjustedChance = variant.chance * variantChanceMultiplier * eventVariantMultiplier;
+                
+                if (Math.random() < adjustedChance) {
+                    selectedVariants.push(variant);
+                    
+                    if (variant.isNegative) {
+                        hasNegative = true;
+                        totalMultiplier *= -1;
+                    }
+                    
+                    if (variant.isDull) {
+                        hasDull = true;
+                        // Dull variant will be applied later
+                    }
+                }
+            }
+            
+            // Then check for regular variants (up to MAX_VARIANTS_PER_ROLL)
+            for (let i = VARIANTS.length - 1; i >= 0; i--) {
+                const variant = VARIANTS[i];
+                // Skip special variants that we already handled
+                if (variant.bypassCap) continue;
+                
                 const adjustedChance = variant.chance * variantChanceMultiplier * eventVariantMultiplier;
                 
                 while (selectedVariants.length < MAX_VARIANTS_PER_ROLL && Math.random() < adjustedChance) {
@@ -1182,11 +1317,25 @@
                 }
             }
             
+            let modifiedValue = baseValue * totalMultiplier;
+            
+            // Apply Dull transformation if needed (powers RNG by -1)
+            if (hasDull) {
+                if (modifiedValue !== 0) {
+                    modifiedValue = Math.pow(modifiedValue, -1);
+                }
+            }
+            
             if (selectedVariants.length > 0) {
-                selectedVariants.sort((a, b) => b.multiplier - a.multiplier);
+                selectedVariants.sort((a, b) => {
+                    // Sort Negative and Dull first
+                    if (a.bypassCap && !b.bypassCap) return -1;
+                    if (!a.bypassCap && b.bypassCap) return 1;
+                    return (b.multiplier || 0) - (a.multiplier || 0);
+                });
                 return { 
                     variants: selectedVariants, 
-                    modifiedValue: baseValue * totalMultiplier 
+                    modifiedValue: modifiedValue 
                 };
             }
             return null;
@@ -1198,15 +1347,22 @@
             return { value: baseRoll, variant: null };
         }
         
-        // --- MODIFIED: To handle time-based 'breaktime', 'eventOnly', 'ALL_SECRETS' event, and new ranks ---
+        // --- MODIFIED: To handle 7 GRAND DAD and HC restrictions ---
         function getSecretRank() {
-            if (!secretsEnabled) return null; // NEW: Check if secrets are enabled
+            if (!secretsEnabled) return null;
             
             const rand = Math.random();
             
             let hiddenEventMultiplier = hardcoreMode ? 1 : (currentEvent && currentEvent.targets.includes("ALL_SECRETS") ? currentEvent.multiplier : 1);
             
-            for (const secret of SECRET_RANKS_CHANCES) {
+            // Filter out destroyed and corrupted in HC mode
+            const availableSecrets = hardcoreMode ? 
+                SECRET_RANKS_CHANCES.filter(secret => 
+                    secret.name !== "Destroyed" && secret.name !== "CORRUPTED"
+                ) : 
+                SECRET_RANKS_CHANCES;
+            
+            for (const secret of availableSecrets) {
                 let chanceMultiplier = 1;
                 let adjustedChance = secret.chance;
 
@@ -1239,6 +1395,11 @@
                     chanceMultiplier = currentEvent.multiplier;
                 }
                 
+                // Special handling for 7 GRAND DAD (only when rolling Grand, handled in roll function)
+                if (secret.name === "7 GRAND DAD" && secret.requiresGrand) {
+                    continue; // This will be handled separately
+                }
+                
                 if (rand < adjustedChance * secretLuckMultiplier * chanceMultiplier * hiddenEventMultiplier) {
                     // Check for morts luck
                     if (secret.name === 'cali^2') {
@@ -1252,8 +1413,38 @@
             return null;
         }
 
-        // MODIFIED: To handle Unobtainable rank (1/200 chance to replace Unattainable, multiplies RNG by 250000)
+        // --- NEW: Rounding issue detection ---
+        function checkRoundingIssue(value) {
+            // Check if value is very close to a round number
+            const rounded = Math.round(value);
+            const diff = Math.abs(value - rounded);
+            
+            // If difference is extremely small but not zero (floating point precision issue)
+            if (diff < 1e-10 && diff > 0) {
+                return true;
+            }
+            
+            // Check for common floating point issues
+            const strValue = value.toString();
+            if (strValue.includes('9999999999') || strValue.includes('0000000001')) {
+                return true;
+            }
+            
+            return false;
+        }
+
+        // MODIFIED: To handle Unobtainable rank and rounding issues
         function getRankInfo(value) {
+            // Check for rounding issue
+            if (checkRoundingIssue(value)) {
+                return { 
+                    name: "Improbable", 
+                    value: value, 
+                    rankNum: RANK_TIERS.length,
+                    isUnobtainable: false
+                };
+            }
+            
             // First, check if the value falls in the Unattainable tier
             for (let i = 0; i < RANK_TIERS.length; i++) {
                 const tier = RANK_TIERS[i];
@@ -1306,7 +1497,7 @@
                 color = "#000000";
             }
             // Check for Complex rank
-            else if (rankName && rankName.includes("+")) {
+            else if (rankName && rankName.includes("Complex")) {
                 className = "rank-complex";
                 color = "#ffffff";
             }
@@ -1374,7 +1565,7 @@
             saveGame();
         }
 
-        // --- MODIFIED: To update all new stats including pending rolls and hardcore mode ---
+        // --- MODIFIED: To update all new stats including scientific notation ---
         function updateStats() {
             document.getElementById('currency').textContent = formatNumber(currency);
             document.getElementById('geometrix').textContent = formatGeometrix(geometrix);
@@ -1395,6 +1586,11 @@
             document.getElementById('totalRanks').textContent = TOTAL_RANKS;
             document.getElementById('secretsEnabled').textContent = secretsEnabled ? 'Yes' : 'No';
             document.getElementById('hardcoreStatus').textContent = hardcoreMode ? 'ON' : 'OFF';
+            
+            // Update scientific notation status
+            document.getElementById('sciNotationStatus').textContent = sciNotationEnabled ? 'ON' : 'OFF';
+            document.getElementById('sciNotationStatus').style.color = sciNotationEnabled ? '#00ff00' : '#ff0000';
+            document.getElementById('sciNotationStat').textContent = `${sciNotationEnabled ? 'ON' : 'OFF'} (≥${formatNumber(sciNotationThreshold)})`;
             
             document.getElementById('bulkRollLevel').textContent = bulkRollLevel;
             document.getElementById('bulkRollAmount').textContent = bulkRollLevel + 1;
@@ -1948,36 +2144,35 @@
             activeAnimationElements.add(elementId);
         }
 
-        // --- NEW: Complex rank generation ---
+        // --- MODIFIED: Complex rank generation (x + yi) ---
         function generateComplexRank() {
             if (Math.random() < COMPLEX_CHANCE) {
-                // Generate two separate rolls with current luck
+                // Generate two separate rolls for real and imaginary parts
                 const totalLuck = currentLuck * luckMultiValue;
-                const baseRoll1 = Math.pow(Math.random(), 3 / POWER_EXPONENT) * (1 + totalLuck);
-                const baseRoll2 = Math.pow(Math.random(), 3 / POWER_EXPONENT) * (1 + totalLuck);
+                const realPart = Math.pow(Math.random(), 3 / POWER_EXPONENT) * (1 + totalLuck);
+                const imagPart = Math.pow(Math.random(), 3 / POWER_EXPONENT) * (1 + totalLuck);
                 
-                const rankInfo1 = getRankInfo(baseRoll1);
-                const rankInfo2 = getRankInfo(baseRoll2);
+                const rankInfoReal = getRankInfo(realPart);
+                const rankInfoImag = getRankInfo(imagPart);
                 
-                let displayName = `Complex: ${rankInfo1.name.replace(" [HC]", "")} + ${rankInfo2.name.replace(" [HC]", "")}`;
+                let displayName = `Complex: ${rankInfoReal.name.replace(" [HC]", "")} + ${rankInfoImag.name.replace(" [HC]", "")}i`;
                 if (hardcoreMode) {
                     displayName += " [HC]";
                 }
                 
                 return {
                     isComplex: true,
-                    baseValue1: baseRoll1,
-                    baseValue2: baseRoll2,
-                    totalValue: baseRoll1 + baseRoll2,
-                    rankName1: rankInfo1.name,
-                    rankName2: rankInfo2.name,
+                    realPart: realPart,
+                    imagPart: imagPart,
+                    realRankName: rankInfoReal.name,
+                    imagRankName: rankInfoImag.name,
                     displayName: displayName
                 };
             }
             return null;
         }
 
-        // --- MODIFIED: To handle new ranks, CORRUPTED, Complex, Auto-Accept, Auto-Stop, and Pending ---
+        // --- MODIFIED: To handle new ranks, 7 GRAND DAD, Complex, Auto-Accept, Auto-Stop, and Pending ---
         async function roll() {
             if (isCutscenePlaying) {
                 addToTerminal('Wait for the cutscene to finish!', true);
@@ -1997,18 +2192,25 @@
                 const complexResult = generateComplexRank();
                 
                 if (complexResult) {
-                    // Handle complex rank
-                    const baseValue = complexResult.totalValue;
+                    // Handle complex rank (x + yi)
+                    const baseValue = complexResult.realPart;
                     const variantResult = getVariants(baseValue);
-                    let displayValue = variantResult ? variantResult.modifiedValue : baseValue;
+                    
+                    // Complex numbers use both real and imaginary parts
+                    const displayValue = {
+                        real: complexResult.realPart,
+                        imag: complexResult.imagPart
+                    };
+                    
                     const variants = variantResult ? variantResult.variants : [];
                     
                     const displayName = complexResult.displayName;
                     const isSecret = false;
                     
                     rollResults.push({ 
-                        baseValue, 
-                        displayValue, 
+                        baseValue: baseValue, 
+                        displayValue: displayValue, 
+                        complexValue: true,
                         variants, 
                         displayName, 
                         isSecret, 
@@ -2018,8 +2220,10 @@
                         complexData: complexResult
                     });
                     
-                    if (displayValue > maxRollValueInBulk) {
-                        maxRollValueInBulk = displayValue;
+                    // For max roll comparison, use magnitude sqrt(real^2 + imag^2)
+                    const magnitude = Math.sqrt(complexResult.realPart**2 + complexResult.imagPart**2);
+                    if (magnitude > maxRollValueInBulk) {
+                        maxRollValueInBulk = magnitude;
                         isMaxRollSecret = isSecret;
                     }
                     
@@ -2033,11 +2237,60 @@
                 
                 // Normal roll generation
                 const rollResult = generateRoll();
-                const baseValue = rollResult.value;
+                let baseValue = rollResult.value;
+                
+                // Check for 7 GRAND DAD when rolling Grand (1e6 to 5e7)
+                let isGrandRoll = baseValue >= 1e6 && baseValue < 5e7;
+                let shouldCheck7GrandDad = isGrandRoll && Math.random() < (1/7.77);
+                
+                // Apply Lol event boost to 7 GRAND DAD
+                if (shouldCheck7GrandDad && currentEvent && currentEvent.name === "Lol") {
+                    shouldCheck7GrandDad = Math.random() < (1/7.77) * currentEvent.multiplier;
+                }
+                
+                // Get variants (now includes Negative and Dull)
                 const variantResult = getVariants(baseValue);
                 let displayValue = variantResult ? variantResult.modifiedValue : baseValue;
                 const variants = variantResult ? variantResult.variants : [];
                 
+                // Check for 7 GRAND DAD after variants are applied
+                if (shouldCheck7GrandDad) {
+                    // Create 7 GRAND DAD secret
+                    const sevenGrandDad = {
+                        name: "7 GRAND DAD",
+                        chance: 1/7.77,
+                        rarity: 7.77,
+                        multiplier: 7777777
+                    };
+                    
+                    // Apply 7 GRAND DAD multiplier
+                    displayValue *= sevenGrandDad.multiplier;
+                    
+                    rollResults.push({ 
+                        baseValue, 
+                        displayValue, 
+                        variants, 
+                        displayName: "7 GRAND DAD", 
+                        isSecret: true, 
+                        secretRarityMultiplier: sevenGrandDad.multiplier,
+                        rankInfo: { name: "7 GRAND DAD", rankNum: 999, isUnobtainable: false },
+                        isComplex: false
+                    });
+                    
+                    if (displayValue > maxRollValueInBulk) {
+                        maxRollValueInBulk = displayValue;
+                        isMaxRollSecret = true;
+                    }
+                    
+                    const baseRankName = "7 GRAND DAD";
+                    if (!discoveredRanks.has(baseRankName)) {
+                        newRankDiscoveredInBulk = true;
+                    }
+                    
+                    continue;
+                }
+                
+                // Original secret rank logic
                 const secretResult = getSecretRank(); 
                 let rankInfo = getRankInfo(baseValue);
                 let displayName = secretResult ? secretResult.name : rankInfo.name;
@@ -2069,12 +2322,12 @@
                     }
                 }
                 
-                // CORRUPTED Logic
+                // CORRUPTED Logic (not available in HC mode)
                 if (displayName === "CORRUPTED") {
                     displayValue *= -1;
                 }
                 
-                // Destroyed logic
+                // Destroyed logic (not available in HC mode)
                 if (displayName === "Destroyed") {
                     displayValue = 0;
                 }
@@ -2106,11 +2359,15 @@
             }
             
             for (const rollData of rollResults) {
-                let { baseValue, displayValue, variants, displayName, isSecret, secretRarityMultiplier, rankInfo, isComplex, complexData } = rollData;
+                let { baseValue, displayValue, complexValue, variants, displayName, isSecret, secretRarityMultiplier, rankInfo, isComplex, complexData } = rollData;
                 
                 const currencyGain = Math.pow(rankInfo.rankNum, 3);
                 
-                const { className: rankClassBase, color: rollColorBase } = getRankClassAndColor(displayValue, variants, displayName);
+                const { className: rankClassBase, color: rollColorBase } = getRankClassAndColor(
+                    typeof displayValue === 'object' ? Math.sqrt(displayValue.real**2 + displayValue.imag**2) : displayValue, 
+                    variants, 
+                    displayName
+                );
 
                 let rankClass = rankClassBase;
                 let rollColor = rollColorBase;
@@ -2198,7 +2455,16 @@
                 const variantDataAttr = variants.length > 0 ? `data-variants='${JSON.stringify(variants)}'` : '';
                 const baseValueAttr = `data-basevalue='${baseValue}'`;
                 
-                let content = `<span class="clickable-roll ${rankClass}" style="color: ${rollColor};" onclick="tryAddToInventory(${displayValue}, '${escapeHTML(displayName)}', ${currentIndex}, this)" id="roll-${currentIndex}" ${variantDataAttr} ${baseValueAttr}>${formatNumber(finalDisplayValue)} [${displayName}]${secretMultiplierText}${suffix}</span>`;
+                let content = '';
+                
+                if (isComplex) {
+                    // Display complex number as "real + imag i"
+                    const realFormatted = formatNumber(complexData.realPart);
+                    const imagFormatted = formatNumber(complexData.imagPart);
+                    content = `<span class="clickable-roll ${rankClass}" style="color: ${rollColor};" onclick="tryAddToInventory(${displayValue}, '${escapeHTML(displayName)}', ${currentIndex}, this)" id="roll-${currentIndex}" ${variantDataAttr} ${baseValueAttr}>${realFormatted} + ${imagFormatted}i [${displayName}]${secretMultiplierText}${suffix}</span>`;
+                } else {
+                    content = `<span class="clickable-roll ${rankClass}" style="color: ${rollColor};" onclick="tryAddToInventory(${displayValue}, '${escapeHTML(displayName)}', ${currentIndex}, this)" id="roll-${currentIndex}" ${variantDataAttr} ${baseValueAttr}>${formatNumber(finalDisplayValue)} [${displayName}]${secretMultiplierText}${suffix}</span>`;
+                }
                 
                 if (displayName === "⛧Satanic⛧") {
                     content = `<span class="satanic-wrapper">${content}</span>`;
@@ -3234,6 +3500,10 @@
                 originalVariantChance,
                 originalSecretLuck,
 
+                // NEW: Scientific notation settings
+                sciNotationThreshold,
+                sciNotationEnabled,
+
                 // Cutscene State
                 cutscenesEnabled,
 
@@ -3348,6 +3618,10 @@
                     originalVariantChance = gameState.originalVariantChance || 1;
                     originalSecretLuck = gameState.originalSecretLuck || 1;
                     
+                    // NEW: Load scientific notation settings
+                    sciNotationThreshold = gameState.sciNotationThreshold || DEFAULT_SCI_THRESHOLD;
+                    sciNotationEnabled = typeof gameState.sciNotationEnabled !== 'undefined' ? gameState.sciNotationEnabled : true;
+                    
                     // Load Cutscene State
                     cutscenesEnabled = typeof gameState.cutscenesEnabled === 'boolean' ? gameState.cutscenesEnabled : true;
 
@@ -3396,11 +3670,12 @@
                     
                     // Apply hardcore mode if needed
                     if (hardcoreMode) {
-                        // Apply hardcore values
+                        // Apply hardcore values (default x1, +0)
                         bulkRollLevel = 0;
-                        currentLuck = 1;
+                        currentLuck = 0;
                         variantChanceMultiplier = 1;
                         secretLuckMultiplier = 1;
+                        luckMultiValue = 1;
                         
                         // Update UI
                         document.getElementById('hardcoreToggleBtn').textContent = 'Hardcore Mode: ON';
@@ -3409,6 +3684,11 @@
                         document.getElementById('hardcore-warning').style.display = 'block';
                         document.body.classList.add('hardcore-mode-active');
                     }
+                    
+                    // Set scientific notation UI
+                    document.getElementById('sciNotationThreshold').value = sciNotationThreshold;
+                    document.getElementById('sciNotationStatus').textContent = sciNotationEnabled ? 'ON' : 'OFF';
+                    document.getElementById('sciNotationStatus').style.color = sciNotationEnabled ? '#00ff00' : '#ff0000';
                     
                     // Start the shape spawner if it was unlocked
                     if (shapesUnlocked) {
@@ -3507,6 +3787,18 @@
             setTimeout(() => {
                 clover.style.transform = 'scale(1)';
             }, 100);
+        });
+
+        // Add listener for scientific notation threshold
+        document.getElementById('sciNotationThreshold').addEventListener('change', (e) => {
+            const value = parseFloat(e.target.value);
+            if (!isNaN(value) && value > 0) {
+                sciNotationThreshold = value;
+                addToTerminal(`Scientific notation threshold set to ${formatNumber(value)}`, true);
+                updateStats();
+                preserveAnimations();
+                saveGame();
+            }
         });
 
         // Add LZString compression library for save data
