@@ -23,9 +23,29 @@
         }
         .main-container {
             display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: auto auto;
             gap: 20px;
         }
+        
+        .main-container > div:first-child {
+            grid-column: 1;
+            grid-row: 1;
+        }
+        
+        .main-container > div:nth-child(2) {
+            grid-column: 2;
+            grid-row: 1;
+        }
+        
+        .main-container > div:last-child {
+            grid-column: 1 / span 2;
+            grid-row: 2;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
         #terminal {
             background-color: #2d0051;
             border: 2px solid #ff69b4;
@@ -207,6 +227,36 @@
             width: 200px;
         }
         
+        /* NEW: UI Customization */
+        .ui-customization {
+            background-color: #2d0051;
+            border: 2px solid #FFA500;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        
+        .ui-customization-item {
+            margin: 10px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .ui-customization-item label {
+            flex-shrink: 0;
+            min-width: 150px;
+            color: #FFA500;
+        }
+        
+        .ui-customization-item input[type="color"] {
+            width: 60px;
+            height: 30px;
+            cursor: pointer;
+            border: 2px solid #FFA500;
+            border-radius: 3px;
+        }
+        
         /* Rank colors */
         .rank-1-1000 { color: #ffffff; }
         .rank-1000-10000 { color: #ffff00; }
@@ -230,24 +280,36 @@
             background-size: 200% 100%;
         }
 
-        /* ADDED: Unobtainable rank style */
+        /* FIXED: Unobtainable rank style */
         .rank-unobtainable {
-    color: transparent;
-    background: linear-gradient(90deg, #000000, #ffffff);
-    -webkit-background-clip: text;
-    background-clip: text;
-    /* Sharp gray outline */
-    text-shadow: 
-        -1px -1px 0 #808080,
-        0 -1px 0 #808080,
-        1px -1px 0 #808080,
-        -1px 0 0 #808080,
-        1px 0 0 #808080,
-        -1px 1px 0 #808080,
-        0 1px 0 #808080,
-        1px 1px 0 #808080;
-    font-weight: bold;
-}
+            position: relative;
+            display: inline-block;
+            color: transparent;
+            background: linear-gradient(90deg, #000000, #ffffff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            font-weight: bold;
+            z-index: 2;
+        }
+        
+        .rank-unobtainable::before {
+            content: 'Unobtainable';
+            position: absolute;
+            left: 0;
+            top: 0;
+            color: #808080;
+            z-index: 1;
+            text-shadow: 
+                -1px -1px 0 #808080,
+                0 -1px 0 #808080,
+                1px -1px 0 #808080,
+                -1px 0 0 #808080,
+                1px 0 0 #808080,
+                -1px 1px 0 #808080,
+                0 1px 0 #808080,
+                1px 1px 0 #808080;
+        }
+        
         .secret-nonavacious {
             filter: drop-shadow(0 0 5px #00BFFF); 
         }
@@ -320,7 +382,6 @@
             border: 2px solid #00FF00; /* Green border for new UI */
             padding: 20px;
             border-radius: 5px;
-            /* REMOVED: margin-top: 20px; to allow it to sit flush with its new parent grid cell */
             display: none; /* Hidden by default */
         }
 
@@ -397,6 +458,7 @@
             border: 2px solid #FFD700; /* Gold border */
             padding: 20px;
             border-radius: 5px;
+            display: none;
         }
 
         #clover-clicker:active {
@@ -527,7 +589,19 @@
 
         @media (max-width: 1200px) {
             .main-container {
-                grid-template-columns: 1fr 1fr;
+                grid-template-columns: 1fr;
+                grid-template-rows: auto;
+            }
+            
+            .main-container > div:first-child,
+            .main-container > div:nth-child(2),
+            .main-container > div:last-child {
+                grid-column: 1;
+                grid-row: auto;
+            }
+            
+            .main-container > div:last-child {
+                display: block;
             }
         }
 
@@ -578,6 +652,35 @@
         </div>
     </div>
 
+    <!-- NEW: UI Customization -->
+    <div class="ui-customization">
+        <div class="section-header" style="color: #FFA500;">UI Customization</div>
+        <div class="ui-customization-item">
+            <label>Background Color:</label>
+            <input type="color" id="ui-bg-color" value="#4a148c">
+        </div>
+        <div class="ui-customization-item">
+            <label>Button Background:</label>
+            <input type="color" id="ui-button-bg" value="#808080">
+        </div>
+        <div class="ui-customization-item">
+            <label>Button Outline:</label>
+            <input type="color" id="ui-button-outline" value="#ff69b4">
+        </div>
+        <div class="ui-customization-item">
+            <label>HC Mode UI Color:</label>
+            <input type="color" id="ui-hc-color" value="#ff0000">
+        </div>
+        <div class="ui-customization-item">
+            <label>Text Color:</label>
+            <input type="color" id="ui-text-color" value="#ffffff">
+        </div>
+        <div class="ui-customization-item">
+            <button onclick="applyUICustomization()" style="background-color: #FFA500; border-color: #FFA500; color: #000;">Apply UI Changes</button>
+            <button onclick="resetUICustomization()" style="background-color: #808080; border-color: #ff69b4; color: #fff;">Reset to Default</button>
+        </div>
+    </div>
+
     <div class="autoroll-settings" style="padding-bottom: 5px;">
         <div class="section-header">Auto Accept Settings</div>
         <div class="autoroll-setting-item">
@@ -616,7 +719,7 @@
             <label for="autoStopNewRank">Stop on new rank discovery</label>
         </div>
         
-        <!-- UPDATED: Import / Export Save with no text cap -->
+        <!-- UPDATED: Import / Export Save with base64url encoding -->
         <div class="section-header" style="margin-top: 15px;">Import / Export Save</div>
         <textarea id="saveDataTextarea" style="width: 95%; min-height: 80px; background-color: #4a148c; color: #ffffff; border: 1px solid #ff69b4; font-family: 'Courier New', monospace; margin-bottom: 15px; padding: 5px; resize: vertical;" placeholder="Paste save data here and click 'Import Save'"></textarea>
         <div class="controls" style="grid-template-columns: 1fr 1fr; margin-bottom: 10px;">
@@ -642,7 +745,6 @@
         <!-- NEW: Hardcore mode toggle -->
         <button id="hardcoreToggleBtn" onclick="toggleHardcoreMode()">Hardcore Mode: OFF</button>
     </div>
-
     
     <div class="main-container">
         <div>
@@ -659,56 +761,58 @@
             </div>
         </div>
         <div>
-            <div id="index">
-                <div class="section-header">Index (Ranks Discovered)</div>
-                <div id="indexContent">Roll to discover ranks!</div>
-            </div>
-            
-            <!-- UPDATED: Always show pending rolls section -->
-            <div id="pending-rolls" style="margin-top: 20px;">
-                <div class="section-header">Pending Rolls</div>
-                <div id="pendingContent">Empty</div>
-            </div>
-            
-            <div class="controls" id="shapes-unlock-controls" style="margin-top: 20px;">
-                <button id="unlockShapesBtn" onclick="unlockShapes()">Unlock Shapes GUI (5,000,000.00 Currency)</button>
-            </div>
-            
-            <div id="shapes-gui">
-                <div class="section-header" style="color: #00FF00;">Shapes GUI</div>
-                
-                <div id="shapes-field" class="shapes-field"></div>
-
-                <div class="stat-item">Current Shape Luck: +<span id="shapeLuckBonus">0.0</span>x</div>
-                <div class="stat-item">Shapes/Spawn: <span id="bulkShapeAmount">1</span> (Lvl <span id="bulkShapeLevel">0</span>)</div>
-                <div class="stat-item">Spawn Cooldown: <span id="shapeCooldown">2.0000</span>s</div>
-                
-                <div class="shape-spawn-output" id="shape-spawn-output" style="height: 50px;">Waiting for first spawn...</div>
-
-                <div class="shapes-upgrades">
-                    <button id="buyShapeLuckBtn" onclick="buyShapeLuckUpgrade()">Shape Luck (+0.1x) - Cost: <span id="shapeLuckCost">5.00</span> GMX</button>
-                    <button id="buyLuckMultiBtn" onclick="buyLuckMultiUpgrade()">Luck Multiplier (x2.00) - Cost: <span id="luckMultiCost">100.00</span> GMX</button>
-                    <button id="buyBulkShapeBtn" onclick="buyBulkShapeUpgrade()">Bulk/Cooldown Lvl <span id="bulkShapeLevelBtn">1</span> - Cost: <span id="bulkShapeCost">50.00</span> GMX</button>
-                    <button id="buyClickerUnlockBtn" onclick="unlockClicker()">Unlock Clicker - Cost: 1,000,000.00 GMX</button>
+            <div class="right-column">
+                <div id="index">
+                    <div class="section-header">Index (Ranks Discovered)</div>
+                    <div id="indexContent">Roll to discover ranks!</div>
                 </div>
-            </div>
-            
-            <div id="clicker-gui" style="display: none; margin-top: 20px;">
-                <div class="section-header" style="color: #FFD700;">Clicker</div>
                 
-                <div class="stats" style="background-color: #2d0051; border-color: #FFD700; padding: 10px; margin-bottom: 10px;">
-                    <div class="stat-item">Fortunium: <span id="fortunium">0.00</span></div>
-                    <div class="stat-item">Fortunium Luck: +<span id="fortuniumLuck">0.00</span>x</div>
+                <!-- UPDATED: Always show pending rolls section -->
+                <div id="pending-rolls">
+                    <div class="section-header">Pending Rolls</div>
+                    <div id="pendingContent">Empty</div>
                 </div>
-
-                <div id="clover-field" style="text-align: center; margin-bottom: 15px;">
-                     <span id="clover-clicker" style="font-size: 80px; cursor: pointer; display: inline-block; transition: transform 0.1s; user-select: none;">🍀</span>
+                
+                <div class="controls" id="shapes-unlock-controls">
+                    <button id="unlockShapesBtn" onclick="unlockShapes()">Unlock Shapes GUI (5,000,000.00 Currency)</button>
                 </div>
+                
+                <div id="shapes-gui">
+                    <div class="section-header" style="color: #00FF00;">Shapes GUI</div>
+                    
+                    <div id="shapes-field" class="shapes-field"></div>
 
-                <div class="clicker-upgrades" style="display: flex; flex-wrap: wrap; gap: 10px;">
-                    <button id="buyGmxMultiBtn" onclick="buyFortuniumUpgrade('gmx')">GMX Multi (+0.5x) - Cost: <span id="gmxMultiCost">75.00</span> FOR</button>
-                    <button id="buyFortuniumLuckBtn" onclick="buyFortuniumUpgrade('fortuniumLuck')">Fortunium Luck (+0.5x) - Cost: <span id="fortuniumLuckCost">125.00</span> FOR</button>
-                    <button id="buyClickerLuckBtn" onclick="buyFortuniumUpgrade('luck')">Luck Multi (+0.5x) - Cost: <span id="clickerLuckCost">1000.00</span> FOR</button>
+                    <div class="stat-item">Current Shape Luck: +<span id="shapeLuckBonus">0.0</span>x</div>
+                    <div class="stat-item">Shapes/Spawn: <span id="bulkShapeAmount">1</span> (Lvl <span id="bulkShapeLevel">0</span>)</div>
+                    <div class="stat-item">Spawn Cooldown: <span id="shapeCooldown">2.0000</span>s</div>
+                    
+                    <div class="shape-spawn-output" id="shape-spawn-output" style="height: 50px;">Waiting for first spawn...</div>
+
+                    <div class="shapes-upgrades">
+                        <button id="buyShapeLuckBtn" onclick="buyShapeLuckUpgrade()">Shape Luck (+0.1x) - Cost: <span id="shapeLuckCost">5.00</span> GMX</button>
+                        <button id="buyLuckMultiBtn" onclick="buyLuckMultiUpgrade()">Luck Multiplier (x2.00) - Cost: <span id="luckMultiCost">100.00</span> GMX</button>
+                        <button id="buyBulkShapeBtn" onclick="buyBulkShapeUpgrade()">Bulk/Cooldown Lvl <span id="bulkShapeLevelBtn">1</span> - Cost: <span id="bulkShapeCost">50.00</span> GMX</button>
+                        <button id="buyClickerUnlockBtn" onclick="unlockClicker()">Unlock Clicker - Cost: 1,000,000.00 GMX</button>
+                    </div>
+                </div>
+                
+                <div id="clicker-gui">
+                    <div class="section-header" style="color: #FFD700;">Clicker</div>
+                    
+                    <div class="stats" style="background-color: #2d0051; border-color: #FFD700; padding: 10px; margin-bottom: 10px;">
+                        <div class="stat-item">Fortunium: <span id="fortunium">0.00</span></div>
+                        <div class="stat-item">Fortunium Luck: +<span id="fortuniumLuck">0.00</span>x</div>
+                    </div>
+
+                    <div id="clover-field" style="text-align: center; margin-bottom: 15px;">
+                         <span id="clover-clicker" style="font-size: 80px; cursor: pointer; display: inline-block; transition: transform 0.1s; user-select: none;">🍀</span>
+                    </div>
+
+                    <div class="clicker-upgrades" style="display: flex; flex-wrap: wrap; gap: 10px;">
+                        <button id="buyGmxMultiBtn" onclick="buyFortuniumUpgrade('gmx')">GMX Multi (+0.5x) - Cost: <span id="gmxMultiCost">75.00</span> FOR</button>
+                        <button id="buyFortuniumLuckBtn" onclick="buyFortuniumUpgrade('fortuniumLuck')">Fortunium Luck (+0.5x) - Cost: <span id="fortuniumLuckCost">125.00</span> FOR</button>
+                        <button id="buyClickerLuckBtn" onclick="buyFortuniumUpgrade('luck')">Luck Multi (+0.5x) - Cost: <span id="clickerLuckCost">1000.00</span> FOR</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -908,7 +1012,7 @@
             { name: "~Nonavacious~", chance: 1/575630, rarity: 575630 }, 
             { name: "Insanity", chance: 1/666666, rarity: 666666 }, 
             { name: "Grand", chance: 1/1e6, rarity: 1e6 },
-            { name: "7 GRAND DAD", chance: 1/7777.77, rarity: 777.77, requiresGrand: true },
+            { name: "7 GRAND DAD", chance: 1/777.777, rarity: 777.777, requiresGrand: true },
             { name: ":[{(absolute zero)}]:", chance: 1/1e6, rarity: 1e6 },
             { name: "Defined", chance: 1/1.5e6, rarity: 1.5e6 },
             { name: "Finale.. wait, how'd this get here?", chance: 1/2.5e6, rarity: 2.5e6 },
@@ -1358,7 +1462,7 @@
             return { value: baseRoll, variant: null };
         }
         
-        // --- MODIFIED: To handle 7 GRAND DAD and HC restrictions ---
+        // --- MODIFIED: To handle 7 GRAND DAD with fixed 1/777.777 chance ---
         function getSecretRank() {
             if (!secretsEnabled) return null;
             
@@ -1406,9 +1510,9 @@
                     chanceMultiplier = currentEvent.multiplier;
                 }
                 
-                // Special handling for 7 GRAND DAD (only when rolling Grand, handled in roll function)
+                // Skip 7 GRAND DAD here - handled separately in roll()
                 if (secret.name === "7 GRAND DAD" && secret.requiresGrand) {
-                    continue; // This will be handled separately
+                    continue;
                 }
                 
                 if (rand < adjustedChance * secretLuckMultiplier * chanceMultiplier * hiddenEventMultiplier) {
@@ -1692,9 +1796,18 @@
                 }
             }
 
-            // --- Shapes GUI Updates ---
-            document.getElementById('shapes-gui').style.display = shapesUnlocked ? 'block' : 'none';
-            document.getElementById('shapes-unlock-controls').style.display = shapesUnlocked ? 'none' : 'grid';
+            // --- Shapes GUI Updates - ALWAYS refresh ---
+            const shapesGui = document.getElementById('shapes-gui');
+            if (shapesGui) {
+                shapesGui.style.display = shapesUnlocked ? 'block' : 'none';
+                shapesGui.offsetHeight; // Force reflow
+            }
+            
+            const shapesUnlockControls = document.getElementById('shapes-unlock-controls');
+            if (shapesUnlockControls) {
+                shapesUnlockControls.style.display = shapesUnlocked ? 'none' : 'grid';
+            }
+            
             document.getElementById('unlockShapesBtn').disabled = currency < UNLOCK_SHAPES_COST;
 
             if (shapesUnlocked) {
@@ -1743,8 +1856,12 @@
                 }
             }
 
-            // --- Clicker GUI Updates ---
-            document.getElementById('clicker-gui').style.display = clickerUnlocked ? 'block' : 'none';
+            // --- Clicker GUI Updates - ALWAYS refresh ---
+            const clickerGui = document.getElementById('clicker-gui');
+            if (clickerGui) {
+                clickerGui.style.display = clickerUnlocked ? 'block' : 'none';
+                clickerGui.offsetHeight; // Force reflow
+            }
             
             if (clickerUnlocked) {
                 document.getElementById('fortunium').textContent = formatNumber(fortunium);
@@ -2183,7 +2300,7 @@
             return null;
         }
 
-        // --- MODIFIED: To handle new ranks, 7 GRAND DAD, Complex, Auto-Accept, Auto-Stop, and Pending ---
+        // --- MODIFIED: To handle 7 Grand Dad with FIXED 1/777.777 chance ---
         async function roll() {
             if (isCutscenePlaying) {
                 addToTerminal('Wait for the cutscene to finish!', true);
@@ -2250,13 +2367,13 @@
                 const rollResult = generateRoll();
                 let baseValue = rollResult.value;
                 
-                // Check for 7 GRAND DAD when rolling Grand (1e6 to 5e7)
-                let isGrandRoll = baseValue >= 1e6 && baseValue < 5e7;
-                let shouldCheck7GrandDad = isGrandRoll && Math.random() < (1/7.77);
-                
+                // FIXED: Check for 7 GRAND DAD ONLY when rolling Grand (1e6 to 1e7)
+                let isGrandRoll = baseValue >= 1e6 && baseValue < 1e7;
+                let shouldCheck7GrandDad = isGrandRoll && Math.random() < (1/777.777);
+
                 // Apply Lol event boost to 7 GRAND DAD
                 if (shouldCheck7GrandDad && currentEvent && currentEvent.name === "Lol") {
-                    shouldCheck7GrandDad = Math.random() < (1/7.77) * currentEvent.multiplier;
+                    shouldCheck7GrandDad = Math.random() < (1/777.777) * currentEvent.multiplier;
                 }
                 
                 // Get variants (now includes Negative and Dull)
@@ -2269,8 +2386,8 @@
                     // Create 7 GRAND DAD secret
                     const sevenGrandDad = {
                         name: "7 GRAND DAD",
-                        chance: 1/7.77,
-                        rarity: 7.77,
+                        chance: 1/777.777,
+                        rarity: 777.777,
                         multiplier: 7777777
                     };
                     
@@ -2866,7 +2983,7 @@
             }
         }
 
-        // --- UPDATED: Import/Export Functions with better error handling ---
+        // --- UPDATED: Import/Export Functions with base64url encoding ---
         function exportSave() {
             try {
                 saveGame();
@@ -2876,7 +2993,7 @@
                     return;
                 }
                 
-                // Compress the save data
+                // Compress the save data using base64url
                 const compressedData = LZString.compressToBase64(saveData);
                 document.getElementById('saveDataTextarea').value = compressedData;
                 
@@ -2899,13 +3016,13 @@
                     return;
                 }
                 
-                // Try to decompress with LZString first
+                // Try to decompress with base64url first
                 let decodedData;
                 try {
                     decodedData = LZString.decompressFromBase64(compressedData);
                 } catch (e) {
-                    // If decompression fails, try as plain base64
-                    decodedData = atob(compressedData);
+                    // If decompression fails, try as plain text
+                    decodedData = compressedData;
                 }
                 
                 if (!decodedData) {
@@ -3391,6 +3508,106 @@
             activeAnimationElements.add(elementId);
         }
 
+        // --- NEW: UI Customization Functions ---
+        function applyUICustomization() {
+            const bgColor = document.getElementById('ui-bg-color').value;
+            const buttonBg = document.getElementById('ui-button-bg').value;
+            const buttonOutline = document.getElementById('ui-button-outline').value;
+            const hcColor = document.getElementById('ui-hc-color').value;
+            const textColor = document.getElementById('ui-text-color').value;
+            
+            // Apply to body
+            document.body.style.backgroundColor = bgColor;
+            document.body.style.color = textColor;
+            
+            // Apply to buttons (excluding special buttons)
+            const buttons = document.querySelectorAll('button:not([style*="background-color"])');
+            buttons.forEach(btn => {
+                btn.style.backgroundColor = buttonBg;
+                btn.style.borderColor = buttonOutline;
+                btn.style.color = textColor;
+            });
+            
+            // Apply to hardcore mode elements
+            const hcElements = document.querySelectorAll('.hardcore-mode-active, .hardcore-rank');
+            hcElements.forEach(el => {
+                el.style.borderColor = hcColor;
+            });
+            
+            // Save UI settings
+            const uiSettings = {
+                bg: bgColor,
+                buttonBg: buttonBg,
+                buttonOutline: buttonOutline,
+                hcColor: hcColor,
+                textColor: textColor
+            };
+            localStorage.setItem('calisRNG_UI', JSON.stringify(uiSettings));
+            
+            addToTerminal('UI customization applied!', true);
+        }
+
+        function resetUICustomization() {
+            // Reset to defaults
+            document.getElementById('ui-bg-color').value = '#4a148c';
+            document.getElementById('ui-button-bg').value = '#808080';
+            document.getElementById('ui-button-outline').value = '#ff69b4';
+            document.getElementById('ui-hc-color').value = '#ff0000';
+            document.getElementById('ui-text-color').value = '#ffffff';
+            
+            // Apply defaults
+            applyUICustomization();
+            
+            addToTerminal('UI reset to defaults!', true);
+        }
+
+        function loadUICustomization() {
+            const saved = localStorage.getItem('calisRNG_UI');
+            if (saved) {
+                try {
+                    const uiSettings = JSON.parse(saved);
+                    document.getElementById('ui-bg-color').value = uiSettings.bg;
+                    document.getElementById('ui-button-bg').value = uiSettings.buttonBg;
+                    document.getElementById('ui-button-outline').value = uiSettings.buttonOutline;
+                    document.getElementById('ui-hc-color').value = uiSettings.hcColor;
+                    document.getElementById('ui-text-color').value = uiSettings.textColor;
+                    
+                    // Apply immediately
+                    setTimeout(() => applyUICustomization(), 100);
+                } catch(e) {
+                    console.error('Error loading UI settings:', e);
+                }
+            }
+        }
+
+        // --- NEW: Refresh all UI function ---
+        function refreshAllUI() {
+            updateStats();
+            updateInventoryDisplay();
+            updateIndexDisplay();
+            updatePendingDisplay();
+            
+            // Force re-render of shapes and clicker
+            if (shapesUnlocked) {
+                const shapesGui = document.getElementById('shapes-gui');
+                if (shapesGui) {
+                    shapesGui.style.display = 'block';
+                    shapesGui.offsetHeight;
+                }
+                renderActiveShapes();
+            }
+            
+            if (clickerUnlocked) {
+                const clickerGui = document.getElementById('clicker-gui');
+                if (clickerGui) {
+                    clickerGui.style.display = 'block';
+                    clickerGui.offsetHeight;
+                }
+            }
+            
+            preserveAnimations();
+        }
+
         // --- EVENT FUNCTIONS ---
         function startEvent(event) {
             if (hardcoreMode) return; // Events disabled in hardcore mode
@@ -3564,6 +3781,9 @@
                 clickerLuckCost
             };
             localStorage.setItem('calisRNGGame', JSON.stringify(gameState));
+            
+            // Refresh UI after save
+            setTimeout(refreshAllUI, 50);
         }
 
         // --- MODIFIED: loadGame to include new data ---
@@ -3701,6 +3921,20 @@
                     document.getElementById('sciNotationStatus').textContent = sciNotationEnabled ? 'ON' : 'OFF';
                     document.getElementById('sciNotationStatus').style.color = sciNotationEnabled ? '#00ff00' : '#ff0000';
                     
+                    // Set input values for Auto-Accept and Auto-Stop
+                    document.getElementById('autoAcceptThreshold').value = autoAcceptThreshold;
+                    document.getElementById('autoAcceptTrueRNG').value = autoAcceptTrueRNGValue;
+                    document.getElementById('autoAcceptSecretThreshold').value = autoAcceptSecretThresholdValue;
+                    document.getElementById('autoAcceptNewRank').checked = autoAcceptOnNewRank;
+                    
+                    document.getElementById('autoStopThreshold').value = autoStopThreshold;
+                    document.getElementById('autoStopTrueRNG').value = autoStopTrueRNGValue;
+                    document.getElementById('autoStopSecretThreshold').value = autoStopSecretThresholdValue;
+                    document.getElementById('autoStopNewRank').checked = autoStopOnNewRank;
+                    
+                    // Refresh all UI
+                    refreshAllUI();
+                    
                     // Start the shape spawner if it was unlocked
                     if (shapesUnlocked) {
                         renderActiveShapes();
@@ -3715,40 +3949,16 @@
                         endEvent({ name: currentEvent.name, eventChanceBoost: currentEvent.eventChanceBoost });
                     }
                     
-                    // Set input values for Auto-Accept and Auto-Stop
-                    document.getElementById('autoAcceptThreshold').value = autoAcceptThreshold;
-                    document.getElementById('autoAcceptTrueRNG').value = autoAcceptTrueRNGValue;
-                    document.getElementById('autoAcceptSecretThreshold').value = autoAcceptSecretThresholdValue;
-                    document.getElementById('autoAcceptNewRank').checked = autoAcceptOnNewRank;
-                    
-                    document.getElementById('autoStopThreshold').value = autoStopThreshold;
-                    document.getElementById('autoStopTrueRNG').value = autoStopTrueRNGValue;
-                    document.getElementById('autoStopSecretThreshold').value = autoStopSecretThresholdValue;
-                    document.getElementById('autoStopNewRank').checked = autoStopOnNewRank;
-                    
-                    updateStats();
-                    updateInventoryDisplay();
-                    updateIndexDisplay();
-                    updatePendingDisplay();
-                    preserveAnimations();
                     addToTerminal('Game loaded!', true);
                 } catch (e) {
                     console.error('Error loading game:', e);
                     updateCalculatedStats();
-                    updateStats();
-                    updateInventoryDisplay();
-                    updateIndexDisplay();
-                    updatePendingDisplay();
-                    preserveAnimations();
+                    refreshAllUI();
                 }
             } else {
                  // First time load
                 updateCalculatedStats();
-                updateStats();
-                updateInventoryDisplay();
-                updateIndexDisplay();
-                updatePendingDisplay();
-                preserveAnimations();
+                refreshAllUI();
             }
         }
 
@@ -3812,26 +4022,37 @@
             }
         });
 
-        // Add LZString compression library for save data
+        // --- UPDATED: LZString compression library for base64url encoding ---
         const LZString = {
             compressToBase64: function(input) {
                 try {
                     if (!input) return '';
-                    const output = btoa(input);
-                    return output;
+                    // Convert to base64url (URL-safe base64)
+                    const base64 = btoa(unescape(encodeURIComponent(input)));
+                    return base64
+                        .replace(/\+/g, '-')
+                        .replace(/\//g, '_')
+                        .replace(/=+$/g, '');
                 } catch (e) {
                     console.error('Compression error:', e);
-                    return btoa(input);
+                    return '';
                 }
             },
             decompressFromBase64: function(input) {
                 try {
                     if (!input) return '';
-                    const output = atob(input);
-                    return output;
+                    // Convert from base64url to regular base64
+                    let base64 = input
+                        .replace(/-/g, '+')
+                        .replace(/_/g, '/');
+                    // Add padding if needed
+                    while (base64.length % 4) {
+                        base64 += '=';
+                    }
+                    return decodeURIComponent(escape(atob(base64)));
                 } catch (e) {
                     console.error('Decompression error:', e);
-                    return atob(input);
+                    return '';
                 }
             }
         };
@@ -3842,12 +4063,14 @@
         document.getElementById('terminal').appendChild(welcomeLine);
         addToTerminal('Click rolls to add them to your inventory!');
         
+        // Initial load
         loadGame();
-        updateInventoryDisplay();
-        updateIndexDisplay();
-        updatePendingDisplay();
-        preserveAnimations();
+        loadUICustomization();
+        refreshAllUI();
         startEventLoop();
+        
+        // Force initial UI refresh
+        setTimeout(refreshAllUI, 500);
     </script>
     
     <script>
