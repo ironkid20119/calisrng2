@@ -595,67 +595,6 @@
             color: #ff6666;
         }
 
-        /* --- NEW: Merging GUI Styles --- */
-        #merging-gui {
-            background-color: #2d0051;
-            border: 2px solid #00CED1;
-            padding: 20px;
-            border-radius: 5px;
-            display: none;
-            margin-top: 20px;
-        }
-        
-        .merge-selection {
-            background-color: #1a0033;
-            border: 1px solid #00CED1;
-            padding: 15px;
-            border-radius: 5px;
-            margin-bottom: 15px;
-        }
-        
-        .merge-item {
-            background-color: #4a148c;
-            border: 1px solid #00CED1;
-            padding: 8px;
-            margin: 5px 0;
-            border-radius: 3px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        
-        .merge-item:hover {
-            background-color: #5a1a9c;
-            transform: translateX(5px);
-        }
-        
-        .merge-item.selected {
-            background-color: #00CED1;
-            color: #000;
-            border-color: #ffffff;
-        }
-        
-        .merge-item.complex {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-        
-        .merge-costs {
-            background-color: #2d0051;
-            border: 1px solid #00CED1;
-            padding: 10px;
-            border-radius: 5px;
-            margin-bottom: 15px;
-        }
-        
-        .merge-cost-item {
-            margin: 5px 0;
-            color: #00CED1;
-        }
-        
-        .merge-cost-item.insufficient {
-            color: #ff0000;
-        }
-
         @media (max-width: 1200px) {
             .main-container {
                 grid-template-columns: 1fr;
@@ -788,13 +727,6 @@
             <label for="autoStopNewRank">Stop on new rank discovery</label>
         </div>
         
-        <!-- NEW: Send to Pending First Toggle -->
-        <div class="section-header" style="margin-top: 15px;">Accept Behavior</div>
-        <div class="autoroll-setting-item">
-            <input type="checkbox" id="sendToPendingFirst" checked>
-            <label for="sendToPendingFirst">Send accepted rolls to pending first</label>
-        </div>
-        
         <!-- UPDATED: Import / Export Save with base64url encoding -->
         <div class="section-header" style="margin-top: 15px;">Import / Export Save</div>
         <textarea id="saveDataTextarea" style="width: 95%; min-height: 80px; background-color: #4a148c; color: #ffffff; border: 1px solid #ff69b4; font-family: 'Courier New', monospace; margin-bottom: 15px; padding: 5px; resize: vertical;" placeholder="Paste save data here and click 'Import Save'"></textarea>
@@ -820,8 +752,6 @@
         <button id="secretToggleBtn" onclick="toggleSecrets()">Secrets: ON</button>
         <!-- NEW: Hardcore mode toggle -->
         <button id="hardcoreToggleBtn" onclick="toggleHardcoreMode()">Hardcore Mode: OFF</button>
-        <!-- NEW: Merging button -->
-        <button id="mergingToggleBtn" onclick="toggleMerging()">Merging: OFF</button>
     </div>
     
     <div class="main-container">
@@ -832,12 +762,8 @@
             <div id="inventory">
                 <div class="section-header">Inventory</div>
                 <div class="controls" style="grid-template-columns: 1fr 1fr; margin-bottom: 10px;">
-                    <button onclick="sortInventory('leastRarest')">Sort Least Rarest (Base)</button>
-                    <button onclick="sortInventory('mostRarest')">Sort Most Rarest (Base)</button>
-                </div>
-                <div class="controls" style="grid-template-columns: 1fr 1fr; margin-bottom: 10px;">
-                    <button onclick="sortInventory('leastTotal')">Sort Least Rarest (Total)</button>
-                    <button onclick="sortInventory('mostTotal')">Sort Most Rarest (Total)</button>
+                    <button onclick="sortInventory('leastRarest')">Least Rarest</button>
+                    <button onclick="sortInventory('mostRarest')">Most Rarest</button>
                 </div>
                 <div id="inventoryContent">Empty</div>
             </div>
@@ -895,30 +821,6 @@
                         <button id="buyFortuniumLuckBtn" onclick="buyFortuniumUpgrade('fortuniumLuck')">Fortunium Luck (+0.5x) - Cost: <span id="fortuniumLuckCost">125.00</span> FOR</button>
                         <button id="buyClickerLuckBtn" onclick="buyFortuniumUpgrade('luck')">Luck Multi (+0.5x) - Cost: <span id="clickerLuckCost">1000.00</span> FOR</button>
                     </div>
-                </div>
-                
-                <!-- NEW: Merging GUI -->
-                <div id="merging-gui">
-                    <div class="section-header" style="color: #00CED1;">Merging</div>
-                    
-                    <div class="merge-costs">
-                        <div class="merge-cost-item">Cost: 1e9 Currency</div>
-                        <div class="merge-cost-item">Cost: 100,000 GMX</div>
-                        <div class="merge-cost-item">Cost: 5,000,000 FOR</div>
-                    </div>
-                    
-                    <div class="merge-selection">
-                        <div style="margin-bottom: 10px; color: #00CED1;">Select first rank to merge:</div>
-                        <div id="merge-selection-1" style="max-height: 150px; overflow-y: auto;"></div>
-                    </div>
-                    
-                    <div class="merge-selection">
-                        <div style="margin-bottom: 10px; color: #00CED1;">Select second rank to merge:</div>
-                        <div id="merge-selection-2" style="max-height: 150px; overflow-y: auto;"></div>
-                    </div>
-                    
-                    <button id="mergeButton" onclick="performMerge()" style="background-color: #00CED1; border-color: #00CED1; color: #000; width: 100%;">Merge Selected Ranks</button>
-                    <div id="merge-result" style="margin-top: 10px; padding: 10px; background-color: #1a0033; border-radius: 5px; display: none;"></div>
                 </div>
             </div>
         </div>
@@ -1100,7 +1002,7 @@
             { min: 1e30, max: Infinity, name: "Improbable" }
         ];
 
-        // UPDATED SECRET RANKS WITH NEW ADDITIONS AND REPLACEMENT SYSTEM
+        // UPDATED SECRET RANKS WITH NEW ADDITIONS
         const SECRET_RANKS_CHANCES = [
             { name: "nil", chance: 1/17500, rarity: 17500 }, 
             { name: "Title Label Missing", chance: 1/4040.404, rarity: 4040.404 },
@@ -1120,8 +1022,7 @@
             { name: "~Nonavacious~", chance: 1/575630, rarity: 575630 }, 
             { name: "Insanity", chance: 1/666666, rarity: 666666 }, 
             { name: "Grand", chance: 1/1e6, rarity: 1e6 },
-            // 7 GRAND DAD now properly targets Grand secret
-            { name: "7 GRAND DAD", chance: 1/777.777, rarity: 777.777, requires: "Grand" },
+            { name: "7 GRAND DAD", chance: 1/777.777, rarity: 777.777, requiresGrand: true },
             { name: ":[{(absolute zero)}]:", chance: 1/1e6, rarity: 1e6 },
             { name: "Defined", chance: 1/1.5e6, rarity: 1.5e6 },
             { name: "Finale.. wait, how'd this get here?", chance: 1/2.5e6, rarity: 2.5e6 },
@@ -1149,18 +1050,8 @@
             { name: "coal osal !!!", chance: 1/5551112, rarity: 5551112 },
             { name: "Obscam", chance: 1/888.8888888e6, rarity: 888.8888888e6 },
             { name: "probable", chance: 1/7.5e7, rarity: 7.5e7 },
-            { name: "WHAT THE FUCK", chance: 1/1e50, rarity: 1e50, multiplier: 1e50 },
-            // NEW: Replacement ranks system (like Unobtainable)
-            { name: "Unobtainable", chance: 1/200, rarity: 200, replaces: "Unattainable", multiplier: 250000 }
+            { name: "WHAT THE FUCK", chance: 1/1e50, rarity: 1e50, multiplier: 1e50 }
         ];
-
-        // NEW: Replacement ranks lookup map
-        const REPLACEMENT_RANKS = {};
-        SECRET_RANKS_CHANCES.forEach(secret => {
-            if (secret.replaces) {
-                REPLACEMENT_RANKS[secret.replaces] = secret;
-            }
-        });
 
         // FIX: Sort by chance ascending (rarest first) 
         SECRET_RANKS_CHANCES.sort((a, b) => a.chance - b.chance); 
@@ -1205,12 +1096,6 @@
         // --- NEW: SCIENTIFIC NOTATION CONSTANTS ---
         const DEFAULT_SCI_THRESHOLD = 1e18;
 
-        // --- NEW: MERGING CONSTANTS ---
-        const MERGE_COST_CURRENCY = 1e9;
-        const MERGE_COST_GMX = 100000;
-        const MERGE_COST_FOR = 5e6;
-        const MERGE_DISCOUNT = 0.85; // 85% of original
-
         // --- GAME STATE VARIABLES ---
         let currency = 0;
         let totalUpgrades = 0;
@@ -1247,14 +1132,6 @@
         // NEW: Scientific notation settings
         let sciNotationThreshold = DEFAULT_SCI_THRESHOLD;
         let sciNotationEnabled = true;
-        
-        // NEW: Send to pending first option
-        let sendToPendingFirst = true;
-        
-        // NEW: Merging variables
-        let mergingEnabled = false;
-        let mergeSelection1 = -1;
-        let mergeSelection2 = -1;
         
         // Auto-Accept Variables
         let autoAcceptThreshold = 0;
@@ -1316,9 +1193,6 @@
         // --- NEW: Animation preservation tracking ---
         let activeAnimationElements = new Set();
 
-        // --- NEW: Background running tracking ---
-        let isInBackground = false;
-        let backgroundIntervals = {};
 
         // --- OPTIMIZATION: CALCULATED STATS (set by updateCalculatedStats) ---
         let currentLuck = 0;
@@ -1483,23 +1357,16 @@
             });
         }
 
-        // --- MODIFIED: Sort inventory functions to add total RNG sorting ---
+        // --- MODIFIED: Sort inventory functions to use BASE value ---
         function sortInventory(type) {
             if (type === 'leastRarest') {
                 inventory.sort((a, b) => (a.baseValue || a.value) - (b.baseValue || b.value));
-                addToTerminal(`Inventory sorted by least rarest (Base Value).`, true);
             } else if (type === 'mostRarest') {
                 inventory.sort((a, b) => (b.baseValue || b.value) - (a.baseValue || a.value));
-                addToTerminal(`Inventory sorted by most rarest (Base Value).`, true);
-            } else if (type === 'leastTotal') {
-                inventory.sort((a, b) => a.value - b.value);
-                addToTerminal(`Inventory sorted by least rarest (Total RNG).`, true);
-            } else if (type === 'mostTotal') {
-                inventory.sort((a, b) => b.value - a.value);
-                addToTerminal(`Inventory sorted by most rarest (Total RNG).`, true);
             }
             updateInventoryDisplay();
-            preserveAnimations();
+            preserveAnimations(); // Preserve animations after sorting
+            addToTerminal(`Inventory sorted by ${type === 'mostRarest' ? 'most rarest (Base Value)' : 'least rarest (Base Value)'}.`, true);
             saveGame();
         }
 
@@ -1608,23 +1475,22 @@
             return { value: baseRoll, variant: null };
         }
         
-        // --- MODIFIED: To handle 7 GRAND DAD properly and replacement ranks ---
-        function getSecretRank(rankName = null) {
+        // --- MODIFIED: To handle 7 GRAND DAD with fixed 1/777.777 chance ---
+        function getSecretRank() {
             if (!secretsEnabled) return null;
             
             const rand = Math.random();
             
             let hiddenEventMultiplier = hardcoreMode ? 1 : (currentEvent && currentEvent.targets.includes("ALL_SECRETS") ? currentEvent.multiplier : 1);
             
-            // FIX: Allow all secrets in HC mode
-            const availableSecrets = SECRET_RANKS_CHANCES;
+            // Filter out destroyed and corrupted in HC mode
+            const availableSecrets = hardcoreMode ? 
+                SECRET_RANKS_CHANCES.filter(secret => 
+                    secret.name !== "Destroyed" && secret.name !== "CORRUPTED"
+                ) : 
+                SECRET_RANKS_CHANCES;
             
             for (const secret of availableSecrets) {
-                // Skip if this is a replacement rank and we're not replacing that rank
-                if (secret.replaces && rankName !== secret.replaces) {
-                    continue;
-                }
-                
                 let chanceMultiplier = 1;
                 let adjustedChance = secret.chance;
 
@@ -1657,8 +1523,8 @@
                     chanceMultiplier = currentEvent.multiplier;
                 }
                 
-                // Check for requires condition (like 7 GRAND DAD requires Grand)
-                if (secret.requires && rankName !== secret.requires) {
+                // Skip 7 GRAND DAD here - handled separately in roll()
+                if (secret.name === "7 GRAND DAD" && secret.requiresGrand) {
                     continue;
                 }
                 
@@ -1695,7 +1561,7 @@
             return false;
         }
 
-        // MODIFIED: To handle replacement ranks
+        // MODIFIED: To handle Unobtainable rank and rounding issues
         function getRankInfo(value) {
             // Check for rounding issue
             if (checkRoundingIssue(value)) {
@@ -1712,15 +1578,13 @@
                 const tier = RANK_TIERS[i];
                 if (value >= tier.min && value < tier.max) {
                     let rankName = tier.name;
+                    let isUnobtainable = false;
                     
-                    // Check for replacement ranks
-                    const replacement = REPLACEMENT_RANKS[rankName];
-                    if (replacement) {
-                        const rand = Math.random();
-                        if (rand < replacement.chance) {
-                            rankName = replacement.name;
-                            value *= (replacement.multiplier || 1);
-                        }
+                    // Check if this is Unattainable and should be replaced with Unobtainable
+                    if (tier.name === "Unattainable" && Math.random() < 1/200) {
+                        rankName = "Unobtainable";
+                        value *= 250000; // Multiply RNG by 250000
+                        isUnobtainable = true;
                     }
                     
                     // Add [HC] suffix if in hardcore mode
@@ -1732,7 +1596,7 @@
                         name: rankName, 
                         value: value, 
                         rankNum: i + 1,
-                        isUnobtainable: rankName === "Unobtainable"
+                        isUnobtainable: isUnobtainable
                     };
                 }
             }
@@ -1945,18 +1809,6 @@
                 }
             }
 
-            // NEW: Update Merging Button
-            const mergingBtn = document.getElementById('mergingToggleBtn');
-            if (mergingBtn) {
-                mergingBtn.textContent = `Merging: ${mergingEnabled ? 'ON' : 'OFF'}`;
-                if (mergingEnabled) {
-                    mergingBtn.classList.add('active');
-                    updateMergeSelection();
-                } else {
-                    mergingBtn.classList.remove('active');
-                }
-            }
-
             // --- Shapes GUI Updates - ALWAYS refresh ---
             const shapesGui = document.getElementById('shapes-gui');
             if (shapesGui) {
@@ -2051,15 +1903,6 @@
                 }
             }
             
-            // --- Merging GUI Updates ---
-            const mergingGui = document.getElementById('merging-gui');
-            if (mergingGui) {
-                mergingGui.style.display = mergingEnabled ? 'block' : 'none';
-                if (mergingEnabled) {
-                    updateMergeCostDisplay();
-                }
-            }
-            
             // Preserve animations after updating stats
             preserveAnimations();
         }
@@ -2099,16 +1942,7 @@
                         displayValue = 1e10;
                     }
                     
-                    // FIX: Complex display bug
-                    let content;
-                    if (item.isComplex) {
-                        const realPart = item.realPart || item.value;
-                        const imagPart = item.imagPart || 0;
-                        content = `<span class="${displayClass}" style="color: ${rollColor};">${formatNumber(realPart)} + ${formatNumber(imagPart)}i [${item.rank}]${suffix}</span>`;
-                    } else {
-                        content = `<span class="${displayClass}" style="color: ${rollColor};">${formatNumber(displayValue)} [${item.rank}]${suffix}</span>`;
-                    }
-                    
+                    let content = `<span class="${displayClass}" style="color: ${rollColor};">${formatNumber(displayValue)} [${item.rank}]${suffix}</span>`;
                     // Wrap if satanic
                     if (item.rank === "⛧Satanic⛧") {
                         content = `<span class="satanic-wrapper">${content}</span>`;
@@ -2130,11 +1964,6 @@
                     initBewildermentAnimation(elementId);
                 }
             });
-            
-            // Update merge selection if merging is enabled
-            if (mergingEnabled) {
-                updateMergeSelection();
-            }
         }
 
         // --- MODIFIED: To add new secret ranks to index and fix sorting ---
@@ -2234,7 +2063,7 @@
         // --- NEW: Accept pending roll ---
         function acceptPendingRoll(idx) {
             const pending = pendingRolls[idx];
-            if (addToInventory(pending.value, pending.rank, pending.index, pending.variants, pending.baseValue, pending.isSecret, pending.isComplex, pending.realPart, pending.imagPart)) {
+            if (addToInventory(pending.value, pending.rank, pending.index, pending.variants, pending.baseValue)) {
                 pendingRolls.splice(idx, 1);
                 updatePendingDisplay();
                 addToTerminal(`Accepted pending roll #${formatInteger(pending.index)} (${pending.rank})`, true);
@@ -2255,21 +2084,15 @@
             saveGame();
         }
 
-        function addToInventory(value, rank, index, variants = [], baseValue = null, isSecret = false, isComplex = false, realPart = null, imagPart = null) {
+        function addToInventory(value, rank, index, variants = [], baseValue = null) {
             if (inventory.length >= maxInventory) {
                 return false;
             }
-            inventory.push({ 
-                value, 
-                rank, 
-                index, 
-                variants, 
-                baseValue: baseValue || value, 
-                isSecret, 
-                isComplex, 
-                realPart: realPart || (isComplex ? value : null),
-                imagPart: imagPart || (isComplex ? 0 : null)
-            });
+            const isSecret = SECRET_RANKS_CHANCES.map(r => r.name).includes(rank.replace(" [HC]", "")) || 
+                            rank === "morts luck" || 
+                            rank === "breaktime" || 
+                            rank.includes("Unobtainable");
+            inventory.push({ value, rank, index, variants, baseValue: baseValue || value, isSecret });
             updateInventoryDisplay();
             updateStats();
             saveGame();
@@ -2277,22 +2100,16 @@
         }
 
         // --- NEW: Add to pending rolls ---
-        function addToPendingRolls(value, rank, index, variants = [], baseValue = null, isSecret = false, isComplex = false, realPart = null, imagPart = null) {
+        function addToPendingRolls(value, rank, index, variants = [], baseValue = null) {
             if (pendingRolls.length >= maxPendingRolls) {
                 return false;
             }
             
-            pendingRolls.push({ 
-                value, 
-                rank, 
-                index, 
-                variants, 
-                baseValue: baseValue || value, 
-                isSecret, 
-                isComplex, 
-                realPart: realPart || (isComplex ? value : null),
-                imagPart: imagPart || (isComplex ? 0 : null)
-            });
+            const isSecret = SECRET_RANKS_CHANCES.map(r => r.name).includes(rank.replace(" [HC]", "")) || 
+                            rank === "morts luck" || 
+                            rank === "breaktime" || 
+                            rank.includes("Unobtainable");
+            pendingRolls.push({ value, rank, index, variants, baseValue: baseValue || value, isSecret });
             updatePendingDisplay();
             updateStats();
             return true;
@@ -2468,7 +2285,7 @@
             activeAnimationElements.add(elementId);
         }
 
-        // --- MODIFIED: Complex rank generation (x + yi) - FIXED display bug ---
+        // --- MODIFIED: Complex rank generation (x + yi) ---
         function generateComplexRank() {
             if (Math.random() < COMPLEX_CHANCE) {
                 // Generate two separate rolls for real and imaginary parts
@@ -2496,7 +2313,7 @@
             return null;
         }
 
-        // --- MODIFIED: To handle 7 Grand Dad properly and HC tags ---
+        // --- MODIFIED: To handle 7 Grand Dad with FIXED 1/777.777 chance ---
         async function roll() {
             if (isCutscenePlaying) {
                 addToTerminal('Wait for the cutscene to finish!', true);
@@ -2521,23 +2338,19 @@
                     const variantResult = getVariants(baseValue);
                     
                     // Complex numbers use both real and imaginary parts
-                    const magnitude = Math.sqrt(complexResult.realPart**2 + complexResult.imagPart**2);
-                    const displayValue = magnitude;
+                    const displayValue = {
+                        real: complexResult.realPart,
+                        imag: complexResult.imagPart
+                    };
                     
                     const variants = variantResult ? variantResult.variants : [];
                     
-                    let displayName = complexResult.displayName;
-                    // Add HC tag if needed
-                    if (hardcoreMode && !displayName.includes("[HC]")) {
-                        displayName += " [HC]";
-                    }
-                    
+                    const displayName = complexResult.displayName;
                     const isSecret = false;
                     
                     rollResults.push({ 
                         baseValue: baseValue, 
                         displayValue: displayValue, 
-                        magnitude: magnitude,
                         complexValue: true,
                         variants, 
                         displayName, 
@@ -2548,6 +2361,8 @@
                         complexData: complexResult
                     });
                     
+                    // For max roll comparison, use magnitude sqrt(real^2 + imag^2)
+                    const magnitude = Math.sqrt(complexResult.realPart**2 + complexResult.imagPart**2);
                     if (magnitude > maxRollValueInBulk) {
                         maxRollValueInBulk = magnitude;
                         isMaxRollSecret = isSecret;
@@ -2565,36 +2380,65 @@
                 const rollResult = generateRoll();
                 let baseValue = rollResult.value;
                 
+                // FIXED: Check for 7 GRAND DAD ONLY when rolling Grand (1e6 to 1e7)
+                let isGrandRoll = baseValue >= 1e6 && baseValue < 1e7;
+                let shouldCheck7GrandDad = isGrandRoll && Math.random() < (1/777.777);
+
+                // Apply Lol event boost to 7 GRAND DAD
+                if (shouldCheck7GrandDad && currentEvent && currentEvent.name === "Lol") {
+                    shouldCheck7GrandDad = Math.random() < (1/777.777) * currentEvent.multiplier;
+                }
+                
                 // Get variants (now includes Negative and Dull)
                 const variantResult = getVariants(baseValue);
                 let displayValue = variantResult ? variantResult.modifiedValue : baseValue;
                 const variants = variantResult ? variantResult.variants : [];
                 
+                // Check for 7 GRAND DAD after variants are applied
+                if (shouldCheck7GrandDad) {
+                    // Create 7 GRAND DAD secret
+                    const sevenGrandDad = {
+                        name: "7 GRAND DAD",
+                        chance: 1/777.777,
+                        rarity: 777.777,
+                        multiplier: 7777777
+                    };
+                    
+                    // Apply 7 GRAND DAD multiplier
+                    displayValue *= sevenGrandDad.multiplier;
+                    
+                    rollResults.push({ 
+                        baseValue, 
+                        displayValue, 
+                        variants, 
+                        displayName: "7 GRAND DAD", 
+                        isSecret: true, 
+                        secretRarityMultiplier: sevenGrandDad.multiplier,
+                        rankInfo: { name: "7 GRAND DAD", rankNum: 999, isUnobtainable: false },
+                        isComplex: false
+                    });
+                    
+                    if (displayValue > maxRollValueInBulk) {
+                        maxRollValueInBulk = displayValue;
+                        isMaxRollSecret = true;
+                    }
+                    
+                    const baseRankName = "7 GRAND DAD";
+                    if (!discoveredRanks.has(baseRankName)) {
+                        newRankDiscoveredInBulk = true;
+                    }
+                    
+                    continue;
+                }
+                
                 // Original secret rank logic
                 const secretResult = getSecretRank(); 
                 let rankInfo = getRankInfo(baseValue);
-                
-                // Check for 7 GRAND DAD - FIXED: Only trigger when Grand secret is rolled
                 let displayName = secretResult ? secretResult.name : rankInfo.name;
-                
-                if (secretResult && secretResult.name === "Grand") {
-                    // Check for 7 GRAND DAD
-                    if (Math.random() < (1/777.777)) {
-                        const sevenGrandDad = getSecretRank("Grand");
-                        if (sevenGrandDad && sevenGrandDad.name === "7 GRAND DAD") {
-                            displayName = "7 GRAND DAD";
-                            displayValue *= (sevenGrandDad.multiplier || 7777777);
-                            // Override secretResult for this roll
-                            secretResult.name = "7 GRAND DAD";
-                            secretResult.multiplier = sevenGrandDad.multiplier;
-                        }
-                    }
-                }
-                
                 const isSecret = !!secretResult;
                 
                 // Apply CATASTROPHIC multiplier if applicable
-                if (displayName === "CATASTROPHIC" && secretResult && secretResult.multiplier) {
+                if (displayName === "CATASTROPHIC" && secretResult.multiplier) {
                     displayValue *= secretResult.multiplier;
                 }
                 
@@ -2605,12 +2449,12 @@
                 }
                 
                 // Apply LEGACY In im table ?!?!? multiplier
-                if (displayName === "LEGACY In im table ?!?!?" && secretResult && secretResult.multiplier) {
+                if (displayName === "LEGACY In im table ?!?!?" && secretResult.multiplier) {
                     displayValue *= secretResult.multiplier;
                 }
                 
                 let secretRarityMultiplier = 1;
-                if (isSecret && secretResult) {
+                if (isSecret) {
                     if (secretResult.rarity) {
                         secretRarityMultiplier = secretResult.rarity;
                         displayValue *= secretRarityMultiplier;
@@ -2619,19 +2463,14 @@
                     }
                 }
                 
-                // CORRUPTED Logic (available in HC mode now)
+                // CORRUPTED Logic (not available in HC mode)
                 if (displayName === "CORRUPTED") {
                     displayValue *= -1;
                 }
                 
-                // Destroyed logic (available in HC mode now)
+                // Destroyed logic (not available in HC mode)
                 if (displayName === "Destroyed") {
                     displayValue = 0;
-                }
-                
-                // Add HC tag to display name if in hardcore mode
-                if (hardcoreMode && !displayName.includes("[HC]")) {
-                    displayName += " [HC]";
                 }
                 
                 rollResults.push({ 
@@ -2661,12 +2500,12 @@
             }
             
             for (const rollData of rollResults) {
-                let { baseValue, displayValue, magnitude, complexValue, variants, displayName, isSecret, secretRarityMultiplier, rankInfo, isComplex, complexData } = rollData;
+                let { baseValue, displayValue, complexValue, variants, displayName, isSecret, secretRarityMultiplier, rankInfo, isComplex, complexData } = rollData;
                 
                 const currencyGain = Math.pow(rankInfo.rankNum, 3);
                 
                 const { className: rankClassBase, color: rollColorBase } = getRankClassAndColor(
-                    isComplex ? magnitude : displayValue, 
+                    typeof displayValue === 'object' ? Math.sqrt(displayValue.real**2 + displayValue.imag**2) : displayValue, 
                     variants, 
                     displayName
                 );
@@ -2687,17 +2526,17 @@
                 let suffix = "";
                 let finalDisplayValue = displayValue;
                 
-                if (displayName.includes("100")) suffix = ` * 💯`;
-                if (displayName.includes("absolute zero")) suffix = ` * 0`;
+                if (displayName === "100") suffix = ` * 💯`;
+                if (displayName === ":[{(absolute zero)}]:") suffix = ` * 0`;
                 
                 // Special Display Logic
-                if (displayName.includes("⛧Satanic⛧")) {
+                if (displayName === "⛧Satanic⛧") {
                     suffix = ` (Actual: ${formatNumber(displayValue)})`;
                     finalDisplayValue = -666.66;
                     rankClass = "rank-1000000-100000000";
                     rollColor = "#ff0000";
                 }
-                if (displayName.includes("Finale.. wait, how'd this get here?")) {
+                if (displayName === "Finale.. wait, how'd this get here?") {
                     suffix = ` (Actual: ${formatNumber(displayValue)})`;
                     finalDisplayValue = 1e10; 
                     rankClass = getRankClass(1e10);
@@ -2706,7 +2545,7 @@
                 
                 const secretMultiplierText = (isSecret && secretRarityMultiplier > 1) ? ` (x${formatNumber(secretRarityMultiplier)})` : '';
 
-                if (displayName.includes("Nonavacious")) {
+                if (displayName === "~Nonavacious~") {
                     rankClass += " secret-nonavacious";
                 }
                 
@@ -2727,8 +2566,8 @@
                     highestBaseRoll = baseValue;
                 }
 
-                if ((!displayName.includes("CORRUPTED") && displayValue > highestFinalRoll.value) || 
-                    (displayName.includes("CORRUPTED") && (!highestFinalRoll.rank.includes("CORRUPTED") || displayValue < highestFinalRoll.value))) {
+                if ((displayName !== "CORRUPTED" && displayValue > highestFinalRoll.value) || 
+                    (displayName === "CORRUPTED" && (highestFinalRoll.rank !== "CORRUPTED" || displayValue < highestFinalRoll.value))) {
                     highestFinalRoll = {
                         value: displayValue,
                         baseValue: baseValue,
@@ -2743,14 +2582,14 @@
                 const shouldAcceptOnSecret = autoAcceptSecretThresholdValue > 0 && isSecret && secretRarityMultiplier >= autoAcceptSecretThresholdValue;
                 const shouldAcceptOnNew = autoAcceptOnNewRank && newRankDiscovered;
                 const shouldAcceptOnTrueRNG = autoAcceptTrueRNGValue > 0 && baseValue >= autoAcceptTrueRNGValue;
-                const shouldAcceptCorrupted = displayName.includes("CORRUPTED") && (autoAcceptSecretThresholdValue > 0 || autoAcceptThreshold > 0);
+                const shouldAcceptCorrupted = displayName === "CORRUPTED" && (autoAcceptSecretThresholdValue > 0 || autoAcceptThreshold > 0);
                 
                 // AUTO-STOP LOGIC
                 const shouldStopOnValue = autoStopThreshold > 0 && displayValue >= autoStopThreshold;
                 const shouldStopOnSecret = autoStopSecretThresholdValue > 0 && isSecret && secretRarityMultiplier >= autoStopSecretThresholdValue;
                 const shouldStopOnNew = autoStopOnNewRank && newRankDiscovered;
                 const shouldStopOnTrueRNG = autoStopTrueRNGValue > 0 && baseValue >= autoStopTrueRNGValue;
-                const shouldStopCorrupted = displayName.includes("CORRUPTED") && (autoStopSecretThresholdValue > 0 || autoStopThreshold > 0);
+                const shouldStopCorrupted = displayName === "CORRUPTED" && (autoStopSecretThresholdValue > 0 || autoStopThreshold > 0);
                 
                 const variantText = variants.map(v => `<span style="color: ${v.color}; font-weight: bold;">[${v.name}]</span>`).join('') + ' ';
                 
@@ -2760,15 +2599,15 @@
                 let content = '';
                 
                 if (isComplex) {
-                    // Display complex number as "real + imag i" - FIXED
+                    // Display complex number as "real + imag i"
                     const realFormatted = formatNumber(complexData.realPart);
                     const imagFormatted = formatNumber(complexData.imagPart);
-                    content = `<span class="clickable-roll ${rankClass}" style="color: ${rollColor};" onclick="tryAddToInventory(${displayValue}, '${escapeHTML(displayName)}', ${currentIndex}, this)" id="roll-${currentIndex}" ${variantDataAttr} ${baseValueAttr} data-complex="true" data-real="${complexData.realPart}" data-imag="${complexData.imagPart}">${realFormatted} + ${imagFormatted}i [${displayName}]${secretMultiplierText}${suffix}</span>`;
+                    content = `<span class="clickable-roll ${rankClass}" style="color: ${rollColor};" onclick="tryAddToInventory(${displayValue}, '${escapeHTML(displayName)}', ${currentIndex}, this)" id="roll-${currentIndex}" ${variantDataAttr} ${baseValueAttr}>${realFormatted} + ${imagFormatted}i [${displayName}]${secretMultiplierText}${suffix}</span>`;
                 } else {
                     content = `<span class="clickable-roll ${rankClass}" style="color: ${rollColor};" onclick="tryAddToInventory(${displayValue}, '${escapeHTML(displayName)}', ${currentIndex}, this)" id="roll-${currentIndex}" ${variantDataAttr} ${baseValueAttr}>${formatNumber(finalDisplayValue)} [${displayName}]${secretMultiplierText}${suffix}</span>`;
                 }
                 
-                if (displayName.includes("⛧Satanic⛧")) {
+                if (displayName === "⛧Satanic⛧") {
                     content = `<span class="satanic-wrapper">${content}</span>`;
                 }
 
@@ -2777,11 +2616,11 @@
                 );
 
                 // Initialize animations
-                if (displayName.includes("?!? bewilderment ?!?")) {
+                if (displayName === "?!? bewilderment ?!?") {
                     setTimeout(() => initBewildermentAnimation(`roll-${currentIndex}`), 100);
                 }
                 
-                if (displayName.includes("!! EUPHORIA !!")) {
+                if (displayName === "!! EUPHORIA !!") {
                     initEuphoriaAnimation(`roll-${currentIndex}`, "!! EUPHORIA !!");
                 }
                 
@@ -2795,20 +2634,9 @@
                     const rollElement = document.getElementById(`roll-${currentIndex}`);
                     
                     if (!acceptedRolls.has(currentIndex)) {
-                        // Check if we should send to pending first
-                        if (sendToPendingFirst) {
-                            // Send to pending rolls
-                            if (addToPendingRolls(
-                                displayValue, 
-                                displayName, 
-                                currentIndex, 
-                                variants, 
-                                baseValue, 
-                                isSecret, 
-                                isComplex,
-                                isComplex ? complexData.realPart : null,
-                                isComplex ? complexData.imagPart : null
-                            )) {
+                        if (inventory.length >= maxInventory) {
+                            // Send to pending rolls if inventory full
+                            if (addToPendingRolls(displayValue, displayName, currentIndex, variants, baseValue)) {
                                 acceptedRolls.add(currentIndex);
                                 
                                 if (activeEuphoriaIntervals[currentIndex]) {
@@ -2822,8 +2650,8 @@
                                 }
                                 
                                 let acceptSuffix = "";
-                                if (displayName.includes("⛧Satanic⛧")) acceptSuffix = ` (Actual: ${formatNumber(displayValue)})`;
-                                if (displayName.includes("Finale.. wait, how'd this get here?")) acceptSuffix = ` (Actual: ${formatNumber(displayValue)})`;
+                                if (displayName === "⛧Satanic⛧") acceptSuffix = ` (Actual: ${formatNumber(displayValue)})`;
+                                if (displayName === "Finale.. wait, how'd this get here?") acceptSuffix = ` (Actual: ${formatNumber(displayValue)})`;
                                 
                                 addToTerminal(`Auto-Accepted to pending: #${formatInteger(currentIndex)} ${variantText}${formatNumber(finalDisplayValue)} [${displayName}]${acceptSuffix}`, true, 'rank-1000-10000');
                                 
@@ -2836,85 +2664,33 @@
                                 saveGame();
                             }
                         } else {
-                            // Add directly to inventory if space available
-                            if (inventory.length >= maxInventory) {
-                                // Send to pending if inventory full
-                                if (addToPendingRolls(
-                                    displayValue, 
-                                    displayName, 
-                                    currentIndex, 
-                                    variants, 
-                                    baseValue, 
-                                    isSecret, 
-                                    isComplex,
-                                    isComplex ? complexData.realPart : null,
-                                    isComplex ? complexData.imagPart : null
-                                )) {
-                                    acceptedRolls.add(currentIndex);
-                                    
-                                    if (activeEuphoriaIntervals[currentIndex]) {
-                                        clearInterval(activeEuphoriaIntervals[currentIndex]);
-                                        delete activeEuphoriaIntervals[currentIndex];
-                                    }
-                                    
-                                    if (activeBewildermentIntervals[`roll-${currentIndex}`]) {
-                                        clearInterval(activeBewildermentIntervals[`roll-${currentIndex}`]);
-                                        delete activeBewildermentIntervals[`roll-${currentIndex}`];
-                                    }
-                                    
-                                    let acceptSuffix = "";
-                                    if (displayName.includes("⛧Satanic⛧")) acceptSuffix = ` (Actual: ${formatNumber(displayValue)})`;
-                                    if (displayName.includes("Finale.. wait, how'd this get here?")) acceptSuffix = ` (Actual: ${formatNumber(displayValue)})`;
-                                    
-                                    addToTerminal(`Auto-Accepted to pending (inventory full): #${formatInteger(currentIndex)} ${variantText}${formatNumber(finalDisplayValue)} [${displayName}]${acceptSuffix}`, true, 'rank-1000-10000');
-                                    
-                                    if (rollElement) {
-                                        rollElement.style.opacity = '0.5';
-                                        rollElement.style.cursor = 'not-allowed';
-                                        rollElement.onclick = null;
-                                    }
-                                    
-                                    saveGame();
+                            // Add directly to inventory
+                            if (addToInventory(displayValue, displayName, currentIndex, variants, baseValue)) {
+                                acceptedRolls.add(currentIndex);
+                                
+                                if (activeEuphoriaIntervals[currentIndex]) {
+                                    clearInterval(activeEuphoriaIntervals[currentIndex]);
+                                    delete activeEuphoriaIntervals[currentIndex];
                                 }
-                            } else {
-                                // Add directly to inventory
-                                if (addToInventory(
-                                    displayValue, 
-                                    displayName, 
-                                    currentIndex, 
-                                    variants, 
-                                    baseValue, 
-                                    isSecret, 
-                                    isComplex,
-                                    isComplex ? complexData.realPart : null,
-                                    isComplex ? complexData.imagPart : null
-                                )) {
-                                    acceptedRolls.add(currentIndex);
-                                    
-                                    if (activeEuphoriaIntervals[currentIndex]) {
-                                        clearInterval(activeEuphoriaIntervals[currentIndex]);
-                                        delete activeEuphoriaIntervals[currentIndex];
-                                    }
-                                    
-                                    if (activeBewildermentIntervals[`roll-${currentIndex}`]) {
-                                        clearInterval(activeBewildermentIntervals[`roll-${currentIndex}`]);
-                                        delete activeBewildermentIntervals[`roll-${currentIndex}`];
-                                    }
-                                    
-                                    let acceptSuffix = "";
-                                    if (displayName.includes("⛧Satanic⛧")) acceptSuffix = ` (Actual: ${formatNumber(displayValue)})`;
-                                    if (displayName.includes("Finale.. wait, how'd this get here?")) acceptSuffix = ` (Actual: ${formatNumber(displayValue)})`;
-                                    
-                                    addToTerminal(`Auto-Accepted: #${formatInteger(currentIndex)} ${variantText}${formatNumber(finalDisplayValue)} [${displayName}]${acceptSuffix}`, true, 'rank-1000-10000');
-                                    
-                                    if (rollElement) {
-                                        rollElement.style.opacity = '0.5';
-                                        rollElement.style.cursor = 'not-allowed';
-                                        rollElement.onclick = null;
-                                    }
-                                    
-                                    saveGame();
+                                
+                                if (activeBewildermentIntervals[`roll-${currentIndex}`]) {
+                                    clearInterval(activeBewildermentIntervals[`roll-${currentIndex}`]);
+                                    delete activeBewildermentIntervals[`roll-${currentIndex}`];
                                 }
+                                
+                                let acceptSuffix = "";
+                                if (displayName === "⛧Satanic⛧") acceptSuffix = ` (Actual: ${formatNumber(displayValue)})`;
+                                if (displayName === "Finale.. wait, how'd this get here?") acceptSuffix = ` (Actual: ${formatNumber(displayValue)})`;
+                                
+                                addToTerminal(`Auto-Accepted: #${formatInteger(currentIndex)} ${variantText}${formatNumber(finalDisplayValue)} [${displayName}]${acceptSuffix}`, true, 'rank-1000-10000');
+                                
+                                if (rollElement) {
+                                    rollElement.style.opacity = '0.5';
+                                    rollElement.style.cursor = 'not-allowed';
+                                    rollElement.onclick = null;
+                                }
+                                
+                                saveGame();
                             }
                         }
                     }
@@ -2942,9 +2718,6 @@
             
             let variants = [];
             let baseValue = value;
-            let isComplex = false;
-            let realPart = value;
-            let imagPart = 0;
             
             if (element && element.dataset) {
                 if (element.dataset.variants) {
@@ -2957,19 +2730,12 @@
                 if (element.dataset.basevalue) {
                     baseValue = parseFloat(element.dataset.basevalue);
                 }
-                if (element.dataset.complex === "true") {
-                    isComplex = true;
-                    if (element.dataset.real) realPart = parseFloat(element.dataset.real);
-                    if (element.dataset.imag) imagPart = parseFloat(element.dataset.imag);
-                    // For complex, value is the magnitude
-                    value = Math.sqrt(realPart**2 + imagPart**2);
-                }
             }
             
-            // Check if we should send to pending first
-            if (sendToPendingFirst) {
+            // Check if inventory is full
+            if (inventory.length >= maxInventory) {
                 // Try to add to pending rolls
-                if (addToPendingRolls(value, rank, index, variants, baseValue, false, isComplex, realPart, imagPart)) {
+                if (addToPendingRolls(value, rank, index, variants, baseValue)) {
                     acceptedRolls.add(index);
 
                     // Stop animations
@@ -2987,14 +2753,14 @@
                     
                     let suffix = "";
                     let displayValue = value;
-                    if (rank.includes("100")) suffix = " * 💯";
-                    if (rank.includes("absolute zero")) suffix = " * 0";
+                    if (rank === "100") suffix = " * 💯";
+                    if (rank === ":[{(absolute zero)}]:") suffix = " * 0";
                     
-                    if (rank.includes("⛧Satanic⛧")) {
+                    if (rank === "⛧Satanic⛧") {
                         suffix = ` (Actual: ${formatNumber(value)})`;
                         displayValue = -666.66;
                     }
-                    if (rank.includes("Finale.. wait, how'd this get here?")) {
+                    if (rank === "Finale.. wait, how'd this get here?") {
                         suffix = ` (Actual: ${formatNumber(value)})`;
                         displayValue = 1e10;
                     }
@@ -3010,98 +2776,50 @@
                     
                     saveGame();
                 } else {
-                    addToTerminal(`Cannot add to pending rolls: pending queue full!`, true);
+                    addToTerminal(`Cannot add to inventory or pending rolls: both are full!`, true);
                 }
             } else {
-                // Check if inventory is full
-                if (inventory.length >= maxInventory) {
-                    // Try to add to pending rolls
-                    if (addToPendingRolls(value, rank, index, variants, baseValue, false, isComplex, realPart, imagPart)) {
-                        acceptedRolls.add(index);
+                // Add to inventory
+                if (addToInventory(value, rank, index, variants, baseValue)) {
+                    acceptedRolls.add(index);
 
-                        // Stop animations
-                        if (activeEuphoriaIntervals[index]) {
-                            clearInterval(activeEuphoriaIntervals[index]);
-                            delete activeEuphoriaIntervals[index];
-                        }
-                        
-                        if (activeBewildermentIntervals[`roll-${index}`]) {
-                            clearInterval(activeBewildermentIntervals[`roll-${index}`]);
-                            delete activeBewildermentIntervals[`roll-${index}`];
-                        }
-                        
-                        const variantText = variants.map(v => `[${v.name}]`).join('') + ' ';
-                        
-                        let suffix = "";
-                        let displayValue = value;
-                        if (rank.includes("100")) suffix = " * 💯";
-                        if (rank.includes("absolute zero")) suffix = " * 0";
-                        
-                        if (rank.includes("⛧Satanic⛧")) {
-                            suffix = ` (Actual: ${formatNumber(value)})`;
-                            displayValue = -666.66;
-                        }
-                        if (rank.includes("Finale.. wait, how'd this get here?")) {
-                            suffix = ` (Actual: ${formatNumber(value)})`;
-                            displayValue = 1e10;
-                        }
-                        
-                        addToTerminal(`Added to pending rolls: #${formatInteger(index)} ${variantText}${formatNumber(displayValue)} [${rank}]${suffix}`, true); 
-                        
-                        const rollElement = document.getElementById(`roll-${index}`);
-                        if (rollElement) {
-                            rollElement.style.opacity = '0.5';
-                            rollElement.style.cursor = 'not-allowed';
-                            rollElement.onclick = null;
-                        }
-                        
-                        saveGame();
-                    } else {
-                        addToTerminal(`Cannot add to inventory or pending rolls: both are full!`, true);
+                    // Stop animations
+                    if (activeEuphoriaIntervals[index]) {
+                        clearInterval(activeEuphoriaIntervals[index]);
+                        delete activeEuphoriaIntervals[index];
                     }
-                } else {
-                    // Add to inventory
-                    if (addToInventory(value, rank, index, variants, baseValue, false, isComplex, realPart, imagPart)) {
-                        acceptedRolls.add(index);
-
-                        // Stop animations
-                        if (activeEuphoriaIntervals[index]) {
-                            clearInterval(activeEuphoriaIntervals[index]);
-                            delete activeEuphoriaIntervals[index];
-                        }
-                        
-                        if (activeBewildermentIntervals[`roll-${index}`]) {
-                            clearInterval(activeBewildermentIntervals[`roll-${index}`]);
-                            delete activeBewildermentIntervals[`roll-${index}`];
-                        }
-                        
-                        const variantText = variants.map(v => `[${v.name}]`).join('') + ' ';
-                        
-                        let suffix = "";
-                        let displayValue = value;
-                        if (rank.includes("100")) suffix = " * 💯";
-                        if (rank.includes("absolute zero")) suffix = " * 0";
-                        
-                        if (rank.includes("⛧Satanic⛧")) {
-                            suffix = ` (Actual: ${formatNumber(value)})`;
-                            displayValue = -666.66;
-                        }
-                        if (rank.includes("Finale.. wait, how'd this get here?")) {
-                            suffix = ` (Actual: ${formatNumber(value)})`;
-                            displayValue = 1e10;
-                        }
-                        
-                        addToTerminal(`Added to inventory: #${formatInteger(index)} ${variantText}${formatNumber(displayValue)} [${rank}]${suffix}`, true); 
-                        
-                        const rollElement = document.getElementById(`roll-${index}`);
-                        if (rollElement) {
-                            rollElement.style.opacity = '0.5';
-                            rollElement.style.cursor = 'not-allowed';
-                            rollElement.onclick = null;
-                        }
-                        
-                        saveGame();
+                    
+                    if (activeBewildermentIntervals[`roll-${index}`]) {
+                        clearInterval(activeBewildermentIntervals[`roll-${index}`]);
+                        delete activeBewildermentIntervals[`roll-${index}`];
                     }
+                    
+                    const variantText = variants.map(v => `[${v.name}]`).join('') + ' ';
+                    
+                    let suffix = "";
+                    let displayValue = value;
+                    if (rank === "100") suffix = " * 💯";
+                    if (rank === ":[{(absolute zero)}]:") suffix = " * 0";
+                    
+                    if (rank === "⛧Satanic⛧") {
+                        suffix = ` (Actual: ${formatNumber(value)})`;
+                        displayValue = -666.66;
+                    }
+                    if (rank === "Finale.. wait, how'd this get here?") {
+                        suffix = ` (Actual: ${formatNumber(value)})`;
+                        displayValue = 1e10;
+                    }
+                    
+                    addToTerminal(`Added to inventory: #${formatInteger(index)} ${variantText}${formatNumber(displayValue)} [${rank}]${suffix}`, true); 
+                    
+                    const rollElement = document.getElementById(`roll-${index}`);
+                    if (rollElement) {
+                        rollElement.style.opacity = '0.5';
+                        rollElement.style.cursor = 'not-allowed';
+                        rollElement.onclick = null;
+                    }
+                    
+                    saveGame();
                 }
             }
         }
@@ -3133,9 +2851,6 @@
                 autoStopSecretThresholdValue = parseFloat(document.getElementById('autoStopSecretThreshold').value) || 0;
                 autoStopOnNewRank = document.getElementById('autoStopNewRank').checked;
                 
-                // Load Send to Pending First setting
-                sendToPendingFirst = document.getElementById('sendToPendingFirst').checked;
-                
                 autoRollInterval = setInterval(roll, AUTO_ROLL_DELAY_MS);
                 btn.textContent = 'Stop Auto Roll';
                 btn.classList.add('active');
@@ -3160,10 +2875,6 @@
                 
                 if (stopConditions.length > 0) {
                     message += ` (Auto-Stop: ${stopConditions.join(', ')})`;
-                }
-                
-                if (sendToPendingFirst) {
-                    message += ` (Send to Pending First: ON)`;
                 }
                 
                 addToTerminal(message, true);
@@ -3235,7 +2946,7 @@
 
         // MODIFIED: To handle new ranks
         function showRarest() {
-            if (highestFinalRoll.value === 0 && !highestFinalRoll.rank.includes("CORRUPTED")) {
+            if (highestFinalRoll.value === 0 && highestFinalRoll.rank !== "CORRUPTED") {
                 addToTerminal('No rolls yet!', true);
             } else {
                 const { className, color } = getRankClassAndColor(highestFinalRoll.value, highestFinalRoll.variants, highestFinalRoll.rank);
@@ -3245,21 +2956,21 @@
                 let displayValue = highestFinalRoll.value;
                 let suffix = "";
 
-                if (displayName.includes("Nonavacious")) {
+                if (displayName === "~Nonavacious~") {
                     rankClass += " secret-nonavacious";
                 }
                 
-                if (displayName.includes("CORRUPTED")) {
+                if (displayName === "CORRUPTED") {
                     rankClass += " secret-corrupted";
                     rollColor = "#FFFFFF";
                 }
                 
                 // Special display for rarest
-                if (displayName.includes("⛧Satanic⛧")) {
+                if (displayName === "⛧Satanic⛧") {
                     suffix = ` (Actual: ${formatNumber(highestFinalRoll.value)})`;
                     displayValue = -666.66;
                 }
-                if (displayName.includes("Finale.. wait, how'd this get here?")) {
+                if (displayName === "Finale.. wait, how'd this get here?") {
                     suffix = ` (Actual: ${formatNumber(highestFinalRoll.value)})`;
                     displayValue = 1e10;
                 }
@@ -3882,312 +3593,6 @@
             }
         }
 
-        // --- NEW: Background running system ---
-        function setupBackgroundRunning() {
-            // Page Visibility API
-            document.addEventListener('visibilitychange', function() {
-                if (document.hidden) {
-                    isInBackground = true;
-                    pauseGameInBackground();
-                } else {
-                    isInBackground = false;
-                    resumeGameFromBackground();
-                }
-            });
-            
-            // Request Animation Frame for background tasks
-            function backgroundLoop() {
-                if (!isInBackground) {
-                    // Run normal game loop
-                    requestAnimationFrame(backgroundLoop);
-                    return;
-                }
-                
-                // Run background tasks at reduced frequency
-                if (!backgroundIntervals.gameLoop) {
-                    backgroundIntervals.gameLoop = setTimeout(() => {
-                        // Update stats less frequently in background
-                        updateStats();
-                        backgroundIntervals.gameLoop = null;
-                        requestAnimationFrame(backgroundLoop);
-                    }, 1000); // Update every second instead of every frame
-                } else {
-                    requestAnimationFrame(backgroundLoop);
-                }
-            }
-            
-            requestAnimationFrame(backgroundLoop);
-        }
-
-        function pauseGameInBackground() {
-            // Store current intervals
-            if (autoRollInterval) {
-                backgroundIntervals.autoRoll = autoRollInterval;
-                clearInterval(autoRollInterval);
-                autoRollInterval = null;
-            }
-            
-            if (shapeInterval) {
-                backgroundIntervals.shape = shapeInterval;
-                clearInterval(shapeInterval);
-                shapeInterval = null;
-            }
-            
-            if (eventInterval) {
-                backgroundIntervals.event = eventInterval;
-                clearInterval(eventInterval);
-                eventInterval = null;
-            }
-            
-            addToTerminal('Game paused (tab in background)', true);
-        }
-
-        function resumeGameFromBackground() {
-            // Restore intervals
-            if (backgroundIntervals.autoRoll) {
-                const btn = document.getElementById('autoRollBtn');
-                if (btn.classList.contains('active')) {
-                    autoRollInterval = setInterval(roll, AUTO_ROLL_DELAY_MS);
-                }
-                backgroundIntervals.autoRoll = null;
-            }
-            
-            if (backgroundIntervals.shape && shapesUnlocked) {
-                startShapeInterval();
-                backgroundIntervals.shape = null;
-            }
-            
-            if (backgroundIntervals.event) {
-                startEventLoop();
-                backgroundIntervals.event = null;
-            }
-            
-            addToTerminal('Game resumed', true);
-            updateStats();
-        }
-
-        // --- NEW: Merging System Functions ---
-        function toggleMerging() {
-            mergingEnabled = !mergingEnabled;
-            const btn = document.getElementById('mergingToggleBtn');
-            btn.textContent = `Merging: ${mergingEnabled ? 'ON' : 'OFF'}`;
-            
-            if (mergingEnabled) {
-                btn.classList.add('active');
-                updateMergeSelection();
-                addToTerminal('Merging GUI enabled. Select two ranks to merge.', true, '#00CED1');
-            } else {
-                btn.classList.remove('active');
-                mergeSelection1 = -1;
-                mergeSelection2 = -1;
-                addToTerminal('Merging GUI disabled.', true);
-            }
-            
-            updateStats();
-        }
-
-        function updateMergeSelection() {
-            if (!mergingEnabled) return;
-            
-            const selection1 = document.getElementById('merge-selection-1');
-            const selection2 = document.getElementById('merge-selection-2');
-            
-            if (!selection1 || !selection2) return;
-            
-            selection1.innerHTML = '';
-            selection2.innerHTML = '';
-            
-            inventory.forEach((item, idx) => {
-                const { className: rankClass, color: rollColor } = getRankClassAndColor(item.value, item.variants, item.rank);
-                let displayClass = rankClass;
-                
-                let variantText = '';
-                if (item.variants && item.variants.length > 0) {
-                    variantText = item.variants.map(v => `[${v.name}]`).join('') + ' ';
-                }
-                
-                let displayValue = item.value;
-                if (item.isComplex) {
-                    const realPart = item.realPart || item.value;
-                    const imagPart = item.imagPart || 0;
-                    displayValue = `${formatNumber(realPart)} + ${formatNumber(imagPart)}i`;
-                }
-                
-                const itemHtml = `<div class="merge-item ${idx === mergeSelection1 || idx === mergeSelection2 ? 'selected' : ''} ${item.isComplex ? 'complex' : ''}" 
-                    onclick="selectMergeItem(${idx}, 1)" 
-                    style="${item.isComplex ? 'opacity: 0.5; cursor: not-allowed;' : ''}">
-                    #${formatInteger(item.index)}: ${variantText}<span class="${displayClass}" style="color: ${rollColor};">${formatNumber(displayValue)} [${item.rank}]</span>
-                </div>`;
-                
-                const itemHtml2 = `<div class="merge-item ${idx === mergeSelection1 || idx === mergeSelection2 ? 'selected' : ''} ${item.isComplex ? 'complex' : ''}" 
-                    onclick="selectMergeItem(${idx}, 2)" 
-                    style="${item.isComplex ? 'opacity: 0.5; cursor: not-allowed;' : ''}">
-                    #${formatInteger(item.index)}: ${variantText}<span class="${displayClass}" style="color: ${rollColor};">${formatNumber(displayValue)} [${item.rank}]</span>
-                </div>`;
-                
-                selection1.innerHTML += itemHtml;
-                selection2.innerHTML += itemHtml2;
-            });
-            
-            updateMergeCostDisplay();
-        }
-
-        function selectMergeItem(index, slot) {
-            if (!mergingEnabled) return;
-            
-            const item = inventory[index];
-            if (item.isComplex) {
-                addToTerminal('Cannot select complex ranks for merging!', true, '#ff0000');
-                return;
-            }
-            
-            if (slot === 1) {
-                if (mergeSelection1 === index) {
-                    mergeSelection1 = -1;
-                } else {
-                    mergeSelection1 = index;
-                }
-            } else {
-                if (mergeSelection2 === index) {
-                    mergeSelection2 = -1;
-                } else {
-                    mergeSelection2 = index;
-                }
-            }
-            
-            updateMergeSelection();
-        }
-
-        function updateMergeCostDisplay() {
-            const costItems = document.querySelectorAll('.merge-cost-item');
-            if (costItems.length >= 3) {
-                costItems[0].className = `merge-cost-item ${currency >= MERGE_COST_CURRENCY ? '' : 'insufficient'}`;
-                costItems[0].textContent = `Cost: ${formatNumber(MERGE_COST_CURRENCY)} Currency`;
-                
-                costItems[1].className = `merge-cost-item ${geometrix >= MERGE_COST_GMX ? '' : 'insufficient'}`;
-                costItems[1].textContent = `Cost: ${formatNumber(MERGE_COST_GMX)} GMX`;
-                
-                costItems[2].className = `merge-cost-item ${fortunium >= MERGE_COST_FOR ? '' : 'insufficient'}`;
-                costItems[2].textContent = `Cost: ${formatNumber(MERGE_COST_FOR)} FOR`;
-            }
-            
-            const mergeButton = document.getElementById('mergeButton');
-            if (mergeSelection1 !== -1 && mergeSelection2 !== -1 && 
-                mergeSelection1 !== mergeSelection2 &&
-                currency >= MERGE_COST_CURRENCY &&
-                geometrix >= MERGE_COST_GMX &&
-                fortunium >= MERGE_COST_FOR) {
-                mergeButton.disabled = false;
-                mergeButton.style.opacity = '1';
-            } else {
-                mergeButton.disabled = true;
-                mergeButton.style.opacity = '0.5';
-            }
-        }
-
-        function performMerge() {
-            if (!mergingEnabled) return;
-            
-            if (mergeSelection1 === -1 || mergeSelection2 === -1) {
-                addToTerminal('Select two different ranks to merge!', true, '#ff0000');
-                return;
-            }
-            
-            if (mergeSelection1 === mergeSelection2) {
-                addToTerminal('Cannot merge a rank with itself!', true, '#ff0000');
-                return;
-            }
-            
-            const item1 = inventory[mergeSelection1];
-            const item2 = inventory[mergeSelection2];
-            
-            if (item1.isComplex || item2.isComplex) {
-                addToTerminal('Cannot merge complex ranks!', true, '#ff0000');
-                return;
-            }
-            
-            // Check costs
-            if (currency < MERGE_COST_CURRENCY) {
-                addToTerminal(`Not enough Currency! Need ${formatNumber(MERGE_COST_CURRENCY)}`, true, '#ff0000');
-                return;
-            }
-            
-            if (geometrix < MERGE_COST_GMX) {
-                addToTerminal(`Not enough Geometrix! Need ${formatNumber(MERGE_COST_GMX)}`, true, '#ff0000');
-                return;
-            }
-            
-            if (fortunium < MERGE_COST_FOR) {
-                addToTerminal(`Not enough Fortunium! Need ${formatNumber(MERGE_COST_FOR)}`, true, '#ff0000');
-                return;
-            }
-            
-            // Pay costs
-            currency -= MERGE_COST_CURRENCY;
-            geometrix -= MERGE_COST_GMX;
-            fortunium -= MERGE_COST_FOR;
-            
-            // Calculate merged values (85% of original)
-            const realPart = item1.value * MERGE_DISCOUNT;
-            const imagPart = item2.value * MERGE_DISCOUNT;
-            const magnitude = Math.sqrt(realPart**2 + imagPart**2);
-            
-            // Create new complex rank
-            const newRankName = `Complex: ${item1.rank.replace(" [HC]", "")} + ${item2.rank.replace(" [HC]", "")}i`;
-            const newIndex = rollIndex++;
-            
-            // Remove old items
-            const removed1 = inventory.splice(mergeSelection1, 1)[0];
-            // Adjust second index if needed
-            const adjustedIndex2 = mergeSelection2 > mergeSelection1 ? mergeSelection2 - 1 : mergeSelection2;
-            const removed2 = inventory.splice(adjustedIndex2, 1)[0];
-            
-            // Add new complex rank
-            inventory.push({
-                value: magnitude,
-                rank: newRankName,
-                index: newIndex,
-                variants: [],
-                baseValue: magnitude,
-                isSecret: false,
-                isComplex: true,
-                realPart: realPart,
-                imagPart: imagPart
-            });
-            
-            // Add to discovered ranks
-            if (!discoveredRanks.has(newRankName)) {
-                discoveredRanks.add(newRankName);
-                addToTerminal(`🎉 NEW COMPLEX RANK DISCOVERED: ${newRankName}!`, true);
-            }
-            
-            // Show result
-            const resultDiv = document.getElementById('merge-result');
-            resultDiv.style.display = 'block';
-            resultDiv.innerHTML = `
-                <div style="color: #00CED1; font-weight: bold;">Merge Successful!</div>
-                <div>Created: ${formatNumber(realPart)} + ${formatNumber(imagPart)}i [${newRankName}]</div>
-                <div style="font-size: 12px; color: #aaa;">(85% of original values)</div>
-            `;
-            
-            addToTerminal(`Merged ${removed1.rank} and ${removed2.rank} into ${newRankName} (${formatNumber(magnitude)})`, true, '#00CED1');
-            
-            // Reset selections
-            mergeSelection1 = -1;
-            mergeSelection2 = -1;
-            
-            // Update displays
-            updateInventoryDisplay();
-            updateIndexDisplay();
-            updateStats();
-            saveGame();
-            
-            // Hide result after 5 seconds
-            setTimeout(() => {
-                resultDiv.style.display = 'none';
-            }, 5000);
-        }
-
         // --- NEW: Refresh all UI function ---
         function refreshAllUI() {
             updateStats();
@@ -4340,14 +3745,6 @@
                 sciNotationThreshold,
                 sciNotationEnabled,
 
-                // NEW: Send to pending first
-                sendToPendingFirst,
-
-                // NEW: Merging
-                mergingEnabled,
-                mergeSelection1,
-                mergeSelection2,
-
                 // Cutscene State
                 cutscenesEnabled,
 
@@ -4442,15 +3839,6 @@
                          if (typeof item.isSecret === 'undefined') {
                             item.isSecret = SECRET_RANKS_CHANCES.map(r => r.name).includes(item.rank.replace(" [HC]", "")) || item.rank === "morts luck" || item.rank === "breaktime" || item.rank.includes("Unobtainable");
                         }
-                        if (typeof item.isComplex === 'undefined') {
-                            item.isComplex = false;
-                        }
-                        if (typeof item.realPart === 'undefined') {
-                            item.realPart = item.value;
-                        }
-                        if (typeof item.imagPart === 'undefined') {
-                            item.imagPart = 0;
-                        }
                         return item;
                     });
 
@@ -4477,14 +3865,6 @@
                     // NEW: Load scientific notation settings
                     sciNotationThreshold = gameState.sciNotationThreshold || DEFAULT_SCI_THRESHOLD;
                     sciNotationEnabled = typeof gameState.sciNotationEnabled !== 'undefined' ? gameState.sciNotationEnabled : true;
-                    
-                    // NEW: Load send to pending first
-                    sendToPendingFirst = typeof gameState.sendToPendingFirst !== 'undefined' ? gameState.sendToPendingFirst : true;
-                    
-                    // NEW: Load merging
-                    mergingEnabled = gameState.mergingEnabled || false;
-                    mergeSelection1 = gameState.mergeSelection1 || -1;
-                    mergeSelection2 = gameState.mergeSelection2 || -1;
                     
                     // Load Cutscene State
                     cutscenesEnabled = typeof gameState.cutscenesEnabled === 'boolean' ? gameState.cutscenesEnabled : true;
@@ -4565,9 +3945,6 @@
                     document.getElementById('autoStopSecretThreshold').value = autoStopSecretThresholdValue;
                     document.getElementById('autoStopNewRank').checked = autoStopOnNewRank;
                     
-                    // Set send to pending first checkbox
-                    document.getElementById('sendToPendingFirst').checked = sendToPendingFirst;
-                    
                     // Refresh all UI
                     refreshAllUI();
                     
@@ -4585,21 +3962,16 @@
                         endEvent({ name: currentEvent.name, eventChanceBoost: currentEvent.eventChanceBoost });
                     }
                     
-                    // Setup background running
-                    setupBackgroundRunning();
-                    
                     addToTerminal('Game loaded!', true);
                 } catch (e) {
                     console.error('Error loading game:', e);
                     updateCalculatedStats();
                     refreshAllUI();
-                    setupBackgroundRunning();
                 }
             } else {
                  // First time load
                 updateCalculatedStats();
                 refreshAllUI();
-                setupBackgroundRunning();
             }
         }
 
@@ -4637,13 +4009,6 @@
         });
         document.getElementById('autoStopTrueRNG').addEventListener('change', (e) => {
             autoStopTrueRNGValue = parseFloat(e.target.value) || 0;
-        });
-
-        // Add listener for send to pending first
-        document.getElementById('sendToPendingFirst').addEventListener('change', (e) => {
-            sendToPendingFirst = e.target.checked;
-            addToTerminal(`Send to pending first: ${sendToPendingFirst ? 'ON' : 'OFF'}`, true);
-            saveGame();
         });
 
         // Add listener for clover click
