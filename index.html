@@ -257,6 +257,84 @@
             border-radius: 3px;
         }
         
+        /* NEW: Debug Panel Styles */
+        .debug-panel {
+            background-color: #2d0051;
+            border: 2px solid #ff0000;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        .debug-warning {
+            background-color: #4a0000;
+            border: 2px solid #ff0000;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+        
+        .debug-warning h3 {
+            color: #ff0000;
+            margin-top: 0;
+        }
+        
+        .debug-password-input {
+            background-color: #4a148c;
+            color: #ffffff;
+            border: 1px solid #ff69b4;
+            padding: 10px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            width: 100%;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+        
+        .debug-buttons {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .debug-button {
+            background-color: #808080;
+            color: #ffffff;
+            border: 2px solid #ff0000;
+            padding: 12px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: all 0.3s;
+        }
+        
+        .debug-button:hover {
+            background-color: #a0a0a0;
+        }
+        
+        .debug-button.danger {
+            background-color: #8b0000;
+            color: #ffffff;
+            border-color: #ff0000;
+        }
+        
+        .debug-button.danger:hover {
+            background-color: #a00000;
+        }
+        
+        .debug-button.confirm {
+            background-color: #006400;
+            color: #ffffff;
+            border-color: #00ff00;
+        }
+        
+        .debug-button.confirm:hover {
+            background-color: #008000;
+        }
+        
         /* Rank colors */
         .rank-1-1000 { color: #ffffff; }
         .rank-1000-10000 { color: #ffff00; }
@@ -595,6 +673,13 @@
             color: #ff6666;
         }
 
+        /* --- NEW: Illegitimate roll style --- */
+        .illegitimate-roll {
+            opacity: 0.7;
+            text-decoration: line-through;
+            color: #ff5555 !important;
+        }
+
         @media (max-width: 1200px) {
             .main-container {
                 grid-template-columns: 1fr;
@@ -689,6 +774,29 @@
         </div>
     </div>
 
+    <!-- NEW: Debug Panel -->
+    <div class="debug-panel" id="debug-panel">
+        <div class="debug-warning">
+            <h3>⚠️ DEBUG PANEL WARNING ⚠️</h3>
+            <p>Are you SURE you wanna open this? If so, type the secret password into the text box below and confirm. Type 'no' to close this. BE AWARE PLAYING AROUND WITH THIS CAN MESS UP YOUR SAVE</p>
+            <input type="password" id="debug-password-input" class="debug-password-input" placeholder="Enter debug password">
+            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                <button onclick="checkDebugPassword()" class="debug-button confirm">Confirm Password</button>
+                <button onclick="closeDebugPanel()" class="debug-button">Type 'no' to close</button>
+            </div>
+        </div>
+        
+        <div id="debug-commands" style="display: none;">
+            <div class="section-header" style="color: #ff0000;">Debug Commands</div>
+            <div class="debug-buttons">
+                <button onclick="resetEventsDebug()" class="debug-button">Event Resetter (fixes bugged events)</button>
+                <button onclick="resetSaveDebug()" class="debug-button danger">Save Resetter (5 confirmations)</button>
+                <button onclick="forceIllegitimateRoll()" class="debug-button">Force Roll (Illegitimate)</button>
+                <button onclick="closeDebugPanel()" class="debug-button">Close Debug Panel</button>
+            </div>
+        </div>
+    </div>
+
     <div class="autoroll-settings" style="padding-bottom: 5px;">
         <div class="section-header">Auto Accept Settings</div>
         <div class="autoroll-setting-item">
@@ -733,6 +841,8 @@
         <div class="controls" style="grid-template-columns: 1fr 1fr; margin-bottom: 10px;">
             <button onclick="exportSave()">Export Save</button>
             <button onclick="importSave()">Import Save</button>
+            <!-- NEW: Debug Panel Button -->
+            <button onclick="openDebugPanel()" style="background-color: #8b0000; border-color: #ff0000;">Debug Panel</button>
         </div>
         <!-- NEW: Hardcore mode warning -->
         <div id="hardcore-warning" style="color: #ff0000; display: none; margin-top: 10px; padding: 10px; background-color: #3a0d6e; border: 1px solid #ff0000;">
@@ -1104,6 +1214,9 @@
         // --- NEW: SCIENTIFIC NOTATION CONSTANTS ---
         const DEFAULT_SCI_THRESHOLD = 1e18;
 
+        // --- NEW: DEBUG PASSWORD ---
+        const DEBUG_PASSWORD = "gd8!dgi0()";
+
         // --- GAME STATE VARIABLES ---
         let currency = 0;
         let totalUpgrades = 0;
@@ -1249,6 +1362,159 @@
         function escapeHTML(str) {
             if (!str) return '';
             return str.replace(/'/g, "\\'");
+        }
+
+        // --- NEW: Debug Panel Functions ---
+        function openDebugPanel() {
+            document.getElementById('debug-panel').style.display = 'block';
+            document.getElementById('debug-password-input').value = '';
+            document.getElementById('debug-commands').style.display = 'none';
+        }
+
+        function closeDebugPanel() {
+            document.getElementById('debug-panel').style.display = 'none';
+            document.getElementById('debug-password-input').value = '';
+            document.getElementById('debug-commands').style.display = 'none';
+            addToTerminal('Debug panel closed.', true);
+        }
+
+        function checkDebugPassword() {
+            const input = document.getElementById('debug-password-input').value;
+            if (input === DEBUG_PASSWORD) {
+                document.getElementById('debug-commands').style.display = 'block';
+                addToTerminal('Debug panel unlocked! Use with caution!', true, 'rank-1000000-100000000');
+            } else if (input.toLowerCase() === 'no') {
+                closeDebugPanel();
+            } else {
+                alert('Incorrect password! Type "no" to close the debug panel.');
+            }
+        }
+
+        function resetEventsDebug() {
+            if (!confirm("This will reset all events. Are you sure?")) return;
+            
+            // Reset event variables
+            if (currentEvent && currentEvent.timeoutId) {
+                clearTimeout(currentEvent.timeoutId);
+            }
+            
+            currentEvent = null;
+            eventEndTime = 0;
+            eventCheckChance = 1;
+            
+            if (eventInterval) {
+                clearInterval(eventInterval);
+            }
+            
+            startEventLoop();
+            addToTerminal('Events have been reset. Event system restarted.', true, 'rank-1000-10000');
+            closeDebugPanel();
+        }
+
+        function resetSaveDebug() {
+            let confirmCount = 0;
+            const confirmMessages = [
+                "Are you REALLY sure? This will delete ALL your progress!",
+                "This is your second warning! Are you sure?",
+                "Third warning! This cannot be undone!",
+                "Fourth warning! You will lose everything!",
+                "FINAL WARNING! Type 'I am sure' to reset your save."
+            ];
+
+            function askConfirmation() {
+                if (confirmCount < 4) {
+                    if (confirm(confirmMessages[confirmCount])) {
+                        confirmCount++;
+                        askConfirmation();
+                    }
+                } else {
+                    const userInput = prompt(confirmMessages[4]);
+                    if (userInput === 'I am sure') {
+                        // Reset the game state to initial
+                        localStorage.removeItem('calisRNGGame');
+                        localStorage.removeItem('calisRNG_UI');
+                        
+                        // Clear all intervals
+                        if (autoRollInterval) clearInterval(autoRollInterval);
+                        if (eventInterval) clearInterval(eventInterval);
+                        if (shapeInterval) clearInterval(shapeInterval);
+                        if (currentEvent && currentEvent.timeoutId) clearTimeout(currentEvent.timeoutId);
+                        for (const id in activeEuphoriaIntervals) {
+                            clearInterval(activeEuphoriaIntervals[id]);
+                        }
+                        for (const id in activeBewildermentIntervals) {
+                            clearInterval(activeBewildermentIntervals[id]);
+                        }
+                        
+                        addToTerminal('Save completely reset! Reloading game...', true, 'rank-1000000000-10000000000');
+                        
+                        setTimeout(() => {
+                            location.reload();
+                        }, 1000);
+                    } else {
+                        alert('Save reset cancelled.');
+                        closeDebugPanel();
+                    }
+                }
+            }
+
+            askConfirmation();
+        }
+
+        function forceIllegitimateRoll() {
+            if (!confirm("Force an illegitimate roll? This won't give currency or count for discoveries.")) return;
+            
+            // Generate a roll but mark it as illegitimate
+            const totalLuck = currentLuck * luckMultiValue;
+            const baseRoll = Math.pow(Math.random(), 3 / POWER_EXPONENT) * (1 + totalLuck);
+            
+            // Get variants
+            const variantResult = getVariants(baseRoll);
+            let displayValue = variantResult ? variantResult.modifiedValue : baseRoll;
+            const variants = variantResult ? variantResult.variants : [];
+            
+            // Check for secret (but won't count for discovery)
+            const secretResult = secretsEnabled ? getSecretRank() : null;
+            let rankInfo = getRankInfo(baseRoll);
+            let displayName = secretResult ? secretResult.name : rankInfo.name;
+            
+            // Apply Unobtainable if needed
+            if (rankInfo.isUnobtainable) {
+                displayName = hardcoreMode ? "Unobtainable [HC]" : "Unobtainable";
+                displayValue = rankInfo.value;
+            }
+            
+            // Apply secret multiplier if needed
+            if (secretResult && secretResult.rarity) {
+                displayValue *= secretResult.rarity;
+            }
+            
+            // Special cases
+            if (displayName === "CORRUPTED") {
+                displayValue *= -1;
+            }
+            if (displayName === "Destroyed") {
+                displayValue = 0;
+            }
+            
+            // Get styling
+            const { className: rankClass, color: rollColor } = getRankClassAndColor(displayValue, variants, displayName);
+            
+            let variantText = '';
+            if (variants.length > 0) {
+                variantText = variants.map(v => `<span style="color: ${v.color}; font-weight: bold;">[${v.name}]</span>`).join('') + ' ';
+            }
+            
+            // Add illegitimate tag
+            const illegitimateTag = '<span style="color: #ff5555; font-weight: bold;">[ILLEGIT!]</span>';
+            
+            const content = `<span class="${rankClass} illegitimate-roll" style="color: ${rollColor};">${formatNumber(displayValue)} [${displayName}] ${illegitimateTag}</span>`;
+            
+            addToTerminal(
+                `#${formatInteger(rollIndex++)} (DEBUG): ${variantText}${content} (No currency, no discovery)`
+            );
+            
+            closeDebugPanel();
         }
 
         // --- NEW: Scientific notation functions ---
