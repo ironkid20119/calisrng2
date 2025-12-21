@@ -1025,6 +1025,14 @@
                 multiplier: 100
             },
             {
+            name: "Exclusivity",
+            chance: 1/725,
+            duration: 30000,
+            description: "EVERY dev exclusive is rollable for 30s",
+            targets: ["ALL_SECRETS"],
+            multiplier: 1
+            },
+            {
     name: "Impossibility",
     chance: 1/500,
     duration: 60000,
@@ -1180,6 +1188,10 @@
             { name: "Bootleg cali^2", chance: 1/1.01e6, rarity: 1e6 },
             { name: "!!! S E R O T O N I N !!!", chance: 1/94.34e9, rarity: 94.34e9 },
             { name: "Lol", chance: 0, rarity: 1e30, eventOnly: "ULTRA", eventChance: 1/1e6 },
+            { name: "cali^0.5 (DEV EXCLUSIVE)", chance: 0, rarity: 69420, eventOnly: "Exclusivity", eventChance: 1/69420 },
+            { name: "??? (DEV EXCLUSIVE)", chance: 0, rarity: 4.25e7, eventOnly: "Exclusivity", eventChance: 1/4.25e7 },
+            { name: "Poly", chance: 1/175257625, rarity: 175257625 },
+            { name: "err.404notfound (DEV EXCLUSIVE)", chance: 0, rarity: 4.04e8, eventOnly: "Exclusivity", eventChance: 1/4.04e8 },
             { name: "WHAT THE FUCK", chance: 1/1e50, rarity: 1e50, multiplier: 1e50 }
         ];
 
@@ -1189,7 +1201,7 @@
         // --- NEW ---
         const EUPHORIA_SYMBOLS = ['%', '@', '#', '^', '$', '*', '&', '>', '<', '?'];
         // UPDATED: Total ranks count (updated for new ranks)
-        const TOTAL_RANKS = 94;
+        const TOTAL_RANKS = 98;
 
         // --- NEW: SHAPES CONSTANTS ---
         const UNLOCK_SHAPES_COST = 5000000;
