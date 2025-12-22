@@ -2273,11 +2273,11 @@
         function updateIndexDisplay() {
             const indexContent = document.getElementById('indexContent');
             
-            // Sort normal ranks by min value
-            const sortedNormalRanks = [...RANK_TIERS].sort((a, b) => a.min - b.min);
+            // Sort normal ranks by min value (highest first)
+            const sortedNormalRanks = [...RANK_TIERS].sort((a, b) => b.min - a.min);
             
-            // Sort secret ranks by chance (rarity)
-            const sortedSecretRanks = [...SECRET_RANKS_CHANCES].sort((a, b) => a.chance - b.chance);
+            // Sort secret ranks by chance (rarity) - highest rarity first
+            const sortedSecretRanks = [...SECRET_RANKS_CHANCES].sort((a, b) => b.chance - a.chance);
             
             let html = '<div style="margin-bottom: 15px;"><strong>Normal Ranks:</strong></div>';
             
