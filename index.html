@@ -964,7 +964,7 @@
         const WHITE_FLASH_DURATION_MS = 1000; 
 
         // --- NEW EVENT CONSTANTS ---
-        const EVENT_CHECK_INTERVAL_MS = 1000; 
+        const EVENT_CHECK_INTERVAL_MS = 500; 
 
         const EVENTS = [
             { 
@@ -1095,11 +1095,13 @@
 
         // UPDATED RANK TIERS with Theoretical
         const RANK_TIERS = [
-            { min: 1, max: 5, name: "Common" },
+            { min: 1, max: 1.01, name: "TRASH"},
+            { min: 1.01, max: 5, name: "Common" },
             { min: 5, max: 25, name: "Natural" },
             { min: 25, max: 50, name: "Uncommon" },
             { min: 50, max: 100, name: "Normal" },
-            { min: 100, max: 500, name: "Divine" },
+            { min: 100, max: 100.1, name: "weird" },
+            { min: 100.1, max: 500, name: "Divine" },
             { min: 500, max: 1000, name: "Grandiose" },
             { min: 1000, max: 2500, name: "Decent" },
             { min: 2500, max: 7500, name: "Unreal" },
@@ -1191,6 +1193,9 @@
             { name: "cali^0.5 (DEV EXCLUSIVE)", chance: 0, rarity: 69420, eventOnly: "Exclusivity", eventChance: 1/69420 },
             { name: "??? (DEV EXCLUSIVE)", chance: 0, rarity: 4.25e7, eventOnly: "Exclusivity", eventChance: 1/4.25e7 },
             { name: "Poly", chance: 1/175257625, rarity: 175257625 },
+            { name: "Delusion", chance: 1/98900000, rarity: 98900000 },
+            { name: "Maniac", chance: 1/7e7, rarity: 7e7 },
+            { name: "Perlica", chance: 1/2e10, rarity: 2e10 },
             { name: "err.404notfound (DEV EXCLUSIVE)", chance: 0, rarity: 4.04e8, eventOnly: "Exclusivity", eventChance: 1/4.04e8 },
             { name: "WHAT THE FUCK", chance: 1/1e50, rarity: 1e50, multiplier: 1e50 }
         ];
@@ -1201,7 +1206,7 @@
         // --- NEW ---
         const EUPHORIA_SYMBOLS = ['%', '@', '#', '^', '$', '*', '&', '>', '<', '?'];
         // UPDATED: Total ranks count (updated for new ranks)
-        const TOTAL_RANKS = 98;
+        const TOTAL_RANKS = 102;
 
         // --- NEW: SHAPES CONSTANTS ---
         const UNLOCK_SHAPES_COST = 5000000;
@@ -1236,7 +1241,7 @@
         const HARDCORE_MODE_ENABLED = true;
 
         // --- NEW: SCIENTIFIC NOTATION CONSTANTS ---
-        const DEFAULT_SCI_THRESHOLD = 1e18;
+        const DEFAULT_SCI_THRESHOLD = 1e12;
 
         // --- NEW: DEBUG PASSWORD ---
         const DEBUG_PASSWORD = "gd8!dgi0()";
