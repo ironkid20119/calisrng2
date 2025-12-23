@@ -2716,7 +2716,7 @@
             const luck = BOOSTER_BASE_LUCK * BOOSTER_LUCK_FORMULA(rand);
             let cost = BOOSTER_COST_FORMULA(luck);
             const shape = BOOSTER_SHAPES[Math.floor(Math.random() * BOOSTER_SHAPES.length)];
-            const color = BOOSTER_COLORS[Math.floor(Math.random() * BOOSTER_COLORS.length)];
+            let color = '#FFFFFF'; // Default white if no variant
             
             // Variant generation: 1/(variant_chance/2.5)
             let variant = null;
@@ -2725,6 +2725,7 @@
                 const variantChance = (2.5 * v.chance); // This is the probability
                 if (Math.random() < variantChance) {
                     variant = { name: v.name, multiplier: v.multiplier, color: v.color };
+                    color = v.color; // Apply variant color to booster
                     // Apply cost multiplier: cost * (variant_multiplier)^1.25
                     cost *= Math.pow(v.multiplier, 1.25);
                     break;

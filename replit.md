@@ -20,6 +20,7 @@ python3 -m http.server 5000 --bind 0.0.0.0
 Configured for static deployment. The entire project directory is served as-is.
 
 ## Recent Changes
+- December 23, 2025: Booster color system - white (#FFFFFF) for non-variant boosters, variant color applied when booster has a variant
 - December 23, 2025: Complete booster inventory system with variant support. Variant boosters have 1/(x/2.5) spawn chance and cost multiplier (variant_multiplier)^1.25. Variant names displayed under booster shapes with color coding. Boosters save/load properly.
 - December 23, 2025: Added booster shop with geometric shapes (circle, triangle, square, pentagon, hexagon, heptagon), luck values displayed in center. Shop displays 5-15 random boosters. Changed money gain formula to ((rank_rng/75)^0.75)/1.5
 - December 23, 2025: Booster system fully functional - click shapes to buy from shop, click owned boosters to activate for next roll
