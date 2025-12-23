@@ -20,6 +20,7 @@ python3 -m http.server 5000 --bind 0.0.0.0
 Configured for static deployment. The entire project directory is served as-is.
 
 ## Recent Changes
+- December 23, 2025: Fixed booster shop opening issue - moved shopBoosters to global scope, added error handling with try-catch and DOM verification
 - December 23, 2025: Enhanced booster visuals - white text with black outline, gradient effect (color to darker version) on bottom half of shapes
 - December 23, 2025: Booster color system - white (#FFFFFF) for non-variant boosters, variant color applied when booster has a variant
 - December 23, 2025: Complete booster inventory system with variant support. Variant boosters have 1/(x/2.5) spawn chance and cost multiplier (variant_multiplier)^1.25. Variant names displayed under booster shapes with color coding. Boosters save/load properly.

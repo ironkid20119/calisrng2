@@ -1390,6 +1390,7 @@
         // --- NEW: BOOSTER SYSTEM ---
         let boosters = [];
         let activeBooster = null;
+        let shopBoosters = [];
 
 
         // --- OPTIMIZATION: CALCULATED STATS (set by updateCalculatedStats) ---
@@ -2709,7 +2710,6 @@
         // --- NEW: Booster functions ---
         const BOOSTER_SHAPES = ['circle', 'triangle', 'square', 'pentagon', 'hexagon', 'heptagon'];
         const BOOSTER_COLORS = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8', '#F7DC6F'];
-        let shopBoosters = [];
         
         function generateBooster() {
             const rand = Math.random();
@@ -2833,13 +2833,24 @@
         }
         
         function openBoosterShop() {
-            const count = Math.floor(Math.random() * (15 - 5 + 1)) + 5; // 5-15
-            shopBoosters = [];
-            for (let i = 0; i < count; i++) {
-                shopBoosters.push(generateBooster());
+            try {
+                const count = Math.floor(Math.random() * (15 - 5 + 1)) + 5; // 5-15
+                shopBoosters = [];
+                for (let i = 0; i < count; i++) {
+                    shopBoosters.push(generateBooster());
+                }
+                updateShopDisplay();
+                const shopPanel = document.getElementById('shop-panel');
+                if (shopPanel) {
+                    shopPanel.style.display = 'block';
+                    addToTerminal('Shop opened! Browse boosters.', true);
+                } else {
+                    addToTerminal('Error: Shop panel not found', true);
+                }
+            } catch (e) {
+                addToTerminal('Error opening shop: ' + e.message, true);
+                console.error('Shop error:', e);
             }
-            updateShopDisplay();
-            document.getElementById('shop-panel').style.display = 'block';
         }
         
         function updateShopDisplay() {
