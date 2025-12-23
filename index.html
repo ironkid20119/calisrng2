@@ -396,6 +396,33 @@
                 1px 1px 0 #808080;
         }
         
+        /* --- NEW: POLY DODECAHEDRON STYLE --- */
+        .poly-dodecahedron-wrapper {
+            position: relative;
+            display: inline-block;
+            z-index: 0;
+        }
+        
+        .poly-dodecahedron-wrapper::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 2em;
+            height: 2em;
+            background: linear-gradient(135deg, #9b59b6 0%, #3498db 50%, #e74c3c 100%);
+            clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%);
+            transform: translate(-50%, -50%);
+            z-index: -1;
+            opacity: 0.75;
+            animation: spin-dodecahedron 3s linear infinite;
+        }
+        
+        @keyframes spin-dodecahedron {
+            0% { transform: translate(-50%, -50%) rotateX(0deg) rotateY(0deg) rotateZ(0deg); }
+            100% { transform: translate(-50%, -50%) rotateX(360deg) rotateY(360deg) rotateZ(360deg); }
+        }
+        
         .secret-nonavacious {
             filter: drop-shadow(0 0 5px #00BFFF); 
         }
@@ -862,6 +889,17 @@
         <button id="secretToggleBtn" onclick="toggleSecrets()">Secrets: ON</button>
         <!-- NEW: Hardcore mode toggle -->
         <button id="hardcoreToggleBtn" onclick="toggleHardcoreMode()">Hardcore Mode: OFF</button>
+        <!-- NEW: Shop button -->
+        <button onclick="document.getElementById('shop-panel').style.display = document.getElementById('shop-panel').style.display === 'none' ? 'block' : 'none'">Shop</button>
+    </div>
+    
+    <!-- NEW: Booster Shop Panel -->
+    <div id="shop-panel" style="display: none; background-color: #2d0051; border: 2px solid #FFD700; padding: 20px; border-radius: 5px; margin-top: 10px;">
+        <div class="section-header" style="color: #FFD700;">Booster Shop</div>
+        <button onclick="buyBooster()" style="width: 100%; margin-bottom: 10px;">Buy Random Booster</button>
+        <div id="booster-list" style="min-height: 50px; max-height: 200px; overflow-y: auto; background-color: #4a148c; border: 1px solid #FFD700; padding: 10px; border-radius: 3px;">
+            <div id="boosterContent">No boosters yet</div>
+        </div>
     </div>
     
     <div class="main-container">
@@ -1242,6 +1280,11 @@
 
         // --- NEW: SCIENTIFIC NOTATION CONSTANTS ---
         const DEFAULT_SCI_THRESHOLD = 1e12;
+        
+        // --- NEW: BOOSTER CONSTANTS ---
+        const BOOSTER_BASE_LUCK = 15;
+        const BOOSTER_LUCK_FORMULA = (rand) => Math.pow(rand, -1.2);
+        const BOOSTER_COST_FORMULA = (multi) => Math.pow(multi, 1.75);
 
         // --- NEW: DEBUG PASSWORD ---
         const DEBUG_PASSWORD = "gd8!dgi0()";
@@ -1342,6 +1385,10 @@
 
         // --- NEW: Animation preservation tracking ---
         let activeAnimationElements = new Set();
+        
+        // --- NEW: BOOSTER SYSTEM ---
+        let boosters = [];
+        let activeBooster = null;
 
 
         // --- OPTIMIZATION: CALCULATED STATS (set by updateCalculatedStats) ---
@@ -1826,6 +1873,10 @@
 
                 // Event-Only Check
                 if (secret.eventOnly) {
+                    // In HC mode, skip all event-only ranks (including dev exclusives)
+                    if (hardcoreMode) {
+                        continue;
+                    }
                     if (!currentEvent || currentEvent.name !== secret.eventOnly) {
                         continue;
                     }
@@ -2654,10 +2705,76 @@
         }
 
         // --- MODIFIED: To handle 7 Grand Dad with FIXED 1/777.777 chance ---
+        // --- NEW: Booster functions ---
+        function generateBooster() {
+            const rand = Math.random();
+            const luck = BOOSTER_BASE_LUCK * BOOSTER_LUCK_FORMULA(rand);
+            const cost = BOOSTER_COST_FORMULA(luck);
+            let variant = null;
+            
+            // Check if booster gets variant: 1/(variant_chance/2.5)
+            if (Math.random() < 0.5) { // 50% chance for variant
+                const variantChance = Math.random();
+                let variantLuck = 1;
+                for (const v of VARIANTS) {
+                    if (Math.random() < 1 / (v.chance / 2.5)) {
+                        variant = { name: v.name, color: v.color };
+                        break;
+                    }
+                }
+            }
+            
+            return { luck, cost, variant };
+        }
+        
+        function buyBooster() {
+            const booster = generateBooster();
+            if (currency < booster.cost) {
+                addToTerminal(`Cannot afford booster (cost: ${formatNumber(booster.cost)})`, true);
+                return;
+            }
+            currency -= booster.cost;
+            boosters.push(booster);
+            addToTerminal(`Booster purchased! Luck: x${booster.luck.toFixed(2)}${booster.variant ? ` [${booster.variant.name}]` : ''}`, true);
+            updateStats();
+            saveGame();
+        }
+        
+        function useBooster(idx) {
+            activeBooster = boosters[idx];
+            boosters.splice(idx, 1);
+            addToTerminal(`Booster activated! Next roll gets x${activeBooster.luck.toFixed(2)} luck${activeBooster.variant ? ` + ${activeBooster.variant.name}` : ''}`, true);
+            updateBoosterDisplay();
+            updateStats();
+        }
+        
+        function updateBoosterDisplay() {
+            const boosterContent = document.getElementById('boosterContent');
+            if (boosters.length === 0) {
+                boosterContent.innerHTML = 'No boosters yet';
+            } else {
+                boosterContent.innerHTML = boosters.map((b, idx) => `
+                    <div style="background-color: #3a0d6e; border: 1px solid #FFD700; padding: 8px; margin: 5px 0; border-radius: 3px;">
+                        <div>x${b.luck.toFixed(2)}${b.variant ? ` <span style="color: ${b.variant.color};">[${b.variant.name}]</span>` : ''}</div>
+                        <button onclick="useBooster(${idx})" style="margin-top: 5px; width: 100%; font-size: 12px;">Use Booster</button>
+                    </div>
+                `).join('');
+            }
+        }
+        
         async function roll() {
             if (isCutscenePlaying) {
                 addToTerminal('Wait for the cutscene to finish!', true);
                 return;
+            }
+            
+            // Apply booster if active
+            if (activeBooster) {
+                // Inject booster luck into current roll
+                const boosterLuck = activeBooster.luck;
+                currentLuck += boosterLuck;
+                addToTerminal(`Booster applied! +${boosterLuck.toFixed(2)} luck`, true);
+                activeBooster = null;
             }
             
             const rollResults = [];
@@ -2884,6 +3001,10 @@
 
                 if (displayName === "~Nonavacious~") {
                     rankClass += " secret-nonavacious";
+                }
+                
+                if (displayName === "Poly") {
+                    rankClass = `poly-dodecahedron-wrapper ${rankClass}`;
                 }
                 
                 const currentIndex = rollIndex++;
