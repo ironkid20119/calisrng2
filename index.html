@@ -890,15 +890,16 @@
         <!-- NEW: Hardcore mode toggle -->
         <button id="hardcoreToggleBtn" onclick="toggleHardcoreMode()">Hardcore Mode: OFF</button>
         <!-- NEW: Shop button -->
-        <button onclick="document.getElementById('shop-panel').style.display = document.getElementById('shop-panel').style.display === 'none' ? 'block' : 'none'">Shop</button>
+        <button onclick="openBoosterShop()">Shop</button>
     </div>
     
     <!-- NEW: Booster Shop Panel -->
     <div id="shop-panel" style="display: none; background-color: #2d0051; border: 2px solid #FFD700; padding: 20px; border-radius: 5px; margin-top: 10px;">
         <div class="section-header" style="color: #FFD700;">Booster Shop</div>
-        <button onclick="buyBooster()" style="width: 100%; margin-bottom: 10px;">Buy Random Booster</button>
-        <div id="booster-list" style="min-height: 50px; max-height: 200px; overflow-y: auto; background-color: #4a148c; border: 1px solid #FFD700; padding: 10px; border-radius: 3px;">
-            <div id="boosterContent">No boosters yet</div>
+        <div id="shop-content" style="min-height: 100px; background-color: #4a148c; border: 1px solid #FFD700; padding: 10px; border-radius: 3px; text-align: center;">Loading...</div>
+        <div style="margin-top: 15px; color: #FFD700; font-size: 12px; text-align: center;">Click shapes to buy • Your Boosters:</div>
+        <div id="booster-list" style="min-height: 50px; max-height: 150px; overflow-y: auto; background-color: #4a148c; border: 1px solid #FFD700; padding: 10px; border-radius: 3px; margin-top: 10px;">
+            <div id="boosterContent">No boosters owned</div>
         </div>
     </div>
     
@@ -2706,36 +2707,89 @@
 
         // --- MODIFIED: To handle 7 Grand Dad with FIXED 1/777.777 chance ---
         // --- NEW: Booster functions ---
+        const BOOSTER_SHAPES = ['circle', 'triangle', 'square', 'pentagon', 'hexagon', 'heptagon'];
+        const BOOSTER_COLORS = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8', '#F7DC6F'];
+        let shopBoosters = [];
+        
         function generateBooster() {
             const rand = Math.random();
             const luck = BOOSTER_BASE_LUCK * BOOSTER_LUCK_FORMULA(rand);
             const cost = BOOSTER_COST_FORMULA(luck);
-            let variant = null;
+            const shape = BOOSTER_SHAPES[Math.floor(Math.random() * BOOSTER_SHAPES.length)];
+            const color = BOOSTER_COLORS[Math.floor(Math.random() * BOOSTER_COLORS.length)];
             
-            // Check if booster gets variant: 1/(variant_chance/2.5)
-            if (Math.random() < 0.5) { // 50% chance for variant
-                const variantChance = Math.random();
-                let variantLuck = 1;
-                for (const v of VARIANTS) {
-                    if (Math.random() < 1 / (v.chance / 2.5)) {
-                        variant = { name: v.name, color: v.color };
-                        break;
-                    }
-                }
-            }
-            
-            return { luck, cost, variant };
+            return { luck, cost, shape, color };
         }
         
-        function buyBooster() {
-            const booster = generateBooster();
+        function generateShapeHTML(shape, color, luck) {
+            const size = 60;
+            const centerLuck = luck.toFixed(2);
+            
+            if (shape === 'circle') {
+                return `<svg width="${size}" height="${size}" viewBox="0 0 60 60">
+                    <circle cx="30" cy="30" r="25" fill="${color}" stroke="#FFD700" stroke-width="2"/>
+                    <text x="30" y="35" text-anchor="middle" fill="white" font-size="14" font-weight="bold">${centerLuck}</text>
+                </svg>`;
+            } else if (shape === 'triangle') {
+                return `<svg width="${size}" height="${size}" viewBox="0 0 60 60">
+                    <polygon points="30,10 50,45 10,45" fill="${color}" stroke="#FFD700" stroke-width="2"/>
+                    <text x="30" y="37" text-anchor="middle" fill="white" font-size="14" font-weight="bold">${centerLuck}</text>
+                </svg>`;
+            } else if (shape === 'square') {
+                return `<svg width="${size}" height="${size}" viewBox="0 0 60 60">
+                    <rect x="12" y="12" width="36" height="36" fill="${color}" stroke="#FFD700" stroke-width="2"/>
+                    <text x="30" y="35" text-anchor="middle" fill="white" font-size="14" font-weight="bold">${centerLuck}</text>
+                </svg>`;
+            } else if (shape === 'pentagon') {
+                return `<svg width="${size}" height="${size}" viewBox="0 0 60 60">
+                    <polygon points="30,8 52,22 43,44 17,44 8,22" fill="${color}" stroke="#FFD700" stroke-width="2"/>
+                    <text x="30" y="35" text-anchor="middle" fill="white" font-size="14" font-weight="bold">${centerLuck}</text>
+                </svg>`;
+            } else if (shape === 'hexagon') {
+                return `<svg width="${size}" height="${size}" viewBox="0 0 60 60">
+                    <polygon points="30,8 52,18 52,40 30,50 8,40 8,18" fill="${color}" stroke="#FFD700" stroke-width="2"/>
+                    <text x="30" y="35" text-anchor="middle" fill="white" font-size="14" font-weight="bold">${centerLuck}</text>
+                </svg>`;
+            } else if (shape === 'heptagon') {
+                return `<svg width="${size}" height="${size}" viewBox="0 0 60 60">
+                    <polygon points="30,6 50,14 55,34 43,50 17,50 5,34 10,14" fill="${color}" stroke="#FFD700" stroke-width="2"/>
+                    <text x="30" y="35" text-anchor="middle" fill="white" font-size="14" font-weight="bold">${centerLuck}</text>
+                </svg>`;
+            }
+        }
+        
+        function openBoosterShop() {
+            const count = Math.floor(Math.random() * (15 - 5 + 1)) + 5; // 5-15
+            shopBoosters = [];
+            for (let i = 0; i < count; i++) {
+                shopBoosters.push(generateBooster());
+            }
+            updateShopDisplay();
+            document.getElementById('shop-panel').style.display = 'block';
+        }
+        
+        function updateShopDisplay() {
+            const shopContent = document.getElementById('shop-content');
+            shopContent.innerHTML = shopBoosters.map((b, idx) => `
+                <div style="display: inline-block; text-align: center; margin: 10px; cursor: pointer;" onclick="buyBoosterFromShop(${idx})">
+                    <div style="margin-bottom: 5px; font-size: 12px; color: #FFD700;">Cost: ${formatNumber(b.cost)}</div>
+                    ${generateShapeHTML(b.shape, b.color, b.luck)}
+                </div>
+            `).join('');
+        }
+        
+        function buyBoosterFromShop(idx) {
+            const booster = shopBoosters[idx];
             if (currency < booster.cost) {
                 addToTerminal(`Cannot afford booster (cost: ${formatNumber(booster.cost)})`, true);
                 return;
             }
             currency -= booster.cost;
             boosters.push(booster);
-            addToTerminal(`Booster purchased! Luck: x${booster.luck.toFixed(2)}${booster.variant ? ` [${booster.variant.name}]` : ''}`, true);
+            shopBoosters.splice(idx, 1);
+            addToTerminal(`Booster purchased! x${booster.luck.toFixed(2)} luck`, true);
+            updateBoosterDisplay();
+            updateShopDisplay();
             updateStats();
             saveGame();
         }
@@ -2743,7 +2797,7 @@
         function useBooster(idx) {
             activeBooster = boosters[idx];
             boosters.splice(idx, 1);
-            addToTerminal(`Booster activated! Next roll gets x${activeBooster.luck.toFixed(2)} luck${activeBooster.variant ? ` + ${activeBooster.variant.name}` : ''}`, true);
+            addToTerminal(`Booster activated! Next roll gets x${activeBooster.luck.toFixed(2)} luck`, true);
             updateBoosterDisplay();
             updateStats();
         }
@@ -2751,12 +2805,12 @@
         function updateBoosterDisplay() {
             const boosterContent = document.getElementById('boosterContent');
             if (boosters.length === 0) {
-                boosterContent.innerHTML = 'No boosters yet';
+                boosterContent.innerHTML = '<div style="color: #888;">No boosters owned</div>';
             } else {
                 boosterContent.innerHTML = boosters.map((b, idx) => `
-                    <div style="background-color: #3a0d6e; border: 1px solid #FFD700; padding: 8px; margin: 5px 0; border-radius: 3px;">
-                        <div>x${b.luck.toFixed(2)}${b.variant ? ` <span style="color: ${b.variant.color};">[${b.variant.name}]</span>` : ''}</div>
-                        <button onclick="useBooster(${idx})" style="margin-top: 5px; width: 100%; font-size: 12px;">Use Booster</button>
+                    <div style="display: inline-block; text-align: center; margin: 8px; cursor: pointer;" onclick="useBooster(${idx})">
+                        ${generateShapeHTML(b.shape, b.color, b.luck)}
+                        <div style="font-size: 10px; color: #FFD700; margin-top: 5px;">Click to use</div>
                     </div>
                 `).join('');
             }
@@ -2956,7 +3010,7 @@
             for (const rollData of rollResults) {
                 let { baseValue, displayValue, complexValue, variants, displayName, isSecret, secretRarityMultiplier, rankInfo, isComplex, complexData } = rollData;
                 
-                const currencyGain = Math.pow(rankInfo.rankNum, 3);
+                const currencyGain = (Math.pow(rankInfo.rankNum / 75, 0.75)) / 1.5;
                 
                 const { className: rankClassBase, color: rollColorBase } = getRankClassAndColor(
                     typeof displayValue === 'object' ? Math.sqrt(displayValue.real**2 + displayValue.imag**2) : displayValue, 
