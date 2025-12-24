@@ -11,3 +11,10 @@ have fun and good luck completionists..
 the EASIEST secret is 1/4040.404, whilst the HARDEST is 1/1e18..
 the easiest normal rank is 1/1, and the hardest is..
 *ONE NONILLION. (1x10^30)*
+## how to play
+- press roll, click ranks to accept them..
+- autoroll BASE accept is for NONVARIANTED stuff, just a FYI..
+- unlock features and progress..
+## you do NOT need to download index.html, as its ALREADY on github!
+the best part? the game automatically saves, AND you can transfer from devices by exporting and importing data!
+-# we will KNOW if your save file is edited lol. its easy to tell
