@@ -1,3 +1,5 @@
+# GAME LINK
+https://ironkid20119.github.io/calisrng2/
 # hey !!!! important to read this, kinda..
 this is my rng game (obviously..)  
 so what can you DO?
@@ -15,8 +17,6 @@ the easiest normal rank is 1/1, and the hardest is.. <br>
 - press roll, click ranks to accept them.. <br>
 - autoroll BASE accept is for NONVARIANTED stuff, just a FYI.. <br>
 - unlock features and progress..
-# GAME LINK
-https://ironkid20119.github.io/calisrng2/
 ## you do NOT need to download index.html, as its ALREADY on github!
 the best part? the game automatically saves, AND you can transfer from devices by exporting and importing data! <br>
 `we will KNOW if your save file is edited! its super easy to DETECT, and we dont recommend you doing it!`
