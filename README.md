@@ -5,15 +5,15 @@ roll, find ranks, progress.. etc..
 as of now, theres 100+ ranks to discover!?! (updates every 3 days or so)
 wait, is that..
 **ONE HUNDRED RANKS?**
-yes thats RIGHT, theres over ONE HUNDRED, such as secrets ranging from a few thousand, to a **QUINTILLION**?
-have fun and good luck completionists..
-**youll need it. a lot. trust me**
-the EASIEST secret is 1/4040.404, whilst the HARDEST is 1/1e18..
-the easiest normal rank is 1/1, and the hardest is..
-*ONE NONILLION. (1x10^30)*
+yes thats RIGHT, theres over ONE HUNDRED, such as secrets ranging from a few thousand, to a **QUINTILLION**? <br>
+have fun and good luck completionists.. <br>
+**youll need it. a lot. trust me** <br>
+the EASIEST secret is 1/4040.404, whilst the HARDEST is 1/1e18.. <br>
+the easiest normal rank is 1/1, and the hardest is.. <br>
+*ONE NONILLION. (1x10^{30})* <br>
 ## how to play
-- press roll, click ranks to accept them..
-- autoroll BASE accept is for NONVARIANTED stuff, just a FYI..
+- press roll, click ranks to accept them.. <br>
+- autoroll BASE accept is for NONVARIANTED stuff, just a FYI.. <br>
 - unlock features and progress..
 # GAME LINK
 https://ironkid20119.github.io/calisrng2/
