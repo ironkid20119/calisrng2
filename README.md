@@ -10,7 +10,7 @@ have fun and good luck completionists.. <br>
 **youll need it. a lot. trust me** <br>
 the EASIEST secret is 1/4040.404, whilst the HARDEST is 1/1e18.. <br>
 the easiest normal rank is 1/1, and the hardest is.. <br>
-*ONE NONILLION. (1x10^{30})* <br>
+*ONE NONILLION. (1x10^30) aint this INSANE?* <br>
 ## how to play
 - press roll, click ranks to accept them.. <br>
 - autoroll BASE accept is for NONVARIANTED stuff, just a FYI.. <br>
