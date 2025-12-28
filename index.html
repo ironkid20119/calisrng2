@@ -3977,7 +3977,7 @@
 
         function generateRoll() {
             const totalLuck = currentLuck * luckMultiValue;
-            const baseRoll = Math.pow(Math.random(), 3 / POWER_EXPONENT) * (1 + totalLuck);
+            const baseRoll = Math.pow(Math.random(), 3 / POWER_EXPONENT) * (1 * totalLuck);
             return { value: baseRoll, variant: null };
         }
         
@@ -4511,8 +4511,8 @@
         function generateComplexRank() {
             if (Math.random() < COMPLEX_CHANCE) {
                 const totalLuck = currentLuck * luckMultiValue;
-                const realPart = Math.pow(Math.random(), 3 / POWER_EXPONENT) * (1 + totalLuck);
-                const imagPart = Math.pow(Math.random(), 3 / POWER_EXPONENT) * (1 + totalLuck);
+                const realPart = Math.pow(Math.random(), 3 / POWER_EXPONENT) * (1 * totalLuck);
+                const imagPart = Math.pow(Math.random(), 3 / POWER_EXPONENT) * (1 * totalLuck);
                 
                 const rankInfoReal = getRankInfo(realPart);
                 const rankInfoImag = getRankInfo(imagPart);
