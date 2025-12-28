@@ -820,6 +820,67 @@
             vertical-align: middle;
         }
 
+        /* --- DESTROY SYSTEM STYLES --- */
+        .destroy-system {
+            background-color: #2d0051;
+            border: 2px solid #8B0000;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        
+        .destroy-warning {
+            background-color: #4a0000;
+            border: 2px solid #ff0000;
+            padding: 10px;
+            border-radius: 3px;
+            margin-bottom: 10px;
+        }
+        
+        .destroy-dimension-list {
+            max-height: 150px;
+            overflow-y: auto;
+            background-color: #1a0033;
+            border: 1px solid #8B0000;
+            padding: 10px;
+            border-radius: 3px;
+            margin-bottom: 10px;
+        }
+        
+        .dimension-item {
+            padding: 5px;
+            margin: 3px 0;
+            border-left: 3px solid #8B0000;
+            background-color: #2d0051;
+        }
+        
+        .dimension-item.current {
+            border-left-color: #FF0000;
+            background-color: #3a0d6e;
+            font-weight: bold;
+        }
+        
+        /* --- Feimienation Secret Style --- */
+        .feimienation-wrapper {
+            display: inline-block;
+            animation: feimienation-rotate 5ms linear infinite, serotonin-flicker 15ms linear infinite;
+            filter: invert(100%) hue-rotate(90deg);
+        }
+        
+        @keyframes feimienation-rotate {
+            0% { transform: rotate(0deg) scale(1); }
+            25% { transform: rotate(90deg) scale(1.1); }
+            50% { transform: rotate(180deg) scale(1); }
+            75% { transform: rotate(270deg) scale(0.9); }
+            100% { transform: rotate(360deg) scale(1); }
+        }
+        
+        @keyframes serotonin-flicker {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+        /* --- END NEW STYLES --- */
+
         @media (max-width: 1200px) {
             .main-container {
                 grid-template-columns: 1fr;
@@ -867,6 +928,11 @@
         <div class="stat-item">Hardcore Mode: <span id="hardcoreStatus">OFF</span></div>
         <div class="stat-item">Scientific Notation: <span id="sciNotationStat">ON (≥1e18)</span></div>
         <div class="stat-item">Variant Secrets: <span id="variantSecretsDiscovered">0</span>/<span id="totalVariantSecrets">10</span></div>
+        <!-- NEW: Destroy System Stats -->
+        <div class="stat-item">Dimension: <span id="dimension">1</span></div>
+        <div class="stat-item">Destroys: <span id="destroyCount">0</span></div>
+        <div class="stat-item">Destroy Multi: <span id="destroyMulti">1.00</span>x Luck, <span id="currencyMulti">1.00</span>x Currency</div>
+        <div class="stat-item">Next Destroy Cost: <span id="destroyCost">100,000,000.00</span></div>
     </div>
 
     <div class="scientific-setting">
@@ -880,6 +946,38 @@
         </div>
         <div class="scientific-setting-item" style="color: #00ffff; font-size: 12px;">
             Note: Numbers ≥ threshold will display in scientific notation (e.g., 1.23e18)
+        </div>
+    </div>
+
+    <!-- NEW: Destroy System Panel -->
+    <div class="destroy-system">
+        <div class="section-header" style="color: #8B0000;">Destroy System</div>
+        <div class="destroy-warning">
+            <strong>⚠️ WARNING:</strong> Destroying resets ALL progress (except ranks) for permanent multipliers! Each Destroy increases dimension.
+        </div>
+        
+        <div class="stat-item" style="margin: 10px 0;">
+            Current Dimension Stats: 
+            <span id="currentDimensionStats">Dimension 1: 1.00x Luck, 1.00x Currency</span>
+        </div>
+        
+        <div class="controls" style="grid-template-columns: 1fr; margin-bottom: 10px;">
+            <button id="destroyBtn" onclick="initiateDestroy()" style="background-color: #8B0000; border-color: #FF0000;">
+                DESTROY (Cost: <span id="destroyCostBtn">100,000,000.00</span>)
+            </button>
+            <button onclick="switchToPreviousDimension()" style="background-color: #4a148c; border-color: #800080;">
+                Switch to Previous Dimension
+            </button>
+        </div>
+        
+        <div class="section-header" style="color: #800080; margin-top: 15px;">Dimension List</div>
+        <div class="destroy-dimension-list" id="dimensionList">
+            <div class="dimension-item current">Dimension 1: 1.00x Luck, 1.00x Currency</div>
+        </div>
+        
+        <div style="color: #FFA500; font-size: 12px; margin-top: 10px;">
+            Each Destroy: +1.00x Luck Multi, +0.50x Currency Gain<br>
+            Progress is preserved per dimension
         </div>
     </div>
 
@@ -928,7 +1026,6 @@
                 <button onclick="resetEventsDebug()" class="debug-button">Event Resetter (fixes bugged events)</button>
                 <button onclick="resetSaveDebug()" class="debug-button danger">Save Resetter (5 confirmations)</button>
                 <button onclick="toggleForceRollUI()" class="debug-button">Force Roll (Custom)</button>
-                <!-- NEW BUTTONS -->
                 <button onclick="nukeShopData()" class="debug-button danger">Nuke Shop Data</button>
                 <button onclick="fixSaveFile()" class="debug-button">Fix Save File</button>
                 <button onclick="inspectSaveFile()" class="debug-button">Inspect Save File</button>
@@ -1118,7 +1215,6 @@
         function startRuin() {
             if (calisrng2.ruinInterval) clearInterval(calisrng2.ruinInterval);
             
-            // Store original colors and texts
             document.querySelectorAll('*').forEach(el => {
                 if (el.style) {
                     calisrng2.ruinOriginalColors.set(el, {
@@ -1132,7 +1228,6 @@
             });
             
             calisrng2.ruinInterval = setInterval(() => {
-                // Randomize all colors
                 document.querySelectorAll('*').forEach(el => {
                     if (el.style) {
                         el.style.color = '#' + Math.floor(Math.random() * 16777215).toString(16);
@@ -1140,7 +1235,6 @@
                     }
                 });
                 
-                // Change all text to "Lol"
                 document.querySelectorAll('*').forEach(el => {
                     if (el.children.length === 0 && el.textContent) {
                         el.textContent = "Lol";
@@ -1148,12 +1242,10 @@
                     }
                 });
                 
-                // Make everything shake
                 document.querySelectorAll('*').forEach(el => {
                     el.style.transform = `translate(${Math.random() * 20 - 10}px, ${Math.random() * 20 - 10}px)`;
                 });
                 
-                // Randomize font sizes
                 document.querySelectorAll('*').forEach(el => {
                     el.style.fontSize = `${Math.random() * 3 + 0.5}em`;
                 });
@@ -1167,7 +1259,6 @@
                 clearInterval(calisrng2.ruinInterval);
                 calisrng2.ruinInterval = null;
                 
-                // Restore original colors
                 calisrng2.ruinOriginalColors.forEach((colors, el) => {
                     if (el.style) {
                         el.style.color = colors.color;
@@ -1175,7 +1266,6 @@
                     }
                 });
                 
-                // Restore original texts
                 calisrng2.ruinOriginalTexts.forEach((text, el) => {
                     if (el.textContent) {
                         el.textContent = text;
@@ -1183,7 +1273,6 @@
                     }
                 });
                 
-                // Reset transforms and font sizes
                 document.querySelectorAll('*').forEach(el => {
                     el.style.transform = '';
                     el.style.fontSize = '';
@@ -1393,6 +1482,7 @@
             { min: 1e30, max: Infinity, name: "Improbable" }
         ];
 
+        // FIXED: Added Feimienation secret with serotonin animation
         const SECRET_RANKS_CHANCES = [
             { name: "nil", chance: 1/17500, rarity: 17500 }, 
             { name: "Title Label Missing", chance: 1/4040.404, rarity: 4040.404 },
@@ -1458,7 +1548,9 @@
             { name: "Maniac", chance: 1/7e7, rarity: 7e7 },
             { name: "Perlica", chance: 1/2e10, rarity: 2e10 },
             { name: "err.404notfound (DEV EXCLUSIVE)", chance: 0, rarity: 4.04e8, eventOnly: "Exclusivity", eventChance: 1/4.04e8 },
-            { name: "WHAT THE FUCK", chance: 1/1e50, rarity: 1e50, multiplier: 1e50 }
+            { name: "WHAT THE FUCK", chance: 1/1e50, rarity: 1e50, multiplier: 1e50 },
+            // NEW: Feimienation secret
+            { name: "Feimienation", chance: 1/666999000100500125000250125950500690420000, rarity: 666999000100500125000250125950500690420000 }
         ];
 
         // NEW: Variant Secrets (Only Sound remains)
@@ -1481,23 +1573,23 @@
         const EUPHORIA_SYMBOLS = ['%', '@', '#', '^', '$', '*', '&', '>', '<', '?'];
         const SEROTONIN_SYMBOLS = ['?', '7', '@', 'SSER', '.', 'O!IN!', '?!?', 'S!O!?'];
         
-        // --- PERFECT BASE RNG SECRETS ---
+        // FIXED: Perfect Base RNG Secrets - Now properly integrated
         const PERFECT_BASE_RNG_SECRETS = [
-            { baseRNG: 1, name: "Unity" },
-            { baseRNG: 10, name: "Decimal" },
-            { baseRNG: 42, name: "Meaning" },
-            { baseRNG: 69, name: "Nice" },
-            { baseRNG: 100, name: "Centum" },
-            { baseRNG: 420, name: "Herbal" },
-            { baseRNG: 1234, name: "Numerical" },
-            { baseRNG: 6969, name: "Double Nice" },
-            { baseRNG: 9999, name: "Niner" },
-            { baseRNG: 10000, name: "Myria" },
-            { baseRNG: 123456, name: "Sequential" },
-            { baseRNG: 1000000, name: "Million" },
-            { baseRNG: 3.141592653589793, name: "π" }
+            { baseRNG: 1, name: "Unity", rarity: 1000 },
+            { baseRNG: 10, name: "Decimal", rarity: 5000 },
+            { baseRNG: 42, name: "Meaning", rarity: 42000 },
+            { baseRNG: 69, name: "Nice", rarity: 69000 },
+            { baseRNG: 100, name: "Centum", rarity: 100000 },
+            { baseRNG: 420, name: "Herbal", rarity: 420000 },
+            { baseRNG: 1234, name: "Numerical", rarity: 1234000 },
+            { baseRNG: 6969, name: "Double Nice", rarity: 6969000 },
+            { baseRNG: 9999, name: "Niner", rarity: 9999000 },
+            { baseRNG: 10000, name: "Myria", rarity: 10000000 },
+            { baseRNG: 123456, name: "Sequential", rarity: 123456000 },
+            { baseRNG: 1000000, name: "Million", rarity: 1000000000 },
+            { baseRNG: 3.141592653589793, name: "π", rarity: 314159265 }
         ];
-        const TOTAL_RANKS = 102;
+        const TOTAL_RANKS = 103; // Updated for Feimienation
         const TOTAL_VARIANT_SECRETS = 4; 
         
         const UNLOCK_SHAPES_COST = 5000000;
@@ -1533,8 +1625,18 @@
         const BOOSTER_BASE_LUCK = 15;
         const BOOSTER_LUCK_FORMULA = (rand) => Math.pow(rand, -1.2);
         const BOOSTER_COST_FORMULA = (multi) => Math.pow(multi, 1.75);
-
+        
+        // NEW: Booster special types
+        const BOOSTER_SPECIAL_MULTIPLIER_CHANCE = 1/5000; // *
+        const BOOSTER_SPECIAL_POWER_CHANCE = 1/2e6; // ^
+        
         const DEBUG_PASSWORD = "gd8!dgi0()";
+
+        // NEW: Destroy System Constants
+        const DESTROY_BASE_COST = 1e8;
+        const DESTROY_COST_MULTIPLIER = 7.5;
+        const DESTROY_LUCK_MULTI_PER_DESTROY = 1.0;
+        const DESTROY_CURRENCY_MULTI_PER_DESTROY = 0.5;
 
         // --- GAME STATE VARIABLES ---
         let currency = 0;
@@ -1652,6 +1754,14 @@
         let luckMultiValue = 1;
         let shapeLuckBonus = 0;
         let currentShapeCooldown = SHAPE_SPAWN_INTERVAL_MS;
+
+        // NEW: Destroy System Variables
+        let destroyCount = 0;
+        let destroyCost = DESTROY_BASE_COST;
+        let currentDimension = 1;
+        let dimensions = []; // Array to store each dimension's state
+        let destroyLuckMultiplier = 1;
+        let destroyCurrencyMultiplier = 1;
 
         // --- UTILITY FUNCTIONS ---
         function formatInteger(num) {
@@ -1801,28 +1911,23 @@
             activeBooster = null;
             shopBoosters = [];
             
-            // Also reset shop refresh timing
             shopLastRefresh = 0;
             
-            // Clear any existing shop auto-refresh interval
             if (shopAutoRefreshInterval) {
                 clearInterval(shopAutoRefreshInterval);
                 shopAutoRefreshInterval = null;
             }
             
-            // Force immediate shop regeneration when opened
             shopBoosters = [];
             
             addToTerminal("💣 Shop data COMPLETELY nuked! All boosters, shop inventory, and shop state reset.", true, 'rank-1000000-100000000');
             updateBoosterDisplay();
             
-            // Force close shop if open
             const shopPanel = document.getElementById('shop-panel');
             if (shopPanel) {
                 shopPanel.style.display = 'none';
             }
             
-            // Save the nuked state
             saveGame();
             closeDebugPanel();
         }
@@ -1898,6 +2003,37 @@
                         isSecret: false 
                     };
                     fixes.push("Fixed: highestFinalRoll was missing");
+                }
+                
+                // NEW: Fix destroy system data
+                if (typeof gameState.destroyCount !== 'number') {
+                    gameState.destroyCount = 0;
+                    fixes.push("Fixed: destroyCount was invalid");
+                }
+                
+                if (typeof gameState.destroyCost !== 'number') {
+                    gameState.destroyCost = DESTROY_BASE_COST;
+                    fixes.push("Fixed: destroyCost was invalid");
+                }
+                
+                if (typeof gameState.currentDimension !== 'number') {
+                    gameState.currentDimension = 1;
+                    fixes.push("Fixed: currentDimension was invalid");
+                }
+                
+                if (!Array.isArray(gameState.dimensions)) {
+                    gameState.dimensions = [];
+                    fixes.push("Fixed: dimensions array was missing");
+                }
+                
+                if (typeof gameState.destroyLuckMultiplier !== 'number') {
+                    gameState.destroyLuckMultiplier = 1;
+                    fixes.push("Fixed: destroyLuckMultiplier was invalid");
+                }
+                
+                if (typeof gameState.destroyCurrencyMultiplier !== 'number') {
+                    gameState.destroyCurrencyMultiplier = 1;
+                    fixes.push("Fixed: destroyCurrencyMultiplier was invalid");
                 }
                 
                 // Check all arrays for invalid items
@@ -2042,6 +2178,14 @@
                     }
                 });
                 
+                // NEW: Check destroy system props
+                const destroyProps = ['destroyCount', 'destroyCost', 'currentDimension', 'dimensions'];
+                destroyProps.forEach(prop => {
+                    if (!(prop in gameState)) {
+                        issues.push(`Missing destroy property: ${prop}`);
+                    }
+                });
+                
                 if (!Array.isArray(gameState.inventory)) {
                     issues.push("Inventory is not an array");
                 }
@@ -2149,6 +2293,19 @@
                     issues.push("discoveredVariantSecrets is not an array");
                 }
                 
+                // NEW: Check destroy system
+                if (!Array.isArray(gameState.dimensions)) {
+                    issues.push("dimensions is not an array");
+                }
+                
+                if (typeof gameState.destroyCount !== 'number' || gameState.destroyCount < 0) {
+                    issues.push("destroyCount is invalid");
+                }
+                
+                if (typeof gameState.currentDimension !== 'number' || gameState.currentDimension < 1) {
+                    issues.push("currentDimension is invalid");
+                }
+                
                 info.push(`Currency: ${gameState.currency || 0}`);
                 info.push(`Geometrix: ${gameState.geometrix || 0}`);
                 info.push(`Upgrades: ${gameState.totalUpgrades || 0}`);
@@ -2162,6 +2319,11 @@
                 info.push(`Hardcore mode: ${gameState.hardcoreMode ? 'ON' : 'OFF'}`);
                 info.push(`Secrets enabled: ${gameState.secretsEnabled !== false ? 'Yes' : 'No'}`);
                 info.push(`Cutscenes enabled: ${gameState.cutscenesEnabled !== false ? 'Yes' : 'No'}`);
+                // NEW: Destroy system info
+                info.push(`Destroy count: ${gameState.destroyCount || 0}`);
+                info.push(`Current dimension: ${gameState.currentDimension || 1}`);
+                info.push(`Destroy cost: ${gameState.destroyCost || DESTROY_BASE_COST}`);
+                info.push(`Dimensions stored: ${gameState.dimensions ? gameState.dimensions.length : 0}`);
                 
                 if (issues.length > 0) {
                     addToTerminal("❌ ISSUES FOUND:", true, 'rank-1000000-100000000');
@@ -2397,15 +2559,28 @@
             }
             
             let boosterVariant = null;
+            let boosterSpecialMultiplier = 1;
+            let boosterPowerEffect = null;
+            
             if (activeBooster) {
                 const boosterLuck = activeBooster.luck;
                 currentLuck += boosterLuck;
                 boosterVariant = activeBooster.variant || null;
-                let msg = `Booster applied! +${boosterLuck.toFixed(2)} luck`;
-                if (boosterVariant) {
-                    msg += ` + ${boosterVariant.name}`;
+                
+                // NEW: Apply booster special effects
+                if (activeBooster.specialType === '*') {
+                    boosterSpecialMultiplier = activeBooster.specialValue;
+                    addToTerminal(`Booster applied! +${boosterLuck.toFixed(2)} luck + ${boosterSpecialMultiplier}x multiplier`, true);
+                } else if (activeBooster.specialType === '^') {
+                    boosterPowerEffect = activeBooster.specialValue;
+                    addToTerminal(`Booster applied! +${boosterLuck.toFixed(2)} luck + Power ${boosterPowerEffect}`, true);
+                } else {
+                    addToTerminal(`Booster applied! +${boosterLuck.toFixed(2)} luck`, true);
                 }
-                addToTerminal(msg, true);
+                
+                if (boosterVariant) {
+                    addToTerminal(`+ ${boosterVariant.name} variant`, true);
+                }
                 activeBooster = null;
             }
             
@@ -2458,6 +2633,20 @@
                 const rollResult = generateRoll();
                 let baseValue = rollResult.value;
                 
+                // FIXED: Check for perfect base RNG secrets FIRST
+                let perfectBaseSecret = null;
+                for (const secret of PERFECT_BASE_RNG_SECRETS) {
+                    if (Math.abs(baseValue - secret.baseRNG) < 0.0001) {
+                        perfectBaseSecret = secret;
+                        break;
+                    }
+                }
+                
+                // Apply booster power effect if present
+                if (boosterPowerEffect) {
+                    baseValue = Math.pow(baseValue, boosterPowerEffect);
+                }
+                
                 let isGrandRoll = baseValue >= 1e6 && baseValue < 1e7;
                 let shouldCheck7GrandDad = isGrandRoll && Math.random() < (1/777.777);
 
@@ -2475,36 +2664,59 @@
                     displayValue *= boosterVariant.multiplier;
                 }
                 
-                // CHECK FOR VARIANT SECRET HERE
-                let variantSecretResult = null;
-                // Check for perfect base RNG secrets
-                let perfectBaseSecret = null;
-                for (const secret of PERFECT_BASE_RNG_SECRETS) {
-                    if (Math.abs(baseValue - secret.baseRNG) < 0.0001) {
-                        perfectBaseSecret = {
-                            name: secret.name,
-                            chance: 1,
-                            rarity: 1,
-                            isPerfectBase: true
-                        };
-                        break;
-                    }
+                // Apply booster special multiplier
+                if (boosterSpecialMultiplier !== 1) {
+                    displayValue *= boosterSpecialMultiplier;
                 }
                 
+                // CHECK FOR VARIANT SECRET HERE
+                let variantSecretResult = null;
+                
+                // Check for variant secrets
                 if (variants.length > 0) {
                     const rankInfoTemp = getRankInfo(baseValue);
                     variantSecretResult = getVariantSecret(rankInfoTemp.name, variants);
                     
-                    // Check for secret rank + variant combinations
+                    // Check for perfect base secret + variant combinations
                     if (!variantSecretResult && perfectBaseSecret) {
-                        // Combine variant with perfect base secret
                         const variantNames = variants.map(v => v.name).join('+');
                         variantSecretResult = {
                             name: `${perfectBaseSecret.name}/${variantNames}`,
                             rarity: perfectBaseSecret.rarity,
-                            isPerfectBase: true
+                            multipliesRNG: perfectBaseSecret.rarity
                         };
                     }
+                }
+                
+                // Handle perfect base RNG secret
+                if (perfectBaseSecret && !variantSecretResult) {
+                    displayName = perfectBaseSecret.name;
+                    displayValue *= perfectBaseSecret.rarity;
+                    
+                    rollResults.push({ 
+                        baseValue, 
+                        displayValue, 
+                        variants, 
+                        displayName, 
+                        isSecret: true, 
+                        secretRarityMultiplier: perfectBaseSecret.rarity,
+                        rankInfo: { name: perfectBaseSecret.name, rankNum: 999, isUnobtainable: false },
+                        isComplex: false,
+                        variantSecret: variantSecretResult,
+                        isPerfectBase: true
+                    });
+                    
+                    if (displayValue > maxRollValueInBulk) {
+                        maxRollValueInBulk = displayValue;
+                        isMaxRollSecret = true;
+                    }
+                    
+                    const baseRankName = perfectBaseSecret.name;
+                    if (!discoveredRanks.has(baseRankName)) {
+                        newRankDiscoveredInBulk = true;
+                    }
+                    
+                    continue;
                 }
                 
                 if (shouldCheck7GrandDad) {
@@ -2579,7 +2791,7 @@
                 }
                 
                 // Apply variant secret multiplier if found
-                if (variantSecretResult) {
+                if (variantSecretResult && variantSecretResult.multipliesRNG) {
                     displayValue *= variantSecretResult.multipliesRNG;
                 }
                 
@@ -2592,7 +2804,8 @@
                     secretRarityMultiplier,
                     rankInfo,
                     isComplex: false,
-                    variantSecret: variantSecretResult
+                    variantSecret: variantSecretResult,
+                    isPerfectBase: false
                 });
                 
                 if (displayValue > maxRollValueInBulk) {
@@ -2611,9 +2824,10 @@
             }
             
             for (const rollData of rollResults) {
-                let { baseValue, displayValue, complexValue, variants, displayName, isSecret, secretRarityMultiplier, rankInfo, isComplex, complexData, variantSecret } = rollData;
+                let { baseValue, displayValue, complexValue, variants, displayName, isSecret, secretRarityMultiplier, rankInfo, isComplex, complexData, variantSecret, isPerfectBase } = rollData;
                 
-                const currencyGain = (Math.pow(baseValue / 75, 0.75)) / 1.5;
+                // Apply destroy currency multiplier
+                const currencyGain = (Math.pow(baseValue / 75, 0.75)) / 1.5 * destroyCurrencyMultiplier;
                 
                 const { className: rankClassBase, color: rollColorBase } = getRankClassAndColor(
                     typeof displayValue === 'object' ? Math.sqrt(displayValue.real**2 + displayValue.imag**2) : displayValue, 
@@ -2627,6 +2841,10 @@
                 if (displayName === "CORRUPTED") {
                     rankClass += " secret-corrupted";
                     rollColor = "#FFFFFF"; 
+                }
+                
+                if (displayName === "Feimienation") {
+                    rankClass += " feimienation-wrapper";
                 }
                 
                 if (isComplex) {
@@ -2695,7 +2913,8 @@
                         rank: displayName,
                         variants: variants,
                         isSecret: isSecret,
-                        variantSecret: variantSecret
+                        variantSecret: variantSecret,
+                        isPerfectBase: isPerfectBase
                     };
                 }
                 
@@ -2747,6 +2966,10 @@
                 if (displayName === "⛧Satanic⛧") {
                     content = `<span class="satanic-wrapper">${content}</span>`;
                 }
+                
+                if (displayName === "Feimienation") {
+                    content = `<span class="feimienation-wrapper">${content}</span>`;
+                }
 
                 addToTerminal(
                     `#${formatInteger(currentIndex)}: ${variantText}${content} (+${currencyGain.toFixed(2)} currency)`
@@ -2759,8 +2982,8 @@
                 if (displayName === "!! EUPHORIA !!") {
                     initEuphoriaAnimation(`roll-${currentIndex}`, "!! EUPHORIA !!");
                 }
-                if (displayName === "!!! S E R O T O N I N !!!") {
-                    initSerotoninAnimation(`roll-${currentIndex}`, "!!! S E R O T O N I N !!!");
+                if (displayName === "!!! S E R O T O N I N !!!" || displayName === "Feimienation") {
+                    initSerotoninAnimation(`roll-${currentIndex}`, displayName);
                 }
                 
                 if (isComplex) {
@@ -2885,6 +3108,10 @@
                     rankStyle = `color: #ffffff; filter: invert(100%); display: inline-block;`;
                 }
                 
+                if (rankName === "Feimienation") {
+                    rankStyle = `color: #FF69B4; display: inline-block;`;
+                }
+                
                 html += `<div class="index-item ${discovered ? 'discovered' : 'locked'}">
                     ${discovered ? `<span style="${rankStyle}">${rankName}</span>` : '???'}
                 </div>`;
@@ -2901,7 +3128,23 @@
                 ${mortsLuckDiscovered ? `<span style="${mortsLuckStyle}">morts luck</span>` : '???'}
             </div>`;
             
-            // NEW: Variant Secrets Section
+            // Perfect Base RNG Secrets Section
+            html += '<div class="variant-secrets-section">';
+            html += '<div style="margin: 15px 0;"><strong>Perfect Base RNG Secrets:</strong></div>';
+            
+            PERFECT_BASE_RNG_SECRETS.forEach(secret => {
+                const discovered = discoveredRanks.has(secret.name);
+                html += `<div class="variant-secret-item ${discovered ? 'discovered' : 'locked'}">
+                    ${discovered ? 
+                        `<span style="color: #00ff00;">${secret.name}</span> (Base: ${secret.baseRNG})` : 
+                        '???'
+                    }
+                </div>`;
+            });
+            
+            html += '</div>';
+            
+            // Variant Secrets Section
             html += '<div class="variant-secrets-section">';
             html += '<div style="margin: 15px 0;"><strong>Variant Secrets:</strong></div>';
             
@@ -3007,10 +3250,17 @@
                 boosters,
                 activeBooster,
                 
-                // NEW: Shop and variant secrets data
                 shopBoosters,
                 shopLastRefresh: Date.now(),
-                discoveredVariantSecrets: Array.from(discoveredVariantSecrets)
+                discoveredVariantSecrets: Array.from(discoveredVariantSecrets),
+                
+                // NEW: Destroy system data
+                destroyCount,
+                destroyCost,
+                currentDimension,
+                dimensions,
+                destroyLuckMultiplier,
+                destroyCurrencyMultiplier
             };
             localStorage.setItem('calisRNGGame', JSON.stringify(gameState));
             
@@ -3136,6 +3386,14 @@
                     
                     // NEW: Load variant secrets
                     discoveredVariantSecrets = new Set(gameState.discoveredVariantSecrets || []);
+                    
+                    // NEW: Load destroy system data
+                    destroyCount = gameState.destroyCount || 0;
+                    destroyCost = gameState.destroyCost || DESTROY_BASE_COST;
+                    currentDimension = gameState.currentDimension || 1;
+                    dimensions = gameState.dimensions || [];
+                    destroyLuckMultiplier = gameState.destroyLuckMultiplier || 1;
+                    destroyCurrencyMultiplier = gameState.destroyCurrencyMultiplier || 1;
 
                     updateCalculatedStats();
                     
@@ -3306,6 +3564,23 @@
             
             document.getElementById('bulkRollLevel').textContent = bulkRollLevel;
             document.getElementById('bulkRollAmount').textContent = bulkRollLevel + 1;
+            
+            // NEW: Destroy system stats
+            document.getElementById('dimension').textContent = currentDimension;
+            document.getElementById('destroyCount').textContent = destroyCount;
+            document.getElementById('destroyMulti').textContent = destroyLuckMultiplier.toFixed(2);
+            document.getElementById('currencyMulti').textContent = destroyCurrencyMultiplier.toFixed(2);
+            document.getElementById('destroyCost').textContent = formatNumber(destroyCost);
+            document.getElementById('destroyCostBtn').textContent = formatNumber(destroyCost);
+            
+            const destroyBtn = document.getElementById('destroyBtn');
+            if (destroyBtn) {
+                destroyBtn.disabled = currency < destroyCost;
+                destroyBtn.innerHTML = `DESTROY (Cost: <span id="destroyCostBtn">${formatNumber(destroyCost)}</span>)`;
+            }
+            
+            // Update dimension list display
+            updateDimensionList();
             
             const bulkCostEl = document.getElementById('bulkRollCost');
             const bulkBtnEl = document.getElementById('buyBulkRollBtn');
@@ -3623,7 +3898,8 @@
             
             const clickerLuckBonus = clickerLuckLevel * 0.5;
             
-            luckMultiValue = hardcoreMode ? 1 : (Math.pow(2, luckMultiLevel) + clickerLuckBonus);
+            // Apply destroy luck multiplier
+            luckMultiValue = hardcoreMode ? 1 : (Math.pow(2, luckMultiLevel) + clickerLuckBonus) * destroyLuckMultiplier;
             
             secretLuckMultiplier = hardcoreMode ? 1 : Math.min(1 + (totalUpgrades * SECRET_LUCK_PER_UPGRADE), MAX_SECRET_LUCK) * luckMultiValue;
             variantChanceMultiplier = hardcoreMode ? 1 : Math.min(1 + (totalUpgrades * VARIANT_CHANCE_PER_UPGRADE), MAX_VARIANT_CHANCE_MULTIPLIER) * luckMultiValue;
@@ -3916,6 +4192,9 @@
                     if (item.rank === "CORRUPTED") {
                         displayClass += " secret-corrupted";
                     }
+                    if (item.rank === "Feimienation") {
+                        displayClass += " feimienation-wrapper";
+                    }
                     
                     let variantText = '';
                     if (item.variants && item.variants.length > 0) {
@@ -3945,6 +4224,9 @@
                     let content = `<span class="${displayClass}" style="color: ${rollColor};" data-text="${escapeHTML(item.rank)}">${formatNumber(displayValue)} [${item.rank}]${suffix}</span>`;
                     if (item.rank === "⛧Satanic⛧") {
                         content = `<span class="satanic-wrapper">${content}</span>`;
+                    }
+                    if (item.rank === "Feimienation") {
+                        content = `<span class="feimienation-wrapper">${content}</span>`;
                     }
                     
                     return `<div class="inventory-item" onclick="removeFromInventory(${idx})" id="inv-item-${idx}">
@@ -4255,6 +4537,7 @@
         const BOOSTER_SHAPES = ['circle', 'triangle', 'square', 'pentagon', 'hexagon', 'heptagon'];
         const BOOSTER_COLORS = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8', '#F7DC6F'];
         
+        // NEW: Modified booster generation with special types
         function generateBooster() {
             const rand = Math.random();
             const luck = BOOSTER_BASE_LUCK * BOOSTER_LUCK_FORMULA(rand);
@@ -4273,12 +4556,26 @@
                 }
             }
             
+            // NEW: Add special booster types
+            let specialType = null;
+            let specialValue = null;
+            
+            if (Math.random() < BOOSTER_SPECIAL_MULTIPLIER_CHANCE) {
+                specialType = '*';
+                specialValue = 1 + Math.random() * 4; // 1x to 5x multiplier
+                cost *= Math.pow(specialValue, 2);
+            } else if (Math.random() < BOOSTER_SPECIAL_POWER_CHANCE) {
+                specialType = '^';
+                specialValue = 1 + Math.random() * 2; // 1x to 3x power
+                cost *= Math.pow(specialValue, 3);
+            }
+            
             // Validate cost is finite and positive
             if (!isFinite(cost) || cost < 0) {
                 cost = 100;
             }
             
-            return { luck, cost, shape, color, variant };
+            return { luck, cost, shape, color, variant, specialType, specialValue };
         }
         
         function refreshBoosterShop() {
@@ -4354,12 +4651,21 @@
                     return;
                 }
                 
-                shopContent.innerHTML = shopBoosters.map((b, idx) => `
+                shopContent.innerHTML = shopBoosters.map((b, idx) => {
+                    let specialBadge = '';
+                    if (b.specialType === '*') {
+                        specialBadge = `<div style="font-size: 10px; color: #00FF00; margin-top: 3px;">${b.specialValue.toFixed(1)}x Multi</div>`;
+                    } else if (b.specialType === '^') {
+                        specialBadge = `<div style="font-size: 10px; color: #FF00FF; margin-top: 3px;">Power ${b.specialValue.toFixed(1)}</div>`;
+                    }
+                    
+                    return `
                     <div style="display: inline-block; text-align: center; margin: 10px; cursor: pointer; padding: 8px; border: 1px solid #FFD700; border-radius: 5px; background-color: #3a0d6e; transition: all 0.2s;" onclick="buyBoosterFromShop(${idx})" onmouseover="this.style.boxShadow='0 0 10px #FFD700';" onmouseout="this.style.boxShadow='none';">
                         <div style="margin-bottom: 5px; font-size: 12px; color: #FFD700;">Cost: ${formatNumber(b.cost.toFixed(0))}</div>
                         ${generateShapeHTML(b.shape, b.color, b.luck, b.variant)}
+                        ${specialBadge}
                     </div>
-                `).join('');
+                `}).join('');
             } catch (e) {
                 console.error('Error updating shop display:', e);
                 const shopContent = document.getElementById('shop-content');
@@ -4392,7 +4698,18 @@
             }
             boosters.push(booster);
             shopBoosters.splice(idx, 1);
-            addToTerminal(`Booster purchased! x${booster.luck.toFixed(2)} luck${booster.variant ? ` + ${booster.variant.name}` : ''}`, true);
+            
+            let boosterDesc = `Booster purchased! x${booster.luck.toFixed(2)} luck`;
+            if (booster.specialType === '*') {
+                boosterDesc += ` + ${booster.specialValue.toFixed(1)}x multiplier`;
+            } else if (booster.specialType === '^') {
+                boosterDesc += ` + Power ${booster.specialValue.toFixed(1)}`;
+            }
+            if (booster.variant) {
+                boosterDesc += ` + ${booster.variant.name}`;
+            }
+            
+            addToTerminal(boosterDesc, true);
             updateBoosterDisplay();
             updateShopDisplay();
             updateStats();
@@ -4402,7 +4719,15 @@
         function useBooster(idx) {
             activeBooster = boosters[idx];
             boosters.splice(idx, 1);
-            addToTerminal(`Booster activated! Next roll gets x${activeBooster.luck.toFixed(2)} luck`, true);
+            
+            let boosterDesc = `Booster activated! Next roll gets x${activeBooster.luck.toFixed(2)} luck`;
+            if (activeBooster.specialType === '*') {
+                boosterDesc += ` + ${activeBooster.specialValue.toFixed(1)}x multiplier`;
+            } else if (activeBooster.specialType === '^') {
+                boosterDesc += ` + Power ${activeBooster.specialValue.toFixed(1)}`;
+            }
+            
+            addToTerminal(boosterDesc, true);
             updateBoosterDisplay();
             updateStats();
         }
@@ -4412,12 +4737,21 @@
             if (boosters.length === 0) {
                 boosterContent.innerHTML = '<div style="color: #888; padding: 10px;">No boosters owned</div>';
             } else {
-                boosterContent.innerHTML = boosters.map((b, idx) => `
+                boosterContent.innerHTML = boosters.map((b, idx) => {
+                    let specialBadge = '';
+                    if (b.specialType === '*') {
+                        specialBadge = `<div style="font-size: 8px; color: #00FF00; margin-top: 2px;">${b.specialValue.toFixed(1)}x</div>`;
+                    } else if (b.specialType === '^') {
+                        specialBadge = `<div style="font-size: 8px; color: #FF00FF; margin-top: 2px;">Power ${b.specialValue.toFixed(1)}</div>`;
+                    }
+                    
+                    return `
                     <div style="display: inline-block; text-align: center; margin: 8px; padding: 8px; cursor: pointer; border: 1px solid #FFD700; border-radius: 5px; background-color: #3a0d6e; transition: all 0.2s;" onclick="useBooster(${idx})" onmouseover="this.style.boxShadow='0 0 10px #FFD700';" onmouseout="this.style.boxShadow='none';">
                         ${generateShapeHTML(b.shape, b.color, b.luck, b.variant)}
+                        ${specialBadge}
                         <div style="font-size: 10px; color: #FFD700; margin-top: 5px;">Click to use</div>
                     </div>
-                `).join('');
+                `}).join('');
             }
         }
         
@@ -5092,6 +5426,78 @@
             }
         }
 
+        // FIXED: Serotonin animation
+        function initSerotoninAnimation(elementId, rankName) {
+            if (!elementId || !document.getElementById(elementId)) return;
+            
+            if (activeSerotoninIntervals[elementId]) {
+                clearInterval(activeSerotoninIntervals[elementId]);
+            }
+            
+            const currentElement = document.getElementById(elementId);
+            const originalHtml = currentElement.innerHTML;
+            
+            // Store original text for Feimienation
+            let originalText = '';
+            if (rankName === "Feimienation") {
+                const match = originalHtml.match(/\[Feimienation\]/);
+                if (match) originalText = match[0];
+            }
+            
+            const intervalId = setInterval(() => {
+                if (!document.getElementById(elementId)) {
+                    clearInterval(intervalId);
+                    delete activeSerotoninIntervals[elementId];
+                    return;
+                }
+                
+                const currentElement = document.getElementById(elementId);
+                
+                if (rankName === "Feimienation") {
+                    // Feimienation uses wild rotation like CORRUPTED
+                    const rotation = Math.random() * 360;
+                    const scale = 0.8 + Math.random() * 0.4;
+                    currentElement.style.transform = `rotate(${rotation}deg) scale(${scale})`;
+                    
+                    // Also flicker like serotonin
+                    if (Math.random() > 0.5) {
+                        currentElement.style.opacity = '0.3';
+                    } else {
+                        currentElement.style.opacity = '1';
+                    }
+                } else {
+                    // Original serotonin animation for !!! S E R O T O N I N !!!
+                    const prefix = rankName + ': <span style="opacity: 0.4; margin: 0 2px;">[';
+                    const suffix = ']</span>';
+                    const chars = originalHtml.substring(prefix.length, originalHtml.length - suffix.length);
+                    
+                    if (chars.length === 0) return;
+                    
+                    const newChars = chars.split('');
+                    const numSymbols = Math.floor(Math.random() * 3) + 2;
+                    
+                    for (let i = 0; i < numSymbols; i++) {
+                        const idx = Math.floor(Math.random() * newChars.length);
+                        const sym = SEROTONIN_SYMBOLS[Math.floor(Math.random() * SEROTONIN_SYMBOLS.length)];
+                        newChars[idx] = `<span style="opacity: 1; display: inline-block; transform: rotate(${Math.random() * 360}deg) scale(${0.8 + Math.random() * 0.6});">${sym}</span>`;
+                    }
+                    
+                    currentElement.innerHTML = prefix + newChars.join('') + suffix;
+                    
+                    setTimeout(() => {
+                        const stillExists = document.getElementById(elementId);
+                        if (stillExists && activeSerotoninIntervals[elementId]) {
+                            stillExists.innerHTML = originalHtml;
+                        }
+                    }, 12);
+                }
+                
+            }, rankName === "Feimienation" ? 5 : 15);
+            
+            activeSerotoninIntervals[elementId] = intervalId;
+            activeAnimationElements.add(elementId);
+        }
+
         function initEuphoriaAnimation(elementId, baseText) {
             const element = document.getElementById(elementId);
             if (!element) return;
@@ -5145,53 +5551,6 @@
             }, 100);
             
             activeEuphoriaIntervals[elementId] = intervalId;
-            activeAnimationElements.add(elementId);
-        }
-
-        function initSerotoninAnimation(elementId, rankName) {
-            if (!elementId || !document.getElementById(elementId)) return;
-            
-            if (activeSerotoninIntervals[elementId]) {
-                clearInterval(activeSerotoninIntervals[elementId]);
-            }
-            
-            const currentElement = document.getElementById(elementId);
-            const originalHtml = currentElement.innerHTML;
-            
-            const intervalId = setInterval(() => {
-                if (!document.getElementById(elementId)) {
-                    clearInterval(intervalId);
-                    delete activeSerotoninIntervals[elementId];
-                    return;
-                }
-                
-                const prefix = rankName + ': <span style="opacity: 0.4; margin: 0 2px;">[';
-                const suffix = ']</span>';
-                const chars = originalHtml.substring(prefix.length, originalHtml.length - suffix.length);
-                
-                if (chars.length === 0) return;
-                
-                const newChars = chars.split('');
-                const numSymbols = Math.floor(Math.random() * 3) + 2;
-                
-                for (let i = 0; i < numSymbols; i++) {
-                    const idx = Math.floor(Math.random() * newChars.length);
-                    const sym = SEROTONIN_SYMBOLS[Math.floor(Math.random() * SEROTONIN_SYMBOLS.length)];
-                    newChars[idx] = `<span style="opacity: 1; display: inline-block; transform: rotate(${Math.random() * 360}deg) scale(${0.8 + Math.random() * 0.6}); animation: spin 0.3s ease-in-out;">${sym}</span>`;
-                }
-                
-                currentElement.innerHTML = prefix + newChars.join('') + suffix;
-                
-                setTimeout(() => {
-                    const stillExists = document.getElementById(elementId);
-                    if (stillExists && activeSerotoninIntervals[elementId]) {
-                        stillExists.innerHTML = originalHtml;
-                    }
-                }, 12);
-                
-            }, 15);
-            
-            activeSerotoninIntervals[elementId] = intervalId;
             activeAnimationElements.add(elementId);
         }
 
@@ -5366,6 +5725,251 @@
         function startEventLoop() {
             if (eventInterval) clearInterval(eventInterval);
             eventInterval = setInterval(checkEvent, EVENT_CHECK_INTERVAL_MS);
+        }
+
+        // NEW: DESTROY SYSTEM FUNCTIONS
+        function saveCurrentDimension() {
+            const dimensionState = {
+                dimensionNumber: currentDimension,
+                currency,
+                totalUpgrades,
+                upgradeCost,
+                highestBaseRoll,
+                highestFinalRoll,
+                maxInventory,
+                inventory: [...inventory],
+                rollIndex,
+                acceptedRolls: Array.from(acceptedRolls),
+                pendingRolls: [...pendingRolls],
+                bulkRollLevel,
+                bulkRollCost,
+                geometrix,
+                shapesUnlocked,
+                shapeLuckLevel,
+                shapeLuckCost,
+                luckMultiLevel,
+                luckMultiCost,
+                bulkShapeLevel,
+                bulkShapeCost,
+                clickerUnlocked,
+                fortunium,
+                fortuniumLuck,
+                gmxMultiLevel,
+                gmxMultiCost,
+                fortuniumLuckLevel,
+                fortuniumLuckCost,
+                clickerLuckLevel,
+                clickerLuckCost,
+                boosters: [...boosters],
+                shopBoosters: [...shopBoosters],
+                activeShapes: [...activeShapes.map(s => ({...s}))],
+                discoveredRanks: Array.from(discoveredRanks),
+                discoveredVariantSecrets: Array.from(discoveredVariantSecrets),
+                destroyCount,
+                destroyCost,
+                destroyLuckMultiplier,
+                destroyCurrencyMultiplier
+            };
+            
+            // Save or update in dimensions array
+            const existingIndex = dimensions.findIndex(d => d.dimensionNumber === currentDimension);
+            if (existingIndex !== -1) {
+                dimensions[existingIndex] = dimensionState;
+            } else {
+                dimensions.push(dimensionState);
+            }
+        }
+        
+        function loadDimension(dimensionNum) {
+            const dimensionState = dimensions.find(d => d.dimensionNumber === dimensionNum);
+            if (!dimensionState) {
+                addToTerminal(`Dimension ${dimensionNum} not found!`, true);
+                return false;
+            }
+            
+            // Save current dimension first
+            saveCurrentDimension();
+            
+            // Load the new dimension
+            currency = dimensionState.currency || 0;
+            totalUpgrades = dimensionState.totalUpgrades || 0;
+            upgradeCost = dimensionState.upgradeCost || 50;
+            highestBaseRoll = dimensionState.highestBaseRoll || 0;
+            highestFinalRoll = dimensionState.highestFinalRoll || { 
+                value: 0, baseValue: 0, rank: 'None yet', variants: [], isSecret: false 
+            };
+            maxInventory = dimensionState.maxInventory || 10;
+            inventory = dimensionState.inventory || [];
+            rollIndex = dimensionState.rollIndex || 1;
+            acceptedRolls = new Set(dimensionState.acceptedRolls || []);
+            pendingRolls = dimensionState.pendingRolls || [];
+            bulkRollLevel = dimensionState.bulkRollLevel || 0;
+            bulkRollCost = dimensionState.bulkRollCost || 50000;
+            
+            geometrix = dimensionState.geometrix || 0;
+            shapesUnlocked = dimensionState.shapesUnlocked || false;
+            shapeLuckLevel = dimensionState.shapeLuckLevel || 0;
+            shapeLuckCost = dimensionState.shapeLuckCost || 5;
+            luckMultiLevel = dimensionState.luckMultiLevel || 0;
+            luckMultiCost = dimensionState.luckMultiCost || 100;
+            bulkShapeLevel = dimensionState.bulkShapeLevel || 0;
+            bulkShapeCost = dimensionState.bulkShapeCost || 50;
+            
+            clickerUnlocked = dimensionState.clickerUnlocked || false;
+            fortunium = dimensionState.fortunium || 0;
+            fortuniumLuck = dimensionState.fortuniumLuck || 0;
+            gmxMultiLevel = dimensionState.gmxMultiLevel || 0;
+            gmxMultiCost = dimensionState.gmxMultiCost || 75;
+            fortuniumLuckLevel = dimensionState.fortuniumLuckLevel || 0;
+            fortuniumLuckCost = dimensionState.fortuniumLuckCost || 125;
+            clickerLuckLevel = dimensionState.clickerLuckLevel || 0;
+            clickerLuckCost = dimensionState.clickerLuckCost || 1000;
+            
+            boosters = dimensionState.boosters || [];
+            shopBoosters = dimensionState.shopBoosters || [];
+            activeShapes = dimensionState.activeShapes || [];
+            
+            discoveredRanks = new Set(dimensionState.discoveredRanks || []);
+            discoveredVariantSecrets = new Set(dimensionState.discoveredVariantSecrets || []);
+            
+            // Update current dimension
+            currentDimension = dimensionNum;
+            
+            addToTerminal(`Switched to Dimension ${dimensionNum}!`, true, 'rank-1000000-100000000');
+            updateCalculatedStats();
+            refreshAllUI();
+            saveGame();
+            
+            return true;
+        }
+        
+        function initiateDestroy() {
+            if (currency < destroyCost) {
+                addToTerminal(`Not enough currency to Destroy! Need ${formatNumber(destroyCost)}`, true);
+                return;
+            }
+            
+            if (!confirm(`⚠️ DESTROY WARNING ⚠️\n\nThis will reset ALL progress (except ranks) for permanent multipliers!\n\nYou will lose all currency, upgrades, inventory, and progress.\n\nGain: +${DESTROY_LUCK_MULTI_PER_DESTROY}x Luck Multiplier, +${DESTROY_CURRENCY_MULTI_PER_DESTROY}x Currency Gain\n\nCost: ${formatNumber(destroyCost)} currency\n\nAre you SURE?`)) {
+                return;
+            }
+            
+            // Save current dimension state
+            saveCurrentDimension();
+            
+            // Increment destroy count and update multipliers
+            destroyCount++;
+            destroyLuckMultiplier += DESTROY_LUCK_MULTI_PER_DESTROY;
+            destroyCurrencyMultiplier += DESTROY_CURRENCY_MULTI_PER_DESTROY;
+            
+            // Update dimension number
+            currentDimension = destroyCount + 1;
+            
+            // Reset all progress (except discovered ranks and variant secrets)
+            currency = 0;
+            totalUpgrades = 0;
+            upgradeCost = 50;
+            highestBaseRoll = 0;
+            highestFinalRoll = { 
+                value: 0, baseValue: 0, rank: 'None yet', variants: [], isSecret: false 
+            };
+            maxInventory = 10;
+            inventory = [];
+            rollIndex = 1;
+            acceptedRolls = new Set();
+            pendingRolls = [];
+            bulkRollLevel = 0;
+            bulkRollCost = 50000;
+            
+            geometrix = 0;
+            shapesUnlocked = false;
+            shapeLuckLevel = 0;
+            shapeLuckCost = 5;
+            luckMultiLevel = 0;
+            luckMultiCost = 100;
+            bulkShapeLevel = 0;
+            bulkShapeCost = 50;
+            
+            clickerUnlocked = false;
+            fortunium = 0;
+            fortuniumLuck = 0;
+            gmxMultiLevel = 0;
+            gmxMultiCost = 75;
+            fortuniumLuckLevel = 0;
+            fortuniumLuckCost = 125;
+            clickerLuckLevel = 0;
+            clickerLuckCost = 1000;
+            
+            boosters = [];
+            shopBoosters = [];
+            activeShapes = [];
+            
+            // Reset events
+            if (currentEvent && currentEvent.timeoutId) {
+                clearTimeout(currentEvent.timeoutId);
+            }
+            currentEvent = null;
+            eventEndTime = 0;
+            
+            // Update destroy cost
+            destroyCost *= DESTROY_COST_MULTIPLIER;
+            
+            addToTerminal(`🔥 DIMENSION ${currentDimension} ACHIEVED! 🔥\n+${DESTROY_LUCK_MULTI_PER_DESTROY}x Luck Multiplier (Total: ${destroyLuckMultiplier.toFixed(1)}x)\n+${DESTROY_CURRENCY_MULTI_PER_DESTROY}x Currency Gain (Total: ${destroyCurrencyMultiplier.toFixed(1)}x)`, true, 'rank-1000000000-10000000000');
+            
+            updateCalculatedStats();
+            refreshAllUI();
+            saveGame();
+        }
+        
+        function switchToPreviousDimension() {
+            if (currentDimension <= 1) {
+                addToTerminal('Already in Dimension 1!', true);
+                return;
+            }
+            
+            const prevDimension = currentDimension - 1;
+            if (confirm(`Switch to Dimension ${prevDimension}?\n\nYou'll lose current progress in Dimension ${currentDimension} unless you save it first with another Destroy.`)) {
+                loadDimension(prevDimension);
+            }
+        }
+        
+        function updateDimensionList() {
+            const dimensionList = document.getElementById('dimensionList');
+            if (!dimensionList) return;
+            
+            let html = '';
+            
+            // Always show Dimension 1
+            html += `<div class="dimension-item ${currentDimension === 1 ? 'current' : ''}">Dimension 1: 1.00x Luck, 1.00x Currency</div>`;
+            
+            // Show saved dimensions
+            dimensions.forEach(dim => {
+                if (dim.dimensionNumber > 1) {
+                    const luckMulti = 1 + ((dim.dimensionNumber - 1) * DESTROY_LUCK_MULTI_PER_DESTROY);
+                    const currencyMulti = 1 + ((dim.dimensionNumber - 1) * DESTROY_CURRENCY_MULTI_PER_DESTROY);
+                    html += `<div class="dimension-item ${currentDimension === dim.dimensionNumber ? 'current' : ''}">
+                        Dimension ${dim.dimensionNumber}: ${luckMulti.toFixed(2)}x Luck, ${currencyMulti.toFixed(2)}x Currency
+                    </div>`;
+                }
+            });
+            
+            // Show current dimension if not saved yet
+            if (currentDimension > 1 && !dimensions.some(d => d.dimensionNumber === currentDimension)) {
+                const luckMulti = 1 + ((currentDimension - 1) * DESTROY_LUCK_MULTI_PER_DESTROY);
+                const currencyMulti = 1 + ((currentDimension - 1) * DESTROY_CURRENCY_MULTI_PER_DESTROY);
+                html += `<div class="dimension-item current">
+                    Dimension ${currentDimension}: ${luckMulti.toFixed(2)}x Luck, ${currencyMulti.toFixed(2)}x Currency (Current)
+                </div>`;
+            }
+            
+            dimensionList.innerHTML = html;
+            
+            // Update current dimension stats display
+            const currentDimensionStats = document.getElementById('currentDimensionStats');
+            if (currentDimensionStats) {
+                const luckMulti = 1 + ((currentDimension - 1) * DESTROY_LUCK_MULTI_PER_DESTROY);
+                const currencyMulti = 1 + ((currentDimension - 1) * DESTROY_CURRENCY_MULTI_PER_DESTROY);
+                currentDimensionStats.textContent = `Dimension ${currentDimension}: ${luckMulti.toFixed(2)}x Luck, ${currencyMulti.toFixed(2)}x Currency`;
+            }
         }
 
         const LZString = {
