@@ -1427,6 +1427,7 @@
             { name: "cheese: cheddar", chance: 1/1.5e7, rarity: 1.5e7 },
             { name: "QHAR ?!?", chance: 1/2.5e7, rarity: 2.5e7 },
             { name: "!! EUPHORIA !!", chance: 1/56789000, rarity: 56789000 },
+            { name: "!!! S E R O T O N I N !!!", chance: 1/94.34e9, rarity: 94.34e9 },
             { name: "CORRUPTED", chance: 1/648236826.394, rarity: 648236826.394, eventOnly: "Hellish" },
             { name: "Chargoggagoggmanchauggauggagoggchaubunagungamaugg", chance: 1/77777777.77, rarity: 77777777.77 },
             { name: "⛧Satanic⛧", chance: 1/1e9, rarity: 1e9 },
@@ -1478,6 +1479,24 @@
         SECRET_RANKS_CHANCES.sort((a, b) => a.chance - b.chance); 
 
         const EUPHORIA_SYMBOLS = ['%', '@', '#', '^', '$', '*', '&', '>', '<', '?'];
+        const SEROTONIN_SYMBOLS = ['😂', '🤪', '💥', '🌈', '✨', '🎉', '🔥', '⚡', '🎪', '🌪️', '🎯', '🚀', '💫', '🎭', '🎸'];
+        
+        // --- PERFECT BASE RNG SECRETS ---
+        const PERFECT_BASE_RNG_SECRETS = [
+            { baseRNG: 1, name: "Unity" },
+            { baseRNG: 10, name: "Decimal" },
+            { baseRNG: 42, name: "Meaning" },
+            { baseRNG: 69, name: "Nice" },
+            { baseRNG: 100, name: "Centum" },
+            { baseRNG: 420, name: "Herbal" },
+            { baseRNG: 1234, name: "Numerical" },
+            { baseRNG: 6969, name: "Double Nice" },
+            { baseRNG: 9999, name: "Niner" },
+            { baseRNG: 10000, name: "Myria" },
+            { baseRNG: 123456, name: "Sequential" },
+            { baseRNG: 1000000, name: "Million" },
+            { baseRNG: 3.141592653589793, name: "π" }
+        ];
         const TOTAL_RANKS = 102;
         const TOTAL_VARIANT_SECRETS = 4; 
         
@@ -1607,6 +1626,7 @@
 
         // --- EUPHORIA EFFECT ---
         let activeEuphoriaIntervals = {};
+        let activeSerotoninIntervals = {};
 
         // --- Bewilderment animation intervals ---
         let activeBewildermentIntervals = {};
@@ -2457,9 +2477,34 @@
                 
                 // CHECK FOR VARIANT SECRET HERE
                 let variantSecretResult = null;
+                // Check for perfect base RNG secrets
+                let perfectBaseSecret = null;
+                for (const secret of PERFECT_BASE_RNG_SECRETS) {
+                    if (Math.abs(baseValue - secret.baseRNG) < 0.0001) {
+                        perfectBaseSecret = {
+                            name: secret.name,
+                            chance: 1,
+                            rarity: 1,
+                            isPerfectBase: true
+                        };
+                        break;
+                    }
+                }
+                
                 if (variants.length > 0) {
                     const rankInfoTemp = getRankInfo(baseValue);
                     variantSecretResult = getVariantSecret(rankInfoTemp.name, variants);
+                    
+                    // Check for secret rank + variant combinations
+                    if (!variantSecretResult && perfectBaseSecret) {
+                        // Combine variant with perfect base secret
+                        const variantNames = variants.map(v => v.name).join('+');
+                        variantSecretResult = {
+                            name: `${perfectBaseSecret.name}/${variantNames}`,
+                            rarity: perfectBaseSecret.rarity,
+                            isPerfectBase: true
+                        };
+                    }
                 }
                 
                 if (shouldCheck7GrandDad) {
@@ -2713,6 +2758,9 @@
                 
                 if (displayName === "!! EUPHORIA !!") {
                     initEuphoriaAnimation(`roll-${currentIndex}`, "!! EUPHORIA !!");
+                }
+                if (displayName === "!!! S E R O T O N I N !!!") {
+                    initSerotoninAnimation(`roll-${currentIndex}`, "!!! S E R O T O N I N !!!");
                 }
                 
                 if (isComplex) {
@@ -3510,10 +3558,10 @@
             inventory.forEach((item, idx) => {
                 const elementId = `inv-item-${idx}`;
                 const element = document.getElementById(elementId);
-                if (element && (item.rank === "!! EUPHORIA !!" || item.rank === "?!? bewilderment ?!?" || item.rank.includes("Complex"))) {
+                if (element && (item.rank === "!! EUPHORIA !!" || item.rank === "!!! S E R O T O N I N !!!" || item.rank === "?!? bewilderment ?!?" || item.rank.includes("Complex"))) {
                     if (!activeAnimationElements.has(elementId)) {
                         activeAnimationElements.add(elementId);
-                        if (item.rank === "!! EUPHORIA !!") {
+                        if (item.rank === "!! EUPHORIA !!" || item.rank === "!!! S E R O T O N I N !!!") {
                             setTimeout(() => initEuphoriaAnimation(elementId, "!! EUPHORIA !!"), 10);
                         }
                         if (item.rank === "?!? bewilderment ?!?") {
@@ -3907,7 +3955,7 @@
             
             inventory.forEach((item, idx) => {
                 const elementId = `inv-item-${idx}`;
-                if (item.rank === "!! EUPHORIA !!" && !activeEuphoriaIntervals[elementId]) {
+                if (item.rank === "!! EUPHORIA !!" || item.rank === "!!! S E R O T O N I N !!!" && !activeEuphoriaIntervals[elementId]) {
                     initEuphoriaAnimation(elementId, "!! EUPHORIA !!");
                 }
                 if (item.rank === "?!? bewilderment ?!?" && !activeBewildermentIntervals[elementId]) {
@@ -4048,7 +4096,7 @@
                     tryAddToInventory(item.value, item.rank, item.index, rollElement); 
                 };
 
-                if (item.rank === "!! EUPHORIA !!") {
+                if (item.rank === "!! EUPHORIA !!" || item.rank === "!!! S E R O T O N I N !!!") {
                     setTimeout(() => initEuphoriaAnimation(`roll-${item.index}`, "!! EUPHORIA !!"), 10);
                 }
                 if (item.rank === "?!? bewilderment ?!?") {
@@ -5097,6 +5145,53 @@
             }, 100);
             
             activeEuphoriaIntervals[elementId] = intervalId;
+            activeAnimationElements.add(elementId);
+        }
+
+        function initSerotoninAnimation(elementId, rankName) {
+            if (!elementId || !document.getElementById(elementId)) return;
+            
+            if (activeSerotoninIntervals[elementId]) {
+                clearInterval(activeSerotoninIntervals[elementId]);
+            }
+            
+            const currentElement = document.getElementById(elementId);
+            const originalHtml = currentElement.innerHTML;
+            
+            const intervalId = setInterval(() => {
+                if (!document.getElementById(elementId)) {
+                    clearInterval(intervalId);
+                    delete activeSerotoninIntervals[elementId];
+                    return;
+                }
+                
+                const prefix = rankName + ': <span style="opacity: 0.4; margin: 0 2px;">[';
+                const suffix = ']</span>';
+                const chars = originalHtml.substring(prefix.length, originalHtml.length - suffix.length);
+                
+                if (chars.length === 0) return;
+                
+                const newChars = chars.split('');
+                const numSymbols = Math.floor(Math.random() * 3) + 2;
+                
+                for (let i = 0; i < numSymbols; i++) {
+                    const idx = Math.floor(Math.random() * newChars.length);
+                    const sym = SEROTONIN_SYMBOLS[Math.floor(Math.random() * SEROTONIN_SYMBOLS.length)];
+                    newChars[idx] = `<span style="opacity: 1; display: inline-block; transform: rotate(${Math.random() * 360}deg) scale(${0.8 + Math.random() * 0.6}); animation: spin 0.3s ease-in-out;">${sym}</span>`;
+                }
+                
+                currentElement.innerHTML = prefix + newChars.join('') + suffix;
+                
+                setTimeout(() => {
+                    const stillExists = document.getElementById(elementId);
+                    if (stillExists && activeSerotoninIntervals[elementId]) {
+                        stillExists.innerHTML = originalHtml;
+                    }
+                }, 12);
+                
+            }, 15);
+            
+            activeSerotoninIntervals[elementId] = intervalId;
             activeAnimationElements.add(elementId);
         }
 
