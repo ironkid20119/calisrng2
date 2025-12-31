@@ -1479,7 +1479,8 @@
             { min: 1e18, max: 1e21, name: "Impossible" },
             { min: 1e21, max: 1e24, name: "Astronomical" },
             { min: 1e24, max: 1e30, name: "Colossal" }, 
-            { min: 1e30, max: Infinity, name: "Improbable" }
+            { min: 1e30, max: 1.79e308, name: "Improbable" },
+            { min: 1.79e308, max: Infinity, name: "Infinipossible" }
         ];
 
         // FIXED: Added Feimienation secret with serotonin animation
@@ -1553,7 +1554,7 @@
             { name: "Feimienation", chance: 1/666999000100500125000250125950500690420000, rarity: 666999000100500125000250125950500690420000 }
         ];
 
-        // NEW: Variant Secrets (Only Sound remains)
+        // Variant Secrets
         const VARIANT_SECRETS = [
             {
                 name: "Sound",
@@ -1589,7 +1590,7 @@
             { baseRNG: 1000000, name: "Million", rarity: 1000000000 },
             { baseRNG: 3.141592653589793, name: "π", rarity: 314159265 }
         ];
-        const TOTAL_RANKS = 103; // Updated for Feimienation
+        const TOTAL_RANKS = 104;
         const TOTAL_VARIANT_SECRETS = 4; 
         
         const UNLOCK_SHAPES_COST = 5000000;
