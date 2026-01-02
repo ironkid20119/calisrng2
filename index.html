@@ -20,7 +20,34 @@
         h1 {
             text-align: center;
             color: #ffffff;
+            cursor: pointer;
+            user-select: none;
         }
+        
+        .title-letter {
+            cursor: pointer;
+            display: inline-block;
+            transition: all 0.2s;
+            padding: 0 2px;
+        }
+        
+        .title-letter:hover {
+            transform: translateY(-3px);
+            text-shadow: 0 0 10px #ff69b4;
+        }
+        
+        .title-letter.active-sequence {
+            color: #ff69b4;
+            font-weight: bold;
+            animation: pulse 0.5s;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+        
         .main-container {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -265,6 +292,10 @@
             border-radius: 5px;
             margin-bottom: 20px;
             display: none;
+        }
+        
+        .debug-panel.unlocked {
+            display: block !important;
         }
         
         .debug-warning {
@@ -860,6 +891,27 @@
             font-weight: bold;
         }
         
+        /* Dimension Selector Styles */
+        .dimension-selector-container {
+            margin: 10px 0;
+        }
+        
+        .dimension-select {
+            background-color: #4a148c;
+            color: #ffffff;
+            border: 1px solid #8B0000;
+            padding: 8px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            width: 200px;
+            font-size: 14px;
+        }
+        
+        .dimension-select option {
+            background-color: #2d0051;
+            color: #ffffff;
+        }
+        
         /* --- Feimienation Secret Style --- */
         .feimienation-wrapper {
             display: inline-block;
@@ -907,7 +959,23 @@
     </style>
 </head>
 <body class="cutscene-inactive">
-    <h1>calis RNG game</h1>
+    <!-- Modified title with clickable letters -->
+    <h1 id="game-title">
+        <span class="title-letter" data-letter="c">c</span>
+        <span class="title-letter" data-letter="a">a</span>
+        <span class="title-letter" data-letter="l">l</span>
+        <span class="title-letter" data-letter="i">i</span>
+        <span class="title-letter" data-letter="s">s</span>
+        <span>&nbsp;</span>
+        <span class="title-letter" data-letter="R">R</span>
+        <span class="title-letter" data-letter="N">N</span>
+        <span class="title-letter" data-letter="G">G</span>
+        <span>&nbsp;</span>
+        <span class="title-letter" data-letter="g">g</span>
+        <span class="title-letter" data-letter="a">a</span>
+        <span class="title-letter" data-letter="m">m</span>
+        <span class="title-letter" data-letter="e">e</span>
+    </h1>
     
     <div class="stats">
         <div class="stat-item">Currency: <span id="currency">0.00</span></div>
@@ -965,9 +1033,16 @@
             <button id="destroyBtn" onclick="initiateDestroy()" style="background-color: #8B0000; border-color: #FF0000;">
                 DESTROY (Cost: <span id="destroyCostBtn">100,000,000.00</span>)
             </button>
-            <button onclick="switchToPreviousDimension()" style="background-color: #4a148c; border-color: #800080;">
-                Switch to Previous Dimension
-            </button>
+            
+            <!-- NEW: Dimension Selector -->
+            <div class="dimension-selector-container">
+                <select id="dimensionSelect" class="dimension-select" onchange="switchToSelectedDimension()">
+                    <option value="1">Dimension 1</option>
+                </select>
+                <button onclick="switchToSelectedDimension()" style="background-color: #4a148c; border-color: #800080; margin-left: 10px;">
+                    Switch Dimension
+                </button>
+            </div>
         </div>
         
         <div class="section-header" style="color: #800080; margin-top: 15px;">Dimension List</div>
@@ -1009,18 +1084,14 @@
         </div>
     </div>
 
+    <!-- Debug Panel - Will be unlocked by clicking "c r i n g e" sequence -->
     <div class="debug-panel" id="debug-panel">
         <div class="debug-warning">
-            <h3>⚠️ DEBUG PANEL WARNING ⚠️</h3>
-            <p>Are you SURE you wanna open this? If so, type the secret password into the text box below and confirm. Type 'no' to close this. BE AWARE PLAYING AROUND WITH THIS CAN MESS UP YOUR SAVE</p>
-            <input type="password" id="debug-password-input" class="debug-password-input" placeholder="Enter debug password">
-            <div style="display: flex; gap: 10px; margin-top: 10px;">
-                <button onclick="checkDebugPassword()" class="debug-button confirm">Confirm Password</button>
-                <button onclick="closeDebugPanel()" class="debug-button">Type 'no' to close</button>
-            </div>
+            <h3>⚠️ DEBUG PANEL ⚠️</h3>
+            <p>Debug panel unlocked! Use with caution.</p>
         </div>
         
-        <div id="debug-commands" style="display: none;">
+        <div id="debug-commands">
             <div class="section-header" style="color: #ff0000;">Debug Commands</div>
             <div class="debug-buttons">
                 <button onclick="resetEventsDebug()" class="debug-button">Event Resetter (fixes bugged events)</button>
@@ -1029,6 +1100,7 @@
                 <button onclick="nukeShopData()" class="debug-button danger">Nuke Shop Data</button>
                 <button onclick="fixSaveFile()" class="debug-button">Fix Save File</button>
                 <button onclick="inspectSaveFile()" class="debug-button">Inspect Save File</button>
+                <button onclick="toggleRuin()" class="debug-button danger">Toggle Ruin Mode</button>
                 <button onclick="closeDebugPanel()" class="debug-button">Close Debug Panel</button>
             </div>
             <div id="force-roll-ui" style="display: none; margin-top: 15px; padding: 15px; background-color: #3a0d6e; border: 1px solid #ff0000; border-radius: 5px;">
@@ -1095,7 +1167,6 @@
         <div class="controls" style="grid-template-columns: 1fr 1fr; margin-bottom: 10px;">
             <button onclick="exportSave()">Export Save</button>
             <button onclick="importSave()">Import Save</button>
-            <button onclick="openDebugPanel()" style="background-color: #8b0000; border-color: #ff0000;">Debug Panel</button>
         </div>
         <div id="hardcore-warning" style="color: #ff0000; display: none; margin-top: 10px; padding: 10px; background-color: #3a0d6e; border: 1px solid #ff0000;">
             <strong>⚠️ Hardcore Mode Active:</strong> Bulk=1, Luck=1, Variant=1, Secret=1, Events disabled
@@ -1136,8 +1207,8 @@
             <div id="inventory">
                 <div class="section-header">Inventory</div>
                 <div class="controls" style="grid-template-columns: 1fr 1fr; margin-bottom: 10px;">
-                    <button onclick="sortInventory('leastRarest')">Least Rarest</button>
-                    <button onclick="sortInventory('mostRarest')">Most Rarest</button>
+                    <button onclick="sortInventory('baseRNGAsc')">Base RNG ↑</button>
+                    <button onclick="sortInventory('baseRNGDesc')">Base RNG ↓</button>
                 </div>
                 <div id="inventoryContent">Empty</div>
             </div>
@@ -1282,6 +1353,10 @@
             }
         }
 
+        function toggleRuin() {
+            calisrng2.ruin = !calisrng2.ruin;
+        }
+
         Object.defineProperty(window.calisrng2, 'ruin', {
             set: function(value) {
                 this._ruin = value;
@@ -1295,6 +1370,96 @@
                 return this._ruin;
             }
         });
+
+        // --- DEBUG PANEL UNLOCK SEQUENCE ---
+        const DEBUG_SEQUENCE = ['c', 'r', 'i', 'n', 'g', 'e'];
+        let currentSequence = [];
+        let debugUnlocked = false;
+        
+        function initTitleClickSequence() {
+            const titleLetters = document.querySelectorAll('.title-letter');
+            titleLetters.forEach(letter => {
+                letter.addEventListener('click', function() {
+                    if (debugUnlocked) return;
+                    
+                    const clickedLetter = this.getAttribute('data-letter').toLowerCase();
+                    
+                    // Reset sequence if wrong letter
+                    if (currentSequence.length > 0 && 
+                        clickedLetter !== DEBUG_SEQUENCE[currentSequence.length]) {
+                        resetSequence();
+                    }
+                    
+                    // Check if this is the next letter in sequence
+                    if (clickedLetter === DEBUG_SEQUENCE[currentSequence.length]) {
+                        currentSequence.push(clickedLetter);
+                        this.classList.add('active-sequence');
+                        
+                        // Check if sequence is complete
+                        if (currentSequence.length === DEBUG_SEQUENCE.length) {
+                            unlockDebugPanel();
+                        }
+                        
+                        // Remove active class after animation
+                        setTimeout(() => {
+                            this.classList.remove('active-sequence');
+                        }, 500);
+                    }
+                });
+            });
+        }
+        
+        function resetSequence() {
+            currentSequence = [];
+            const titleLetters = document.querySelectorAll('.title-letter');
+            titleLetters.forEach(letter => {
+                letter.classList.remove('active-sequence');
+            });
+        }
+        
+        function unlockDebugPanel() {
+            debugUnlocked = true;
+            const debugPanel = document.getElementById('debug-panel');
+            debugPanel.classList.add('unlocked');
+            debugPanel.style.display = 'block';
+            
+            // Truncated password
+            const DEBUG_PASSWORD = "c";
+            
+            // Auto-fill and confirm
+            document.getElementById('debug-password-input').value = DEBUG_PASSWORD;
+            checkDebugPassword();
+            
+            addToTerminal('⚠️ DEBUG PANEL UNLOCKED! Clicked sequence: c r i n g e', true, 'rank-1000000-100000000');
+            
+            // Save debug unlock state
+            localStorage.setItem('calisRNG_debugUnlocked', 'true');
+        }
+        
+        function checkDebugPassword() {
+            const input = document.getElementById('debug-password-input').value;
+            const DEBUG_PASSWORD = "c"; // Truncated password
+            
+            if (input === DEBUG_PASSWORD || debugUnlocked) {
+                document.getElementById('debug-commands').style.display = 'block';
+                if (!debugUnlocked) {
+                    addToTerminal('Debug panel unlocked! Use with caution!', true, 'rank-1000000-100000000');
+                }
+            } else if (input.toLowerCase() === 'no') {
+                closeDebugPanel();
+            } else {
+                alert('Incorrect password! Type "no" to close the debug panel.');
+            }
+        }
+        
+        function closeDebugPanel() {
+            if (!debugUnlocked) {
+                document.getElementById('debug-panel').style.display = 'none';
+                document.getElementById('debug-password-input').value = '';
+                document.getElementById('debug-commands').style.display = 'none';
+                addToTerminal('Debug panel closed.', true);
+            }
+        }
 
         // --- CONSTANTS ---
         const POWER_EXPONENT = -2.4;
@@ -1634,7 +1799,8 @@
         const BOOSTER_SPECIAL_MULTIPLIER_CHANCE = 1/5000; // *
         const BOOSTER_SPECIAL_POWER_CHANCE = 1/2e6; // ^
         
-        const DEBUG_PASSWORD = "gd8!dgi0()";
+        // Truncated password
+        const DEBUG_PASSWORD = "c";
 
         // NEW: Destroy System Constants
         const DESTROY_BASE_COST = 1e8;
@@ -1808,6 +1974,144 @@
             return str.replace(/'/g, "\\'");
         }
 
+        // --- MODIFIED INVENTORY SORT FUNCTION ---
+        function sortInventory(type) {
+            if (type === 'baseRNGAsc') {
+                inventory.sort((a, b) => calculateBaseRNGValue(a) - calculateBaseRNGValue(b));
+            } else if (type === 'baseRNGDesc') {
+                inventory.sort((a, b) => calculateBaseRNGValue(b) - calculateBaseRNGValue(a));
+            }
+            updateInventoryDisplay();
+            preserveAnimations();
+            addToTerminal(`Inventory sorted by ${type === 'baseRNGDesc' ? 'base RNG (descending)' : 'base RNG (ascending)'}.`, true);
+            saveGame();
+        }
+        
+        function calculateBaseRNGValue(item) {
+            // Start with base value
+            let value = item.baseValue || item.value;
+            
+            // Apply variant multipliers
+            if (item.variants && item.variants.length > 0) {
+                item.variants.forEach(variant => {
+                    const variantData = VARIANTS.find(v => v.name === variant.name);
+                    if (variantData && variantData.multiplier) {
+                        if (variantData.isNegative) {
+                            value *= -1;
+                        } else if (variantData.isDull) {
+                            if (value !== 0) {
+                                value = Math.pow(value, -1);
+                            }
+                        } else {
+                            value *= variantData.multiplier;
+                        }
+                    }
+                });
+            }
+            
+            return value;
+        }
+
+        // --- MODIFIED DESTROY SYSTEM FUNCTIONS ---
+        function updateDimensionSelector() {
+            const dimensionSelect = document.getElementById('dimensionSelect');
+            if (!dimensionSelect) return;
+            
+            // Clear current options
+            dimensionSelect.innerHTML = '';
+            
+            // Add Dimension 1
+            const option1 = document.createElement('option');
+            option1.value = '1';
+            option1.textContent = 'Dimension 1';
+            dimensionSelect.appendChild(option1);
+            
+            // Add other dimensions from dimensions array
+            dimensions.forEach(dim => {
+                if (dim.dimensionNumber > 1) {
+                    const option = document.createElement('option');
+                    option.value = dim.dimensionNumber.toString();
+                    option.textContent = `Dimension ${dim.dimensionNumber}`;
+                    dimensionSelect.appendChild(option);
+                }
+            });
+            
+            // Add current dimension if not in list
+            if (currentDimension > 1 && !dimensions.some(d => d.dimensionNumber === currentDimension)) {
+                const option = document.createElement('option');
+                option.value = currentDimension.toString();
+                option.textContent = `Dimension ${currentDimension} (Current)`;
+                dimensionSelect.appendChild(option);
+            }
+            
+            // Set current selection
+            dimensionSelect.value = currentDimension.toString();
+        }
+        
+        function switchToSelectedDimension() {
+            const dimensionSelect = document.getElementById('dimensionSelect');
+            const selectedDimension = parseInt(dimensionSelect.value);
+            
+            if (selectedDimension === currentDimension) {
+                addToTerminal(`Already in Dimension ${currentDimension}!`, true);
+                return;
+            }
+            
+            if (selectedDimension < currentDimension) {
+                // Switching to lower dimension
+                if (confirm(`Switch to Dimension ${selectedDimension}?\n\nYou'll lose current progress in Dimension ${currentDimension} unless you save it first with another Destroy.`)) {
+                    loadDimension(selectedDimension);
+                }
+            } else {
+                // Switching to higher dimension
+                addToTerminal(`Cannot switch to Dimension ${selectedDimension} - must destroy to reach higher dimensions!`, true);
+            }
+        }
+        
+        // Update the updateDimensionList function
+        function updateDimensionList() {
+            const dimensionList = document.getElementById('dimensionList');
+            if (!dimensionList) return;
+            
+            let html = '';
+            
+            // Always show Dimension 1
+            html += `<div class="dimension-item ${currentDimension === 1 ? 'current' : ''}">Dimension 1: 1.00x Luck, 1.00x Currency</div>`;
+            
+            // Show saved dimensions
+            dimensions.forEach(dim => {
+                if (dim.dimensionNumber > 1) {
+                    const luckMulti = 1 + ((dim.dimensionNumber - 1) * DESTROY_LUCK_MULTI_PER_DESTROY);
+                    const currencyMulti = 1 + ((dim.dimensionNumber - 1) * DESTROY_CURRENCY_MULTI_PER_DESTROY);
+                    html += `<div class="dimension-item ${currentDimension === dim.dimensionNumber ? 'current' : ''}">
+                        Dimension ${dim.dimensionNumber}: ${luckMulti.toFixed(2)}x Luck, ${currencyMulti.toFixed(2)}x Currency
+                    </div>`;
+                }
+            });
+            
+            // Show current dimension if not saved yet
+            if (currentDimension > 1 && !dimensions.some(d => d.dimensionNumber === currentDimension)) {
+                const luckMulti = 1 + ((currentDimension - 1) * DESTROY_LUCK_MULTI_PER_DESTROY);
+                const currencyMulti = 1 + ((currentDimension - 1) * DESTROY_CURRENCY_MULTI_PER_DESTROY);
+                html += `<div class="dimension-item current">
+                    Dimension ${currentDimension}: ${luckMulti.toFixed(2)}x Luck, ${currencyMulti.toFixed(2)}x Currency (Current)
+                </div>`;
+            }
+            
+            dimensionList.innerHTML = html;
+            
+            // Update current dimension stats display
+            const currentDimensionStats = document.getElementById('currentDimensionStats');
+            if (currentDimensionStats) {
+                const luckMulti = 1 + ((currentDimension - 1) * DESTROY_LUCK_MULTI_PER_DESTROY);
+                const currencyMulti = 1 + ((currentDimension - 1) * DESTROY_CURRENCY_MULTI_PER_DESTROY);
+                currentDimensionStats.textContent = `Dimension ${currentDimension}: ${luckMulti.toFixed(2)}x Luck, ${currencyMulti.toFixed(2)}x Currency`;
+            }
+            
+            // Update dimension selector
+            updateDimensionSelector();
+        }
+
         // --- FIXED SHOP FUNCTIONS ---
         
         function generateShapeHTML(shape, color, luck, variant) {
@@ -1933,7 +2237,6 @@
             }
             
             saveGame();
-            closeDebugPanel();
         }
         
         function fixSaveFile() {
@@ -2155,8 +2458,6 @@
                 console.error('Error fixing save:', e);
                 addToTerminal("❌ Failed to fix save file. Error: " + e.message, true, 'rank-1000000-100000000');
             }
-            
-            closeDebugPanel();
         }
         
         function inspectSaveFile() {
@@ -2358,105 +2659,10 @@
                 addToTerminal(`❌ ERROR PARSING SAVE FILE: ${e.message}`, true, 'rank-1000000-100000000');
                 addToTerminal("The save file appears to be corrupt.", true);
             }
-            
-            closeDebugPanel();
         }
 
         // --- EXISTING DEBUG FUNCTIONS ---
         
-        function openDebugPanel() {
-            document.getElementById('debug-panel').style.display = 'block';
-            document.getElementById('debug-password-input').value = '';
-            document.getElementById('debug-commands').style.display = 'none';
-        }
-
-        function closeDebugPanel() {
-            document.getElementById('debug-panel').style.display = 'none';
-            document.getElementById('debug-password-input').value = '';
-            document.getElementById('debug-commands').style.display = 'none';
-            addToTerminal('Debug panel closed.', true);
-        }
-
-        function checkDebugPassword() {
-            const input = document.getElementById('debug-password-input').value;
-            if (input === DEBUG_PASSWORD) {
-                document.getElementById('debug-commands').style.display = 'block';
-                addToTerminal('Debug panel unlocked! Use with caution!', true, 'rank-1000000-100000000');
-            } else if (input.toLowerCase() === 'no') {
-                closeDebugPanel();
-            } else {
-                alert('Incorrect password! Type "no" to close the debug panel.');
-            }
-        }
-
-        function resetEventsDebug() {
-            if (!confirm("This will reset all events. Are you sure?")) return;
-            
-            if (currentEvent && currentEvent.timeoutId) {
-                clearTimeout(currentEvent.timeoutId);
-            }
-            
-            currentEvent = null;
-            eventEndTime = 0;
-            eventCheckChance = 1;
-            
-            if (eventInterval) {
-                clearInterval(eventInterval);
-            }
-            
-            startEventLoop();
-            addToTerminal('Events have been reset. Event system restarted.', true, 'rank-1000-10000');
-            closeDebugPanel();
-        }
-
-        function resetSaveDebug() {
-            let confirmCount = 0;
-            const confirmMessages = [
-                "Are you REALLY sure? This will delete ALL your progress!",
-                "This is your second warning! Are you sure?",
-                "Third warning! This cannot be undone!",
-                "Fourth warning! You will lose everything!",
-                "FINAL WARNING! Type 'I am sure' to reset your save."
-            ];
-
-            function askConfirmation() {
-                if (confirmCount < 4) {
-                    if (confirm(confirmMessages[confirmCount])) {
-                        confirmCount++;
-                        askConfirmation();
-                    }
-                } else {
-                    const userInput = prompt(confirmMessages[4]);
-                    if (userInput === 'I am sure') {
-                        localStorage.removeItem('calisRNGGame');
-                        localStorage.removeItem('calisRNG_UI');
-                        
-                        if (autoRollInterval) clearInterval(autoRollInterval);
-                        if (eventInterval) clearInterval(eventInterval);
-                        if (shapeInterval) clearInterval(shapeInterval);
-                        if (currentEvent && currentEvent.timeoutId) clearTimeout(currentEvent.timeoutId);
-                        for (const id in activeEuphoriaIntervals) {
-                            clearInterval(activeEuphoriaIntervals[id]);
-                        }
-                        for (const id in activeBewildermentIntervals) {
-                            clearInterval(activeBewildermentIntervals[id]);
-                        }
-                        
-                        addToTerminal('Save completely reset! Reloading game...', true, 'rank-1000000000-10000000000');
-                        
-                        setTimeout(() => {
-                            location.reload();
-                        }, 1000);
-                    } else {
-                        alert('Save reset cancelled.');
-                        closeDebugPanel();
-                    }
-                }
-            }
-
-            askConfirmation();
-        }
-
         function toggleForceRollUI() {
             const ui = document.getElementById('force-roll-ui');
             if (ui) {
@@ -3264,7 +3470,10 @@
                 currentDimension,
                 dimensions,
                 destroyLuckMultiplier,
-                destroyCurrencyMultiplier
+                destroyCurrencyMultiplier,
+                
+                // NEW: Debug unlock state
+                debugUnlocked
             };
             localStorage.setItem('calisRNGGame', JSON.stringify(gameState));
             
@@ -3398,6 +3607,12 @@
                     dimensions = gameState.dimensions || [];
                     destroyLuckMultiplier = gameState.destroyLuckMultiplier || 1;
                     destroyCurrencyMultiplier = gameState.destroyCurrencyMultiplier || 1;
+
+                    // NEW: Load debug unlock state
+                    debugUnlocked = gameState.debugUnlocked || false;
+                    if (debugUnlocked) {
+                        unlockDebugPanel();
+                    }
 
                     updateCalculatedStats();
                     
@@ -3857,42 +4072,6 @@
                     }
                 }
             });
-        }
-
-        function calculateTotalRarity(item) {
-            let totalRarity = 0;
-            
-            const rankName = item.rank.replace(" [HC]", "");
-            
-            const secretRank = SECRET_RANKS_CHANCES.find(r => r.name === rankName);
-            if (secretRank) {
-                totalRarity += secretRank.rarity || 1;
-            } else {
-                totalRarity += item.baseValue || item.value;
-            }
-            
-            if (item.variants && item.variants.length > 0) {
-                item.variants.forEach(variant => {
-                    const variantData = VARIANTS.find(v => v.name === variant.name);
-                    if (variantData) {
-                        totalRarity += 1 / variantData.chance;
-                    }
-                });
-            }
-            
-            return totalRarity;
-        }
-
-        function sortInventory(type) {
-            if (type === 'leastRarest') {
-                inventory.sort((a, b) => calculateTotalRarity(a) - calculateTotalRarity(b));
-            } else if (type === 'mostRarest') {
-                inventory.sort((a, b) => calculateTotalRarity(b) - calculateTotalRarity(a));
-            }
-            updateInventoryDisplay();
-            preserveAnimations();
-            addToTerminal(`Inventory sorted by ${type === 'mostRarest' ? 'most rarest (Total Rarity)' : 'least rarest (Total Rarity)'}.`, true);
-            saveGame();
         }
 
         function updateCalculatedStats() {
@@ -5923,57 +6102,72 @@
             refreshAllUI();
             saveGame();
         }
-        
-        function switchToPreviousDimension() {
-            if (currentDimension <= 1) {
-                addToTerminal('Already in Dimension 1!', true);
-                return;
+
+        function resetEventsDebug() {
+            if (!confirm("This will reset all events. Are you sure?")) return;
+            
+            if (currentEvent && currentEvent.timeoutId) {
+                clearTimeout(currentEvent.timeoutId);
             }
             
-            const prevDimension = currentDimension - 1;
-            if (confirm(`Switch to Dimension ${prevDimension}?\n\nYou'll lose current progress in Dimension ${currentDimension} unless you save it first with another Destroy.`)) {
-                loadDimension(prevDimension);
+            currentEvent = null;
+            eventEndTime = 0;
+            eventCheckChance = 1;
+            
+            if (eventInterval) {
+                clearInterval(eventInterval);
             }
+            
+            startEventLoop();
+            addToTerminal('Events have been reset. Event system restarted.', true, 'rank-1000-10000');
         }
-        
-        function updateDimensionList() {
-            const dimensionList = document.getElementById('dimensionList');
-            if (!dimensionList) return;
-            
-            let html = '';
-            
-            // Always show Dimension 1
-            html += `<div class="dimension-item ${currentDimension === 1 ? 'current' : ''}">Dimension 1: 1.00x Luck, 1.00x Currency</div>`;
-            
-            // Show saved dimensions
-            dimensions.forEach(dim => {
-                if (dim.dimensionNumber > 1) {
-                    const luckMulti = 1 + ((dim.dimensionNumber - 1) * DESTROY_LUCK_MULTI_PER_DESTROY);
-                    const currencyMulti = 1 + ((dim.dimensionNumber - 1) * DESTROY_CURRENCY_MULTI_PER_DESTROY);
-                    html += `<div class="dimension-item ${currentDimension === dim.dimensionNumber ? 'current' : ''}">
-                        Dimension ${dim.dimensionNumber}: ${luckMulti.toFixed(2)}x Luck, ${currencyMulti.toFixed(2)}x Currency
-                    </div>`;
+
+        function resetSaveDebug() {
+            let confirmCount = 0;
+            const confirmMessages = [
+                "Are you REALLY sure? This will delete ALL your progress!",
+                "This is your second warning! Are you sure?",
+                "Third warning! This cannot be undone!",
+                "Fourth warning! You will lose everything!",
+                "FINAL WARNING! Type 'I am sure' to reset your save."
+            ];
+
+            function askConfirmation() {
+                if (confirmCount < 4) {
+                    if (confirm(confirmMessages[confirmCount])) {
+                        confirmCount++;
+                        askConfirmation();
+                    }
+                } else {
+                    const userInput = prompt(confirmMessages[4]);
+                    if (userInput === 'I am sure') {
+                        localStorage.removeItem('calisRNGGame');
+                        localStorage.removeItem('calisRNG_UI');
+                        localStorage.removeItem('calisRNG_debugUnlocked');
+                        
+                        if (autoRollInterval) clearInterval(autoRollInterval);
+                        if (eventInterval) clearInterval(eventInterval);
+                        if (shapeInterval) clearInterval(shapeInterval);
+                        if (currentEvent && currentEvent.timeoutId) clearTimeout(currentEvent.timeoutId);
+                        for (const id in activeEuphoriaIntervals) {
+                            clearInterval(activeEuphoriaIntervals[id]);
+                        }
+                        for (const id in activeBewildermentIntervals) {
+                            clearInterval(activeBewildermentIntervals[id]);
+                        }
+                        
+                        addToTerminal('Save completely reset! Reloading game...', true, 'rank-1000000000-10000000000');
+                        
+                        setTimeout(() => {
+                            location.reload();
+                        }, 1000);
+                    } else {
+                        alert('Save reset cancelled.');
+                    }
                 }
-            });
-            
-            // Show current dimension if not saved yet
-            if (currentDimension > 1 && !dimensions.some(d => d.dimensionNumber === currentDimension)) {
-                const luckMulti = 1 + ((currentDimension - 1) * DESTROY_LUCK_MULTI_PER_DESTROY);
-                const currencyMulti = 1 + ((currentDimension - 1) * DESTROY_CURRENCY_MULTI_PER_DESTROY);
-                html += `<div class="dimension-item current">
-                    Dimension ${currentDimension}: ${luckMulti.toFixed(2)}x Luck, ${currencyMulti.toFixed(2)}x Currency (Current)
-                </div>`;
             }
-            
-            dimensionList.innerHTML = html;
-            
-            // Update current dimension stats display
-            const currentDimensionStats = document.getElementById('currentDimensionStats');
-            if (currentDimensionStats) {
-                const luckMulti = 1 + ((currentDimension - 1) * DESTROY_LUCK_MULTI_PER_DESTROY);
-                const currencyMulti = 1 + ((currentDimension - 1) * DESTROY_CURRENCY_MULTI_PER_DESTROY);
-                currentDimensionStats.textContent = `Dimension ${currentDimension}: ${luckMulti.toFixed(2)}x Luck, ${currencyMulti.toFixed(2)}x Currency`;
-            }
+
+            askConfirmation();
         }
 
         const LZString = {
@@ -6068,6 +6262,9 @@
         welcomeLine.textContent = 'Welcome to calis RNG game!';
         document.getElementById('terminal').appendChild(welcomeLine);
         addToTerminal('Click rolls to add them to your inventory!');
+        
+        // Initialize title click sequence
+        initTitleClickSequence();
         
         loadGame();
         loadUICustomization();
