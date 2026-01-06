@@ -1462,8 +1462,8 @@
         }
 
         // --- CONSTANTS ---
-        const POWER_EXPONENT = -2.4;
-        const AUTO_ROLL_DELAY_MS = 5;
+        const POWER_EXPONENT = -2;
+        const AUTO_ROLL_DELAY_MS = 17.5;
         const UPGRADE_COST_MULTIPLIER = 1.15;
         const LUCK_PER_UPGRADE = 2.5;
         const INVENTORY_PER_UPGRADE = 10;
@@ -1482,12 +1482,12 @@
         const SIZE_MULTIPLIER_PER_UPDATE = 1.02;
         const WHITE_FLASH_DURATION_MS = 1000; 
 
-        const EVENT_CHECK_INTERVAL_MS = 500; 
+        const EVENT_CHECK_INTERVAL_MS = 1750; 
 
         const EVENTS = [
             { 
                 name: "Error", 
-                chance: 1/40.4, 
+                chance: 1/10.1, 
                 duration: 15000,
                 description: "makes nil, Title Label Missing and unknown's rarity be easier by x4 (this event sucks bro whyd i add it)",
                 targets: ["nil", "Title Label Missing", "?!? unknown ?!?"],
@@ -1495,7 +1495,7 @@
             },
             { 
                 name: "Lol", 
-                chance: 1/69, 
+                chance: 1/12.5, 
                 duration: 20000,
                 description: "makes every meme related secret easier by 6.94x and boosts future event chances",
                 targets: ["r", "fish", "cheese", "c", "cheese : cheddar", "LEGACY In im table ?!?!?", "QHAR ?!?", "7 GRAND DAD"],
@@ -1504,7 +1504,7 @@
             },
             { 
                 name: "UNDEFINED", 
-                chance: 1/300, 
+                chance: 1/175, 
                 duration: 30000,
                 description: "makes ranks 'unknown,' 'title label missing' and 'absolute zero' be x5 times easier",
                 targets: ["?!? unknown ?!?", "Title Label Missing", ":[{(absolute zero)}]:"],
@@ -1512,15 +1512,15 @@
             },
             { 
                 name: "Modified", 
-                chance: 1/750, 
+                chance: 1/300, 
                 duration: 7500,
-                description: "makes every variant x2.5 times easier",
+                description: "makes every variant x5 times easier",
                 targets: [],
-                multiplier: 2.5
+                multiplier: 5
             },
             { 
                 name: "Self Insert", 
-                chance: 1/777, 
+                chance: 1/77, 
                 duration: 77777,
                 description: "makes cali^2 easier by x777,777.777",
                 targets: ["cali^2"],
@@ -1536,7 +1536,7 @@
             },
             {
                 name: "ULTRA",
-                chance: 1/10000,
+                chance: 1/1000,
                 duration: 3333,
                 description: "EVERY SECRET IS x100 EASIER FOR A FEW SECONDS.",
                 targets: ["ALL_SECRETS"],
@@ -1544,7 +1544,7 @@
             },
             {
             name: "Exclusivity",
-            chance: 1/725,
+            chance: 1/72.5,
             duration: 30000,
             description: "EVERY dev exclusive is rollable for 30s",
             targets: ["ALL_SECRETS"],
@@ -1552,7 +1552,7 @@
             },
             {
     name: "Impossibility",
-    chance: 1/500,
+    chance: 1/333.33,
     duration: 60000,
     description: "SUPER HARD secrets are super easier.",
     targets: ["cali^2", "Guardian", "one", "Obscure", "SUPERNOVA", "Omnipotence", "LEGACY In im table ?!?!?", "chezburger", "( N A M E L E S S )" ],
@@ -1560,7 +1560,7 @@
 },
             { 
                 name: "Hidden", 
-                chance: 1/1000, 
+                chance: 1/750, 
                 duration: 15000,
                 description: "makes EVERY secret X7.77 easier",
                 targets: ["ALL_SECRETS"],
