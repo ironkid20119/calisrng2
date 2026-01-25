@@ -1,0 +1,1000 @@
+                }
+                
+                const fixes = [];
+                
+                if (!Array.isArray(gameState.inventory)) {
+                    gameState.inventory = [];
+                    fixes.push("Fixed: inventory was not an array");
+                }
+                
+                if (!Array.isArray(gameState.pendingRolls)) {
+                    gameState.pendingRolls = [];
+                    fixes.push("Fixed: pendingRolls was not an array");
+                }
+                
+                if (!Array.isArray(gameState.boosters)) {
+                    gameState.boosters = [];
+                    fixes.push("Fixed: boosters was not an array");
+                }
+                
+                if (!Array.isArray(gameState.shopBoosters)) {
+                    gameState.shopBoosters = [];
+                    fixes.push("Fixed: shopBoosters was not an array");
+                }
+                
+                if (!Array.isArray(gameState.discoveredVariantSecrets)) {
+                    gameState.discoveredVariantSecrets = [];
+                    fixes.push("Fixed: discoveredVariantSecrets was not an array");
+                }
+                
+                if (typeof gameState.currency !== 'number' || isNaN(gameState.currency)) {
+                    gameState.currency = 0;
+                    fixes.push("Fixed: currency was invalid");
+                }
+                
+                if (typeof gameState.geometrix !== 'number' || isNaN(gameState.geometrix)) {
+                    gameState.geometrix = 0;
+                    fixes.push("Fixed: geometrix was invalid");
+                }
+                
+                if (!Array.isArray(gameState.discoveredRanks)) {
+                    gameState.discoveredRanks = [];
+                    fixes.push("Fixed: discoveredRanks was not an array");
+                }
+                
+                if (!gameState.highestFinalRoll || typeof gameState.highestFinalRoll !== 'object') {
+                    gameState.highestFinalRoll = { 
+                        value: 0, 
+                        baseValue: 0, 
+                        rank: 'None yet', 
+                        variants: [], 
+                        isSecret: false 
+                    };
+                    fixes.push("Fixed: highestFinalRoll was missing");
+                }
+                
+                // NEW: Fix destroy system data
+                if (typeof gameState.destroyCount !== 'number') {
+                    gameState.destroyCount = 0;
+                    fixes.push("Fixed: destroyCount was invalid");
+                }
+                
+                if (typeof gameState.destroyCost !== 'number') {
+                    gameState.destroyCost = DESTROY_BASE_COST;
+                    fixes.push("Fixed: destroyCost was invalid");
+                }
+                
+                if (typeof gameState.currentDimension !== 'number') {
+                    gameState.currentDimension = 1;
+                    fixes.push("Fixed: currentDimension was invalid");
+                }
+                
+                if (!Array.isArray(gameState.dimensions)) {
+                    gameState.dimensions = [];
+                    fixes.push("Fixed: dimensions array was missing");
+                }
+                
+                if (typeof gameState.destroyLuckMultiplier !== 'number') {
+                    gameState.destroyLuckMultiplier = 1;
+                    fixes.push("Fixed: destroyLuckMultiplier was invalid");
+                }
+                
+                if (typeof gameState.destroyCurrencyMultiplier !== 'number') {
+                    gameState.destroyCurrencyMultiplier = 1;
+                    fixes.push("Fixed: destroyCurrencyMultiplier was invalid");
+                }
+                
+                // Check all arrays for invalid items
+                if (Array.isArray(gameState.inventory)) {
+                    const validInventory = [];
+                    for (let i = 0; i < gameState.inventory.length; i++) {
+                        const item = gameState.inventory[i];
+                        if (item && typeof item === 'object' && item.value !== undefined && item.rank) {
+                            if (typeof item.value !== 'number' || isNaN(item.value)) {
+                                fixes.push(`Fixed: inventory item ${i} had invalid value`);
+                                item.value = 0;
+                            }
+                            if (!Array.isArray(item.variants)) {
+                                item.variants = [];
+                            }
+                            validInventory.push(item);
+                        } else {
+                            fixes.push(`Removed invalid inventory item ${i}`);
+                        }
+                    }
+                    gameState.inventory = validInventory;
+                }
+                
+                // Check pending rolls
+                if (Array.isArray(gameState.pendingRolls)) {
+                    const validPending = [];
+                    for (let i = 0; i < gameState.pendingRolls.length; i++) {
+                        const item = gameState.pendingRolls[i];
+                        if (item && typeof item === 'object' && item.value !== undefined && item.rank) {
+                            if (typeof item.value !== 'number' || isNaN(item.value)) {
+                                fixes.push(`Fixed: pending roll ${i} had invalid value`);
+                                item.value = 0;
+                            }
+                            if (!Array.isArray(item.variants)) {
+                                item.variants = [];
+                            }
+                            validPending.push(item);
+                        } else {
+                            fixes.push(`Removed invalid pending roll ${i}`);
+                        }
+                    }
+                    gameState.pendingRolls = validPending;
+                }
+                
+                // Check boosters
+                if (Array.isArray(gameState.boosters)) {
+                    const validBoosters = [];
+                    for (let i = 0; i < gameState.boosters.length; i++) {
+                        const booster = gameState.boosters[i];
+                        if (booster && typeof booster === 'object' && booster.luck !== undefined) {
+                            if (typeof booster.luck !== 'number' || isNaN(booster.luck)) {
+                                fixes.push(`Fixed: booster ${i} had invalid luck`);
+                                booster.luck = BOOSTER_BASE_LUCK;
+                            }
+                            validBoosters.push(booster);
+                        } else {
+                            fixes.push(`Removed invalid booster ${i}`);
+                        }
+                    }
+                    gameState.boosters = validBoosters;
+                }
+                
+                // Check shop boosters
+                if (Array.isArray(gameState.shopBoosters)) {
+                    const validShopBoosters = [];
+                    for (let i = 0; i < gameState.shopBoosters.length; i++) {
+                        const booster = gameState.shopBoosters[i];
+                        if (booster && typeof booster === 'object' && booster.luck !== undefined) {
+                            if (typeof booster.luck !== 'number' || isNaN(booster.luck)) {
+                                fixes.push(`Fixed: shop booster ${i} had invalid luck`);
+                                booster.luck = BOOSTER_BASE_LUCK;
+                            }
+                            validShopBoosters.push(booster);
+                        } else {
+                            fixes.push(`Removed invalid shop booster ${i}`);
+                        }
+                    }
+                    gameState.shopBoosters = validShopBoosters;
+                }
+                
+                // Check active shapes
+                if (Array.isArray(gameState.activeShapes)) {
+                    const validShapes = [];
+                    for (let i = 0; i < gameState.activeShapes.length; i++) {
+                        const shape = gameState.activeShapes[i];
+                        if (shape && typeof shape === 'object' && shape.name) {
+                            validShapes.push(shape);
+                        } else {
+                            fixes.push(`Removed invalid shape ${i}`);
+                        }
+                    }
+                    gameState.activeShapes = validShapes;
+                }
+                
+                // Ensure maxPendingRolls is calculated correctly
+                if (!gameState.maxPendingRolls || typeof gameState.maxPendingRolls !== 'number') {
+                    gameState.maxPendingRolls = (gameState.maxInventory || 10) * 3;
+                    fixes.push("Fixed: maxPendingRolls was invalid");
+                }
+                
+                localStorage.setItem('calisRNGGame', JSON.stringify(gameState));
+                
+                if (fixes.length > 0) {
+                    addToTerminal(`✅ Save file fixed! Applied ${fixes.length} fix(es):`, true, 'rank-1000000-100000000');
+                    fixes.forEach(fix => {
+                        addToTerminal(`  • ${fix}`, true);
+                    });
+                    addToTerminal("Reloading game...", true);
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    addToTerminal("✅ Save file is already healthy. No fixes needed.", true);
+                }
+                
+            } catch (e) {
+                console.error('Error fixing save:', e);
+                addToTerminal("❌ Failed to fix save file. Error: " + e.message, true, 'rank-1000000-100000000');
+            }
+        }
+        
+        function inspectSaveFile() {
+            const saved = localStorage.getItem('calisRNGGame');
+            
+            if (!saved) {
+                addToTerminal("No save file found!", true);
+                return;
+            }
+            
+            addToTerminal("🔍 INSPECTING SAVE FILE...", true, 'rank-1000-10000');
+            
+            try {
+                const gameState = JSON.parse(saved);
+                const issues = [];
+                const warnings = [];
+                const info = [];
+                
+                const criticalProps = ['currency', 'totalUpgrades', 'inventory', 'discoveredRanks'];
+                criticalProps.forEach(prop => {
+                    if (!(prop in gameState)) {
+                        issues.push(`Missing critical property: ${prop}`);
+                    }
+                });
+                
+                // NEW: Check destroy system props
+                const destroyProps = ['destroyCount', 'destroyCost', 'currentDimension', 'dimensions'];
+                destroyProps.forEach(prop => {
+                    if (!(prop in gameState)) {
+                        issues.push(`Missing destroy property: ${prop}`);
+                    }
+                });
+                
+                if (!Array.isArray(gameState.inventory)) {
+                    issues.push("Inventory is not an array");
+                }
+                
+                if (!Array.isArray(gameState.discoveredRanks)) {
+                    issues.push("discoveredRanks is not an array");
+                }
+                
+                if (typeof gameState.currency !== 'number') {
+                    issues.push("Currency is not a number");
+                }
+                
+                if (typeof gameState.geometrix !== 'number') {
+                    issues.push("Geometrix is not a number");
+                }
+                
+                if (isNaN(gameState.currency)) {
+                    issues.push("Currency is NaN");
+                }
+                
+                if (isNaN(gameState.geometrix)) {
+                    issues.push("Geometrix is NaN");
+                }
+                
+                if (gameState.currency < 0) {
+                    warnings.push("Currency is negative");
+                }
+                
+                if (gameState.geometrix < 0) {
+                    warnings.push("Geometrix is negative");
+                }
+                
+                // Check inventory items
+                if (Array.isArray(gameState.inventory)) {
+                    gameState.inventory.forEach((item, idx) => {
+                        if (!item || typeof item !== 'object') {
+                            issues.push(`Inventory item ${idx} is corrupted`);
+                        } else {
+                            if (typeof item.value !== 'number' || isNaN(item.value)) {
+                                issues.push(`Inventory item ${idx} has invalid value`);
+                            }
+                            if (!item.rank || typeof item.rank !== 'string') {
+                                issues.push(`Inventory item ${idx} has invalid rank`);
+                            }
+                            if (!Array.isArray(item.variants)) {
+                                issues.push(`Inventory item ${idx} has invalid variants array`);
+                            }
+                        }
+                    });
+                }
+                
+                // Check pending rolls
+                if (Array.isArray(gameState.pendingRolls)) {
+                    gameState.pendingRolls.forEach((item, idx) => {
+                        if (!item || typeof item !== 'object') {
+                            issues.push(`Pending roll ${idx} is corrupted`);
+                        } else {
+                            if (typeof item.value !== 'number' || isNaN(item.value)) {
+                                issues.push(`Pending roll ${idx} has invalid value`);
+                            }
+                            if (!item.rank || typeof item.rank !== 'string') {
+                                issues.push(`Pending roll ${idx} has invalid rank`);
+                            }
+                        }
+                    });
+                }
+                
+                // Check boosters
+                if (Array.isArray(gameState.boosters)) {
+                    gameState.boosters.forEach((booster, idx) => {
+                        if (!booster || typeof booster !== 'object') {
+                            issues.push(`Booster ${idx} is corrupted`);
+                        } else {
+                            if (typeof booster.luck !== 'number' || isNaN(booster.luck)) {
+                                issues.push(`Booster ${idx} has invalid luck`);
+                            }
+                        }
+                    });
+                }
+                
+                // Check shop boosters
+                if (Array.isArray(gameState.shopBoosters)) {
+                    gameState.shopBoosters.forEach((booster, idx) => {
+                        if (!booster || typeof booster !== 'object') {
+                            issues.push(`Shop booster ${idx} is corrupted`);
+                        } else {
+                            if (typeof booster.luck !== 'number' || isNaN(booster.luck)) {
+                                issues.push(`Shop booster ${idx} has invalid luck`);
+                            }
+                        }
+                    });
+                }
+                
+                // Check active shapes
+                if (Array.isArray(gameState.activeShapes)) {
+                    gameState.activeShapes.forEach((shape, idx) => {
+                        if (!shape || typeof shape !== 'object') {
+                            issues.push(`Active shape ${idx} is corrupted`);
+                        }
+                    });
+                }
+                
+                // Check discovered variant secrets
+                if (!Array.isArray(gameState.discoveredVariantSecrets)) {
+                    issues.push("discoveredVariantSecrets is not an array");
+                }
+                
+                // NEW: Check destroy system
+                if (!Array.isArray(gameState.dimensions)) {
+                    issues.push("dimensions is not an array");
+                }
+                
+                if (typeof gameState.destroyCount !== 'number' || gameState.destroyCount < 0) {
+                    issues.push("destroyCount is invalid");
+                }
+                
+                if (typeof gameState.currentDimension !== 'number' || gameState.currentDimension < 1) {
+                    issues.push("currentDimension is invalid");
+                }
+                
+                info.push(`Currency: ${gameState.currency || 0}`);
+                info.push(`Geometrix: ${gameState.geometrix || 0}`);
+                info.push(`Upgrades: ${gameState.totalUpgrades || 0}`);
+                info.push(`Inventory size: ${gameState.inventory ? gameState.inventory.length : 0}`);
+                info.push(`Discovered ranks: ${gameState.discoveredRanks ? gameState.discoveredRanks.length : 0}`);
+                info.push(`Discovered variant secrets: ${gameState.discoveredVariantSecrets ? gameState.discoveredVariantSecrets.length : 0}`);
+                info.push(`Boosters owned: ${gameState.boosters ? gameState.boosters.length : 0}`);
+                info.push(`Shop inventory: ${gameState.shopBoosters ? gameState.shopBoosters.length : 0}`);
+                info.push(`Active shapes: ${gameState.activeShapes ? gameState.activeShapes.length : 0}`);
+                info.push(`Pending rolls: ${gameState.pendingRolls ? gameState.pendingRolls.length : 0}`);
+                info.push(`Hardcore mode: ${gameState.hardcoreMode ? 'ON' : 'OFF'}`);
+                info.push(`Secrets enabled: ${gameState.secretsEnabled !== false ? 'Yes' : 'No'}`);
+                info.push(`Cutscenes enabled: ${gameState.cutscenesEnabled !== false ? 'Yes' : 'No'}`);
+                // NEW: Destroy system info
+                info.push(`Destroy count: ${gameState.destroyCount || 0}`);
+                info.push(`Current dimension: ${gameState.currentDimension || 1}`);
+                info.push(`Destroy cost: ${gameState.destroyCost || DESTROY_BASE_COST}`);
+                info.push(`Dimensions stored: ${gameState.dimensions ? gameState.dimensions.length : 0}`);
+                
+                if (issues.length > 0) {
+                    addToTerminal("❌ ISSUES FOUND:", true, 'rank-1000000-100000000');
+                    issues.forEach(issue => {
+                        addToTerminal(`  • ${issue}`, true);
+                    });
+                } else {
+                    addToTerminal("✅ No critical issues found", true, 'rank-1000-10000');
+                }
+                
+                if (warnings.length > 0) {
+                    addToTerminal("⚠️ WARNINGS:", true, 'rank-1000-10000');
+                    warnings.forEach(warning => {
+                        addToTerminal(`  • ${warning}`, true);
+                    });
+                }
+                
+                addToTerminal("📊 SAVE FILE INFO:", true, 'rank-1000-10000');
+                info.forEach(line => {
+                    addToTerminal(`  ${line}`, true);
+                });
+                
+                if (issues.length > 0) {
+                    addToTerminal("💡 Run 'Fix Save File' to attempt to repair these issues.", true);
+                }
+                
+            } catch (e) {
+                addToTerminal(`❌ ERROR PARSING SAVE FILE: ${e.message}`, true, 'rank-1000000-100000000');
+                addToTerminal("The save file appears to be corrupt.", true);
+            }
+        }
+
+        // --- EXISTING DEBUG FUNCTIONS ---
+        
+        function toggleForceRollUI() {
+            const ui = document.getElementById('force-roll-ui');
+            if (ui) {
+                ui.style.display = ui.style.display === 'none' ? 'block' : 'none';
+            }
+        }
+
+        function executeCustomForceRoll() {
+            const luck = parseFloat(document.getElementById('forceRollLuck').value) || 0;
+            const variantLuck = parseFloat(document.getElementById('forceRollVariantLuck').value) || 0;
+            const secretLuck = parseFloat(document.getElementById('forceRollSecretLuck').value) || 0;
+            
+            const customLuck = currentLuck + luck + variantLuck;
+            const baseRoll = Math.pow(Math.random(), 3 / POWER_EXPONENT) * (1 + customLuck);
+            
+            const variantResult = getVariants(baseRoll);
+            let displayValue = variantResult ? variantResult.modifiedValue : baseRoll;
+            const variants = variantResult ? variantResult.variants : [];
+            
+            let secretResult = null;
+            if (secretsEnabled) {
+                const originalSecretMultiplier = secretLuckMultiplier;
+                secretLuckMultiplier = Math.max(1, secretLuckMultiplier + secretLuck);
+                secretResult = getSecretRank();
+                secretLuckMultiplier = originalSecretMultiplier;
+            }
+            let rankInfo = getRankInfo(baseRoll);
+            let displayName = secretResult ? secretResult.name : rankInfo.name;
+            
+            if (rankInfo.isUnobtainable) {
+                displayName = hardcoreMode ? "Unobtainable [HC]" : "Unobtainable";
+                displayValue = rankInfo.value;
+            }
+            
+            if (secretResult && secretResult.rarity) {
+                displayValue *= secretResult.rarity;
+            }
+            
+            if (displayName === "CORRUPTED") {
+                displayValue *= -1;
+            }
+            if (displayName === "Destroyed") {
+                displayValue = 0;
+            }
+            
+            const { className: rankClass, color: rollColor } = getRankClassAndColor(displayValue, variants, displayName);
+            
+            let variantText = '';
+            if (variants.length > 0) {
+                variantText = variants.map(v => {
+                    let variantClass = '';
+                    if (v.name === "GIANT") variantClass = 'variant-GIANT';
+                    else if (v.name === "Mega") variantClass = 'variant-Mega';
+                    else if (v.name === "Small") variantClass = 'variant-Small';
+                    
+                    return `<span class="${variantClass}" style="color: ${v.color}; font-weight: bold;">[${v.name}]</span>`;
+                }).join('') + ' ';
+            }
+            
+            const debugTag = '<span style="color: #ffaa00; font-weight: bold;">[CUSTOM]</span>';
+            
+            const content = `<span class="${rankClass} illegitimate-roll" style="color: ${rollColor};">${formatNumber(displayValue)} [${displayName}] ${debugTag}</span>`;
+            
+            addToTerminal(
+                `#${formatInteger(rollIndex++)} (CUSTOM): L${luck} VL${variantLuck} SL${secretLuck} | ${variantText}${content} (No currency, no discovery)`
+            );
+            
+            toggleForceRollUI();
+        }
+
+        // --- VARIANT SECRETS FUNCTIONS ---
+        
+        function getVariantSecret(rankName, variants) {
+            if (variants.length === 0) return null;
+            
+            for (const secret of VARIANT_SECRETS) {
+                if (rankName === secret.needsRank || 
+                    (hardcoreMode && rankName === `${secret.needsRank} [HC]`)) {
+                    
+                    const hasRequiredVariant = variants.some(v => v.name === secret.needsVariant);
+                    
+                    if (hasRequiredVariant) {
+                        if (Math.random() < secret.chance) {
+                            return secret;
+                        }
+                    }
+                }
+            }
+            
+            return null;
+        }
+
+        // --- MODIFIED ROLL FUNCTION WITH ALL FIXES ---
+        
+                }
+                
+                const fixes = [];
+                
+                if (!Array.isArray(gameState.inventory)) {
+                    gameState.inventory = [];
+                    fixes.push("Fixed: inventory was not an array");
+                }
+                
+                if (!Array.isArray(gameState.pendingRolls)) {
+                    gameState.pendingRolls = [];
+                    fixes.push("Fixed: pendingRolls was not an array");
+                }
+                
+                if (!Array.isArray(gameState.boosters)) {
+                    gameState.boosters = [];
+                    fixes.push("Fixed: boosters was not an array");
+                }
+                
+                if (!Array.isArray(gameState.shopBoosters)) {
+                    gameState.shopBoosters = [];
+                    fixes.push("Fixed: shopBoosters was not an array");
+                }
+                
+                if (!Array.isArray(gameState.discoveredVariantSecrets)) {
+                    gameState.discoveredVariantSecrets = [];
+                    fixes.push("Fixed: discoveredVariantSecrets was not an array");
+                }
+                
+                if (typeof gameState.currency !== 'number' || isNaN(gameState.currency)) {
+                    gameState.currency = 0;
+                    fixes.push("Fixed: currency was invalid");
+                }
+                
+                if (typeof gameState.geometrix !== 'number' || isNaN(gameState.geometrix)) {
+                    gameState.geometrix = 0;
+                    fixes.push("Fixed: geometrix was invalid");
+                }
+                
+                if (!Array.isArray(gameState.discoveredRanks)) {
+                    gameState.discoveredRanks = [];
+                    fixes.push("Fixed: discoveredRanks was not an array");
+                }
+                
+                if (!gameState.highestFinalRoll || typeof gameState.highestFinalRoll !== 'object') {
+                    gameState.highestFinalRoll = { 
+                        value: 0, 
+                        baseValue: 0, 
+                        rank: 'None yet', 
+                        variants: [], 
+                        isSecret: false 
+                    };
+                    fixes.push("Fixed: highestFinalRoll was missing");
+                }
+                
+                // NEW: Fix destroy system data
+                if (typeof gameState.destroyCount !== 'number') {
+                    gameState.destroyCount = 0;
+                    fixes.push("Fixed: destroyCount was invalid");
+                }
+                
+                if (typeof gameState.destroyCost !== 'number') {
+                    gameState.destroyCost = DESTROY_BASE_COST;
+                    fixes.push("Fixed: destroyCost was invalid");
+                }
+                
+                if (typeof gameState.currentDimension !== 'number') {
+                    gameState.currentDimension = 1;
+                    fixes.push("Fixed: currentDimension was invalid");
+                }
+                
+                if (!Array.isArray(gameState.dimensions)) {
+                    gameState.dimensions = [];
+                    fixes.push("Fixed: dimensions array was missing");
+                }
+                
+                if (typeof gameState.destroyLuckMultiplier !== 'number') {
+                    gameState.destroyLuckMultiplier = 1;
+                    fixes.push("Fixed: destroyLuckMultiplier was invalid");
+                }
+                
+                if (typeof gameState.destroyCurrencyMultiplier !== 'number') {
+                    gameState.destroyCurrencyMultiplier = 1;
+                    fixes.push("Fixed: destroyCurrencyMultiplier was invalid");
+                }
+                
+                // Check all arrays for invalid items
+                if (Array.isArray(gameState.inventory)) {
+                    const validInventory = [];
+                    for (let i = 0; i < gameState.inventory.length; i++) {
+                        const item = gameState.inventory[i];
+                        if (item && typeof item === 'object' && item.value !== undefined && item.rank) {
+                            if (typeof item.value !== 'number' || isNaN(item.value)) {
+                                fixes.push(`Fixed: inventory item ${i} had invalid value`);
+                                item.value = 0;
+                            }
+                            if (!Array.isArray(item.variants)) {
+                                item.variants = [];
+                            }
+                            validInventory.push(item);
+                        } else {
+                            fixes.push(`Removed invalid inventory item ${i}`);
+                        }
+                    }
+                    gameState.inventory = validInventory;
+                }
+                
+                // Check pending rolls
+                if (Array.isArray(gameState.pendingRolls)) {
+                    const validPending = [];
+                    for (let i = 0; i < gameState.pendingRolls.length; i++) {
+                        const item = gameState.pendingRolls[i];
+                        if (item && typeof item === 'object' && item.value !== undefined && item.rank) {
+                            if (typeof item.value !== 'number' || isNaN(item.value)) {
+                                fixes.push(`Fixed: pending roll ${i} had invalid value`);
+                                item.value = 0;
+                            }
+                            if (!Array.isArray(item.variants)) {
+                                item.variants = [];
+                            }
+                            validPending.push(item);
+                        } else {
+                            fixes.push(`Removed invalid pending roll ${i}`);
+                        }
+                    }
+                    gameState.pendingRolls = validPending;
+                }
+                
+                // Check boosters
+                if (Array.isArray(gameState.boosters)) {
+                    const validBoosters = [];
+                    for (let i = 0; i < gameState.boosters.length; i++) {
+                        const booster = gameState.boosters[i];
+                        if (booster && typeof booster === 'object' && booster.luck !== undefined) {
+                            if (typeof booster.luck !== 'number' || isNaN(booster.luck)) {
+                                fixes.push(`Fixed: booster ${i} had invalid luck`);
+                                booster.luck = BOOSTER_BASE_LUCK;
+                            }
+                            validBoosters.push(booster);
+                        } else {
+                            fixes.push(`Removed invalid booster ${i}`);
+                        }
+                    }
+                    gameState.boosters = validBoosters;
+                }
+                
+                // Check shop boosters
+                if (Array.isArray(gameState.shopBoosters)) {
+                    const validShopBoosters = [];
+                    for (let i = 0; i < gameState.shopBoosters.length; i++) {
+                        const booster = gameState.shopBoosters[i];
+                        if (booster && typeof booster === 'object' && booster.luck !== undefined) {
+                            if (typeof booster.luck !== 'number' || isNaN(booster.luck)) {
+                                fixes.push(`Fixed: shop booster ${i} had invalid luck`);
+                                booster.luck = BOOSTER_BASE_LUCK;
+                            }
+                            validShopBoosters.push(booster);
+                        } else {
+                            fixes.push(`Removed invalid shop booster ${i}`);
+                        }
+                    }
+                    gameState.shopBoosters = validShopBoosters;
+                }
+                
+                // Check active shapes
+                if (Array.isArray(gameState.activeShapes)) {
+                    const validShapes = [];
+                    for (let i = 0; i < gameState.activeShapes.length; i++) {
+                        const shape = gameState.activeShapes[i];
+                        if (shape && typeof shape === 'object' && shape.name) {
+                            validShapes.push(shape);
+                        } else {
+                            fixes.push(`Removed invalid shape ${i}`);
+                        }
+                    }
+                    gameState.activeShapes = validShapes;
+                }
+                
+                // Ensure maxPendingRolls is calculated correctly
+                if (!gameState.maxPendingRolls || typeof gameState.maxPendingRolls !== 'number') {
+                    gameState.maxPendingRolls = (gameState.maxInventory || 10) * 3;
+                    fixes.push("Fixed: maxPendingRolls was invalid");
+                }
+                
+                localStorage.setItem('calisRNGGame', JSON.stringify(gameState));
+                
+                if (fixes.length > 0) {
+                    addToTerminal(`✅ Save file fixed! Applied ${fixes.length} fix(es):`, true, 'rank-1000000-100000000');
+                    fixes.forEach(fix => {
+                        addToTerminal(`  • ${fix}`, true);
+                    });
+                    addToTerminal("Reloading game...", true);
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    addToTerminal("✅ Save file is already healthy. No fixes needed.", true);
+                }
+                
+            } catch (e) {
+                console.error('Error fixing save:', e);
+                addToTerminal("❌ Failed to fix save file. Error: " + e.message, true, 'rank-1000000-100000000');
+            }
+        }
+        
+        function inspectSaveFile() {
+            const saved = localStorage.getItem('calisRNGGame');
+            
+            if (!saved) {
+                addToTerminal("No save file found!", true);
+                return;
+            }
+            
+            addToTerminal("🔍 INSPECTING SAVE FILE...", true, 'rank-1000-10000');
+            
+            try {
+                const gameState = JSON.parse(saved);
+                const issues = [];
+                const warnings = [];
+                const info = [];
+                
+                const criticalProps = ['currency', 'totalUpgrades', 'inventory', 'discoveredRanks'];
+                criticalProps.forEach(prop => {
+                    if (!(prop in gameState)) {
+                        issues.push(`Missing critical property: ${prop}`);
+                    }
+                });
+                
+                // NEW: Check destroy system props
+                const destroyProps = ['destroyCount', 'destroyCost', 'currentDimension', 'dimensions'];
+                destroyProps.forEach(prop => {
+                    if (!(prop in gameState)) {
+                        issues.push(`Missing destroy property: ${prop}`);
+                    }
+                });
+                
+                if (!Array.isArray(gameState.inventory)) {
+                    issues.push("Inventory is not an array");
+                }
+                
+                if (!Array.isArray(gameState.discoveredRanks)) {
+                    issues.push("discoveredRanks is not an array");
+                }
+                
+                if (typeof gameState.currency !== 'number') {
+                    issues.push("Currency is not a number");
+                }
+                
+                if (typeof gameState.geometrix !== 'number') {
+                    issues.push("Geometrix is not a number");
+                }
+                
+                if (isNaN(gameState.currency)) {
+                    issues.push("Currency is NaN");
+                }
+                
+                if (isNaN(gameState.geometrix)) {
+                    issues.push("Geometrix is NaN");
+                }
+                
+                if (gameState.currency < 0) {
+                    warnings.push("Currency is negative");
+                }
+                
+                if (gameState.geometrix < 0) {
+                    warnings.push("Geometrix is negative");
+                }
+                
+                // Check inventory items
+                if (Array.isArray(gameState.inventory)) {
+                    gameState.inventory.forEach((item, idx) => {
+                        if (!item || typeof item !== 'object') {
+                            issues.push(`Inventory item ${idx} is corrupted`);
+                        } else {
+                            if (typeof item.value !== 'number' || isNaN(item.value)) {
+                                issues.push(`Inventory item ${idx} has invalid value`);
+                            }
+                            if (!item.rank || typeof item.rank !== 'string') {
+                                issues.push(`Inventory item ${idx} has invalid rank`);
+                            }
+                            if (!Array.isArray(item.variants)) {
+                                issues.push(`Inventory item ${idx} has invalid variants array`);
+                            }
+                        }
+                    });
+                }
+                
+                // Check pending rolls
+                if (Array.isArray(gameState.pendingRolls)) {
+                    gameState.pendingRolls.forEach((item, idx) => {
+                        if (!item || typeof item !== 'object') {
+                            issues.push(`Pending roll ${idx} is corrupted`);
+                        } else {
+                            if (typeof item.value !== 'number' || isNaN(item.value)) {
+                                issues.push(`Pending roll ${idx} has invalid value`);
+                            }
+                            if (!item.rank || typeof item.rank !== 'string') {
+                                issues.push(`Pending roll ${idx} has invalid rank`);
+                            }
+                        }
+                    });
+                }
+                
+                // Check boosters
+                if (Array.isArray(gameState.boosters)) {
+                    gameState.boosters.forEach((booster, idx) => {
+                        if (!booster || typeof booster !== 'object') {
+                            issues.push(`Booster ${idx} is corrupted`);
+                        } else {
+                            if (typeof booster.luck !== 'number' || isNaN(booster.luck)) {
+                                issues.push(`Booster ${idx} has invalid luck`);
+                            }
+                        }
+                    });
+                }
+                
+                // Check shop boosters
+                if (Array.isArray(gameState.shopBoosters)) {
+                    gameState.shopBoosters.forEach((booster, idx) => {
+                        if (!booster || typeof booster !== 'object') {
+                            issues.push(`Shop booster ${idx} is corrupted`);
+                        } else {
+                            if (typeof booster.luck !== 'number' || isNaN(booster.luck)) {
+                                issues.push(`Shop booster ${idx} has invalid luck`);
+                            }
+                        }
+                    });
+                }
+                
+                // Check active shapes
+                if (Array.isArray(gameState.activeShapes)) {
+                    gameState.activeShapes.forEach((shape, idx) => {
+                        if (!shape || typeof shape !== 'object') {
+                            issues.push(`Active shape ${idx} is corrupted`);
+                        }
+                    });
+                }
+                
+                // Check discovered variant secrets
+                if (!Array.isArray(gameState.discoveredVariantSecrets)) {
+                    issues.push("discoveredVariantSecrets is not an array");
+                }
+                
+                // NEW: Check destroy system
+                if (!Array.isArray(gameState.dimensions)) {
+                    issues.push("dimensions is not an array");
+                }
+                
+                if (typeof gameState.destroyCount !== 'number' || gameState.destroyCount < 0) {
+                    issues.push("destroyCount is invalid");
+                }
+                
+                if (typeof gameState.currentDimension !== 'number' || gameState.currentDimension < 1) {
+                    issues.push("currentDimension is invalid");
+                }
+                
+                info.push(`Currency: ${gameState.currency || 0}`);
+                info.push(`Geometrix: ${gameState.geometrix || 0}`);
+                info.push(`Upgrades: ${gameState.totalUpgrades || 0}`);
+                info.push(`Inventory size: ${gameState.inventory ? gameState.inventory.length : 0}`);
+                info.push(`Discovered ranks: ${gameState.discoveredRanks ? gameState.discoveredRanks.length : 0}`);
+                info.push(`Discovered variant secrets: ${gameState.discoveredVariantSecrets ? gameState.discoveredVariantSecrets.length : 0}`);
+                info.push(`Boosters owned: ${gameState.boosters ? gameState.boosters.length : 0}`);
+                info.push(`Shop inventory: ${gameState.shopBoosters ? gameState.shopBoosters.length : 0}`);
+                info.push(`Active shapes: ${gameState.activeShapes ? gameState.activeShapes.length : 0}`);
+                info.push(`Pending rolls: ${gameState.pendingRolls ? gameState.pendingRolls.length : 0}`);
+                info.push(`Hardcore mode: ${gameState.hardcoreMode ? 'ON' : 'OFF'}`);
+                info.push(`Secrets enabled: ${gameState.secretsEnabled !== false ? 'Yes' : 'No'}`);
+                info.push(`Cutscenes enabled: ${gameState.cutscenesEnabled !== false ? 'Yes' : 'No'}`);
+                // NEW: Destroy system info
+                info.push(`Destroy count: ${gameState.destroyCount || 0}`);
+                info.push(`Current dimension: ${gameState.currentDimension || 1}`);
+                info.push(`Destroy cost: ${gameState.destroyCost || DESTROY_BASE_COST}`);
+                info.push(`Dimensions stored: ${gameState.dimensions ? gameState.dimensions.length : 0}`);
+                
+                if (issues.length > 0) {
+                    addToTerminal("❌ ISSUES FOUND:", true, 'rank-1000000-100000000');
+                    issues.forEach(issue => {
+                        addToTerminal(`  • ${issue}`, true);
+                    });
+                } else {
+                    addToTerminal("✅ No critical issues found", true, 'rank-1000-10000');
+                }
+                
+                if (warnings.length > 0) {
+                    addToTerminal("⚠️ WARNINGS:", true, 'rank-1000-10000');
+                    warnings.forEach(warning => {
+                        addToTerminal(`  • ${warning}`, true);
+                    });
+                }
+                
+                addToTerminal("📊 SAVE FILE INFO:", true, 'rank-1000-10000');
+                info.forEach(line => {
+                    addToTerminal(`  ${line}`, true);
+                });
+                
+                if (issues.length > 0) {
+                    addToTerminal("💡 Run 'Fix Save File' to attempt to repair these issues.", true);
+                }
+                
+            } catch (e) {
+                addToTerminal(`❌ ERROR PARSING SAVE FILE: ${e.message}`, true, 'rank-1000000-100000000');
+                addToTerminal("The save file appears to be corrupt.", true);
+            }
+        }
+
+        // --- EXISTING DEBUG FUNCTIONS ---
+        
+        function toggleForceRollUI() {
+            const ui = document.getElementById('force-roll-ui');
+            if (ui) {
+                ui.style.display = ui.style.display === 'none' ? 'block' : 'none';
+            }
+        }
+
+        function executeCustomForceRoll() {
+            const luck = parseFloat(document.getElementById('forceRollLuck').value) || 0;
+            const variantLuck = parseFloat(document.getElementById('forceRollVariantLuck').value) || 0;
+            const secretLuck = parseFloat(document.getElementById('forceRollSecretLuck').value) || 0;
+            
+            const customLuck = currentLuck + luck + variantLuck;
+            const baseRoll = Math.pow(Math.random(), 3 / POWER_EXPONENT) * (1 + customLuck);
+            
+            const variantResult = getVariants(baseRoll);
+            let displayValue = variantResult ? variantResult.modifiedValue : baseRoll;
+            const variants = variantResult ? variantResult.variants : [];
+            
+            let secretResult = null;
+            if (secretsEnabled) {
+                const originalSecretMultiplier = secretLuckMultiplier;
+                secretLuckMultiplier = Math.max(1, secretLuckMultiplier + secretLuck);
+                secretResult = getSecretRank();
+                secretLuckMultiplier = originalSecretMultiplier;
+            }
+            let rankInfo = getRankInfo(baseRoll);
+            let displayName = secretResult ? secretResult.name : rankInfo.name;
+            
+            if (rankInfo.isUnobtainable) {
+                displayName = hardcoreMode ? "Unobtainable [HC]" : "Unobtainable";
+                displayValue = rankInfo.value;
+            }
+            
+            if (secretResult && secretResult.rarity) {
+                displayValue *= secretResult.rarity;
+            }
+            
+            if (displayName === "CORRUPTED") {
+                displayValue *= -1;
+            }
+            if (displayName === "Destroyed") {
+                displayValue = 0;
+            }
+            
+            const { className: rankClass, color: rollColor } = getRankClassAndColor(displayValue, variants, displayName);
+            
+            let variantText = '';
+            if (variants.length > 0) {
+                variantText = variants.map(v => {
+                    let variantClass = '';
+                    if (v.name === "GIANT") variantClass = 'variant-GIANT';
+                    else if (v.name === "Mega") variantClass = 'variant-Mega';
+                    else if (v.name === "Small") variantClass = 'variant-Small';
+                    
+                    return `<span class="${variantClass}" style="color: ${v.color}; font-weight: bold;">[${v.name}]</span>`;
+                }).join('') + ' ';
+            }
+            
+            const debugTag = '<span style="color: #ffaa00; font-weight: bold;">[CUSTOM]</span>';
+            
+            const content = `<span class="${rankClass} illegitimate-roll" style="color: ${rollColor};">${formatNumber(displayValue)} [${displayName}] ${debugTag}</span>`;
+            
+            addToTerminal(
+                `#${formatInteger(rollIndex++)} (CUSTOM): L${luck} VL${variantLuck} SL${secretLuck} | ${variantText}${content} (No currency, no discovery)`
+            );
+            
+            toggleForceRollUI();
+        }
+
+        // --- VARIANT SECRETS FUNCTIONS ---
+        
+        function getVariantSecret(rankName, variants) {
+            if (variants.length === 0) return null;
+            
+            for (const secret of VARIANT_SECRETS) {
+                if (rankName === secret.needsRank || 
+                    (hardcoreMode && rankName === `${secret.needsRank} [HC]`)) {
+                    
+                    const hasRequiredVariant = variants.some(v => v.name === secret.needsVariant);
+                    
+                    if (hasRequiredVariant) {
+                        if (Math.random() < secret.chance) {
+                            return secret;
+                        }
+                    }
+                }
+            }
+            
+            return null;
+        }
+
+        // --- MODIFIED ROLL FUNCTION WITH ALL FIXES ---
+        
