@@ -10,6 +10,8 @@
     <link rel="apple-touch-icon" href="icons/icon-192x192.png">
     <style>
         .bootleg-anim { display: inline-block; animation: bootleg-oval 2s linear infinite; }
+        @keyframes bootleg-oval { 0% { transform: translate(0, 0); } 25% { transform: translate(20px, 10px); } 50% { transform: translate(0, 20px); } 75% { transform: translate(-20px, 10px); } 100% { transform: translate(0, 0); } }
+        .bootleg-anim { display: inline-block; animation: bootleg-oval 2s linear infinite; }
         @keyframes bootleg-oval { 0% { transform: translate(0,0); } 25% { transform: translate(20px, 10px); } 50% { transform: translate(0, 20px); } 75% { transform: translate(-20px, 10px); } 100% { transform: translate(0,0); } }
         body {
             font-family: 'Courier New', monospace;
@@ -1573,6 +1575,8 @@
         const VARIANTS = [
             { name: "Void", chance: 1/750000000, multiplier: 1, color: "linear-gradient(90deg, #000000, #4b0082)" },
             { name: "nil", chance: 1/1000000000, multiplier: 1, color: "linear-gradient(90deg, #000000, #333333, #000000)" },
+            { name: "Void", chance: 1/750000000, multiplier: 1, color: "linear-gradient(90deg, #000000, #4b0082)" },
+            { name: "nil", chance: 1/1000000000, multiplier: 1, color: "linear-gradient(90deg, #000000, #333333, #000000)" },
             { name: "Shiny", chance: 1/100, multiplier: 25, color: "#FFD700" },
             { name: "Gilded", chance: 1/125, multiplier: 125, color: "#FFA500" },
             { name: "Crystalized", chance: 1/500, multiplier: 250, color: "#e642f5" },
@@ -1758,48 +1762,6 @@
         
         // FIXED: Perfect Base RNG Secrets - Now properly integrated
         const PERFECT_BASE_RNG_SECRETS = [];
-
-        const UNLOCK_CLICKER_COST = 33333.33;
-        const MAX_CLICKER_LUCK_LEVEL = 4;
-
-        const COMPLEX_CHANCE = 1/50000;
-
-        const HARDCORE_MODE_ENABLED = true;
-
-        const DEFAULT_SCI_THRESHOLD = 1e12;
-        
-        const BOOSTER_BASE_LUCK = 50;
-        const BOOSTER_LUCK_FORMULA = (rand) => Math.pow(rand, -1.65);
-        const BOOSTER_COST_FORMULA = (multi) => Math.pow(multi, 1.5);
-        
-        // NEW: Booster special types
-        const BOOSTER_SPECIAL_MULTIPLIER_CHANCE = 1/1000; // *
-        const BOOSTER_SPECIAL_POWER_CHANCE = 1/2e5; // ^
-        
-        // Truncated password
-        const DEBUG_PASSWORD = "c";
-
-        // NEW: Destroy System Constants
-        const DESTROY_BASE_COST = 1e8;
-        const DESTROY_COST_MULTIPLIER = 7.5;
-        const DESTROY_LUCK_MULTI_PER_DESTROY = 1.0;
-        const DESTROY_CURRENCY_MULTI_PER_DESTROY = 0.5;
-
-        // --- GAME STATE VARIABLES ---
-        let currency = 0;
-        let totalUpgrades = 0;
-        let upgradeCost = 50;
-        let highestBaseRoll = 0; 
-        let highestFinalRoll = { 
-            value: 0,
-            baseValue: 0,
-            rank: 'None yet',
-            variants: [],
-            isSecret: false
-        };
-        let autoRollInterval = null;
-        let maxInventory = 10;
-        let inventory = [];
         let rollIndex = 1;
         let acceptedRolls = new Set();
         let discoveredRanks = new Set();
