@@ -9,6 +9,10 @@
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icons/icon-192x192.png">
     <style>
+        #sidebar { position: fixed; left: 0; top: 0; width: 150px; height: 100%; background: #2d0051; border-right: 2px solid #ff69b4; padding: 20px; z-index: 100; }
+        .sidebar-item { padding: 10px; cursor: pointer; border-bottom: 1px solid #ff69b4; }
+        .sidebar-item:hover { background: #4a148c; }
+        #main-content { margin-left: 170px; padding: 20px; }
         .bootleg-anim { display: inline-block; animation: bootleg-oval 2s linear infinite; }
         @keyframes bootleg-oval { 0% { transform: translate(0, 0); } 25% { transform: translate(20px, 10px); } 50% { transform: translate(0, 20px); } 75% { transform: translate(-20px, 10px); } 100% { transform: translate(0, 0); } }
         .bootleg-anim { display: inline-block; animation: bootleg-oval 2s linear infinite; }
@@ -1205,7 +1209,16 @@
         </div>
     </div>
     
-    <div class="main-container">
+    <div id="sidebar">
+        <div class="sidebar-item" onclick="showSection('index-section')">Index</div>
+        <div class="sidebar-item" onclick="showSection('shapes-section')">Shapes</div>
+        <div class="sidebar-item" onclick="showSection('clicker-section')">Clicker</div>
+        <div class="sidebar-item" onclick="showSection('upgrades-section')">Upgrades</div>
+    </div>
+    <div id="main-content">
+        <div id="index-section" class="game-section"><div class="section-header">Index</div><div id="index"></div></div>
+        <div id="shapes-section" class="game-section" style="display:none"><div class="section-header">Shapes</div><div id="shapes-gui"></div></div><div id="clicker-section" class="game-section" style="display:none"><div class="section-header">Clicker</div><div id="clicker-gui"></div></div><div id="upgrades-section" class="game-section" style="display:none"><div class="section-header">Upgrades</div><div id="upgrades"></div></div>
+    </div>
         <div>
             <div id="terminal"></div>
         </div>
@@ -2694,3 +2707,4 @@
 
         // --- MODIFIED ROLL FUNCTION WITH ALL FIXES ---
         
+function showSection(id) { document.querySelectorAll(".game-section").forEach(s => s.style.display = "none"); document.getElementById(id).style.display = "block"; }
