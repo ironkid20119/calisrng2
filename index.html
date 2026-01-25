@@ -12,6 +12,8 @@
         .bootleg-anim { display: inline-block; animation: bootleg-oval 2s linear infinite; }
         @keyframes bootleg-oval { 0% { transform: translate(0, 0); } 25% { transform: translate(20px, 10px); } 50% { transform: translate(0, 20px); } 75% { transform: translate(-20px, 10px); } 100% { transform: translate(0, 0); } }
         .bootleg-anim { display: inline-block; animation: bootleg-oval 2s linear infinite; }
+        @keyframes bootleg-oval { 0% { transform: translate(0, 0); } 25% { transform: translate(20px, 10px); } 50% { transform: translate(0, 20px); } 75% { transform: translate(-20px, 10px); } 100% { transform: translate(0, 0); } }
+        .bootleg-anim { display: inline-block; animation: bootleg-oval 2s linear infinite; }
         @keyframes bootleg-oval { 0% { transform: translate(0,0); } 25% { transform: translate(20px, 10px); } 50% { transform: translate(0, 20px); } 75% { transform: translate(-20px, 10px); } 100% { transform: translate(0,0); } }
         body {
             font-family: 'Courier New', monospace;
@@ -1577,6 +1579,8 @@
             { name: "nil", chance: 1/1000000000, multiplier: 1, color: "linear-gradient(90deg, #000000, #333333, #000000)" },
             { name: "Void", chance: 1/750000000, multiplier: 1, color: "linear-gradient(90deg, #000000, #4b0082)" },
             { name: "nil", chance: 1/1000000000, multiplier: 1, color: "linear-gradient(90deg, #000000, #333333, #000000)" },
+            { name: "Void", chance: 1/750000000, multiplier: 1, color: "linear-gradient(90deg, #000000, #4b0082)" },
+            { name: "nil", chance: 1/1000000000, multiplier: 1, color: "linear-gradient(90deg, #000000, #333333, #000000)" },
             { name: "Shiny", chance: 1/100, multiplier: 25, color: "#FFD700" },
             { name: "Gilded", chance: 1/125, multiplier: 125, color: "#FFA500" },
             { name: "Crystalized", chance: 1/500, multiplier: 250, color: "#e642f5" },
@@ -1762,12 +1766,6 @@
         
         // FIXED: Perfect Base RNG Secrets - Now properly integrated
         const PERFECT_BASE_RNG_SECRETS = [];
-        let rollIndex = 1;
-        let acceptedRolls = new Set();
-        let discoveredRanks = new Set();
-        
-        // NEW: Pending rolls system
-        let pendingRolls = [];
         let maxPendingRolls = maxInventory * 3;
         
         // NEW: Secrets toggle
