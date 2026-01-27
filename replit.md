@@ -20,14 +20,16 @@ python3 -m http.server 5000 --bind 0.0.0.0
 Configured for static deployment. The entire project directory is served as-is.
 
 ## Recent Changes
-- January 25, 2026: Implemented SFX for high-value rolls (cowm.wav > 50m, 100t.wav > 1b).
-- January 25, 2026: Added "Void" and "nil" variants with custom gradients.
-- January 25, 2026: Added "BOOTLEG" secret (1/200b) with sideways oval animation.
-- January 25, 2026: Fixed index to show rarity, removed obfuscation, and grayed out undiscovered ranks.
-- January 25, 2026: Removed Perfect Base RNG secrets.
-- January 25, 2026: Fixed bug with events not loading and dev exclusives not being rollable.
-- January 25, 2026: Fixed animation persistence for all ranks.
-- January 25, 2026: Added UI sidebar for navigation.
+- December 28, 2025: Added SEROTONIN effect - chaotic, fast animation with 15 emoji symbols, updates every 15ms (67x faster than EUPHORIA)
+- December 28, 2025: Added Perfect Base RNG Secrets - trigger by rolling exact base RNG values (Unity=1, Decimal=10, Meaning=42, Nice=69, Centum=100, Herbal=420, Numerical=1234, Double Nice=6969, Niner=9999, Myria=10000, Sequential=123456, Million=1000000, π=3.14159...)
+- December 28, 2025: Added secret rank + variant combinations (example: Numerical + Shiny = Numerical/Shiny)
+- December 28, 2025: Fixed critical shop loading bugs - added booster cost validation, filtered corrupted save data, improved error handling
+- December 28, 2025: Fixed variant text sizing - GIANT text x5 (55px), mega x2.5 (27.5px), small x0.75 (8.25px)
+- December 28, 2025: Added CSS animation for ranks 1e21-1e30 - background text scales 1.1x to 1.9x over 2 seconds, flickers black/white every 0.8s
+- December 28, 2025: Fixed booster currency NaN bug - validate costs are finite and positive, reset invalid currency
+- December 28, 2025: Fixed variant boosters not applying to rolls - booster variants now properly add to roll's variant array and multiply display value
+- December 28, 2025: Fixed secret luck in force roll - applies custom multiplier to secret chances correctly
+- December 28, 2025: Added VARIANT_SECRETS constant with Sound variant (1/299 on Uncommon+Gilded, x855000 RNG)
 - December 23, 2025: Fixed booster shop interface - added close button, removed Loading placeholder. Changed Force Roll to custom UI with 3 textboxes (Luck, Variant Luck, Secret Luck) and Roll button. Added toggleForceRollUI() and executeCustomForceRoll() functions for debug panel.
 - December 23, 2025: Added booster shop auto-refresh - boosters change every 20 seconds when shop is open, includes refreshBoosterShop() function and closeBoosterShop() for cleanup
 - December 23, 2025: Updated money gain formula to use actual RNG baseValue: ((baseValue/75)^0.75)/1.5

@@ -9,16 +9,6 @@
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icons/icon-192x192.png">
     <style>
-        #sidebar { position: fixed; left: 0; top: 0; width: 150px; height: 100%; background: #2d0051; border-right: 2px solid #ff69b4; padding: 20px; z-index: 100; }
-        .sidebar-item { padding: 10px; cursor: pointer; border-bottom: 1px solid #ff69b4; }
-        .sidebar-item:hover { background: #4a148c; }
-        #main-content { margin-left: 170px; padding: 20px; }
-        .bootleg-anim { display: inline-block; animation: bootleg-oval 2s linear infinite; }
-        @keyframes bootleg-oval { 0% { transform: translate(0, 0); } 25% { transform: translate(20px, 10px); } 50% { transform: translate(0, 20px); } 75% { transform: translate(-20px, 10px); } 100% { transform: translate(0, 0); } }
-        .bootleg-anim { display: inline-block; animation: bootleg-oval 2s linear infinite; }
-        @keyframes bootleg-oval { 0% { transform: translate(0, 0); } 25% { transform: translate(20px, 10px); } 50% { transform: translate(0, 20px); } 75% { transform: translate(-20px, 10px); } 100% { transform: translate(0, 0); } }
-        .bootleg-anim { display: inline-block; animation: bootleg-oval 2s linear infinite; }
-        @keyframes bootleg-oval { 0% { transform: translate(0,0); } 25% { transform: translate(20px, 10px); } 50% { transform: translate(0, 20px); } 75% { transform: translate(-20px, 10px); } 100% { transform: translate(0,0); } }
         body {
             font-family: 'Courier New', monospace;
             background-color: #4a148c;
@@ -438,6 +428,18 @@
         }
         
         /* --- POLY DODECAHEDRON STYLE --- */
+        .bootleg-title {
+            display: inline-block;
+            animation: bootleg-oval 2s linear infinite;
+        }
+        @keyframes bootleg-oval {
+            0% { transform: translate(0, 0); }
+            25% { transform: translate(20px, 10px); }
+            50% { transform: translate(0, 20px); }
+            75% { transform: translate(-20px, 10px); }
+            100% { transform: translate(0, 0); }
+        }
+        
         .poly-dodecahedron-wrapper {
             position: relative;
             display: inline-block;
@@ -1209,16 +1211,7 @@
         </div>
     </div>
     
-    <div id="sidebar">
-        <div class="sidebar-item" onclick="showSection('index-section')">Index</div>
-        <div class="sidebar-item" onclick="showSection('shapes-section')">Shapes</div>
-        <div class="sidebar-item" onclick="showSection('clicker-section')">Clicker</div>
-        <div class="sidebar-item" onclick="showSection('upgrades-section')">Upgrades</div>
-    </div>
-    <div id="main-content">
-        <div id="index-section" class="game-section"><div class="section-header">Index</div><div id="index"></div></div>
-        <div id="shapes-section" class="game-section" style="display:none"><div class="section-header">Shapes</div><div id="shapes-gui"></div></div><div id="clicker-section" class="game-section" style="display:none"><div class="section-header">Clicker</div><div id="clicker-gui"></div></div><div id="upgrades-section" class="game-section" style="display:none"><div class="section-header">Upgrades</div><div id="upgrades"></div></div>
-    </div>
+    <div class="main-container">
         <div>
             <div id="terminal"></div>
         </div>
@@ -1590,10 +1583,6 @@
         const VARIANTS = [
             { name: "Void", chance: 1/750000000, multiplier: 1, color: "linear-gradient(90deg, #000000, #4b0082)" },
             { name: "nil", chance: 1/1000000000, multiplier: 1, color: "linear-gradient(90deg, #000000, #333333, #000000)" },
-            { name: "Void", chance: 1/750000000, multiplier: 1, color: "linear-gradient(90deg, #000000, #4b0082)" },
-            { name: "nil", chance: 1/1000000000, multiplier: 1, color: "linear-gradient(90deg, #000000, #333333, #000000)" },
-            { name: "Void", chance: 1/750000000, multiplier: 1, color: "linear-gradient(90deg, #000000, #4b0082)" },
-            { name: "nil", chance: 1/1000000000, multiplier: 1, color: "linear-gradient(90deg, #000000, #333333, #000000)" },
             { name: "Shiny", chance: 1/100, multiplier: 25, color: "#FFD700" },
             { name: "Gilded", chance: 1/125, multiplier: 125, color: "#FFA500" },
             { name: "Crystalized", chance: 1/500, multiplier: 250, color: "#e642f5" },
@@ -1612,7 +1601,7 @@
             { name: "UNIVERSAL", chance: 1/100000, multiplier: 100000, color: "#D2691E" },
             { name: "Solar", chance: 1/250000, multiplier: 250000, color: "#FFA500" },
             { name: "Atomic", chance: 1/494500, multiplier: 494500, color: "#32CD32" },
-            { name: "DARK", chance: 1/500000, multiplier: 500000, color: "#391a57" },
+            { name: "DARK", chance: 1/500000, mulltiplier: 500000, color: "#391a57" },
             { name: "Luminous", chance: 1/625000, multiplier: 625000, color: "#90ccdb" },
             { name: "Charged", chance: 1/750000, multiplier: 750000, color: "#90db90" },
             { name: "Ultimate", chance: 1/1e6, multiplier: 1e6, color: "#1e4259" },
@@ -1626,9 +1615,7 @@
             { name: "ARCANE", chance: 1/1e8, multiplier: 1e8, color: "#ffffff" },
             { name: "Apex", chance: 1/2.5e8, multiplier: 2.5e8, color: "#66bab7" },
             { name: "Zenith", chance: 1/5e8, multiplier: 5e8, color: "#d7f5e8"},
-            { name: "Void", chance: 1/750000000, multiplier: 750000000, color: "linear-gradient(90deg, #000000, #4b0082)" },
-            { name: "nil", chance: 1/1000000000, multiplier: 1000000000, color: "linear-gradient(90deg, #000000, #333333, #000000)" },
-            { name: "Negative", 
+        { name: "Negative", 
                 chance: 1/5625, 
                 multiplier: -1, 
                 color: "#000000", 
@@ -1686,8 +1673,7 @@
 
         // FIXED: Added Feimienation secret with serotonin animation
         const SECRET_RANKS_CHANCES = [
-            { name: "BOOTLEG", chance: 1/200000000000, rarity: 200000000000, color: "#c0c0c0", animation: "bootleg" },
-            { name: "BOOTLEG", chance: 1/200000000000, rarity: 200000000000, color: "#c0c0c0", animation: "bootleg" },
+            { name: "BOOTLEG", chance: 1/200000000000, rarity: 200000000000, color: "#c0c0c0", animation: "bootleg-title" },
             { name: "nil_secret", chance: 1/17500, rarity: 17500 }, 
             { name: "Title Label Missing", chance: 1/4040.404, rarity: 4040.404 },
             { name: "?!? unknown ?!?", chance: 1/6666.666, rarity: 6666.666 },
@@ -1778,7 +1764,95 @@
         const SEROTONIN_SYMBOLS = ['?', '7', '@', 'SSER', '.', 'O!IN!', '?!?', 'S!O!?'];
         
         // FIXED: Perfect Base RNG Secrets - Now properly integrated
-        const PERFECT_BASE_RNG_SECRETS = [];
+        const PERFECT_BASE_RNG_SECRETS = [
+            { baseRNG: 1, name: "Unity", rarity: 1000 },
+            { baseRNG: 10, name: "Decimal", rarity: 5000 },
+            { baseRNG: 42, name: "Meaning", rarity: 42000 },
+            { baseRNG: 69, name: "Nice", rarity: 69000 },
+            { baseRNG: 100, name: "Centum", rarity: 100000 },
+            { baseRNG: 420, name: "Herbal", rarity: 420000 },
+            { baseRNG: 449, name: "Bootleg Improbable", rarity: 1e30 },
+            { baseRNG: 1000000000000000001, name: "ok", rarity: Infinity },
+            { baseRNG: 1234, name: "Numerical", rarity: 1234000 },
+            { baseRNG: 6969, name: "Double Nice", rarity: 6969000 },
+            { baseRNG: 9999, name: "Niner", rarity: 9999000 },
+            { baseRNG: 10000, name: "Myria", rarity: 10000000 },
+            { baseRNG: 123456, name: "Sequential", rarity: 123456000 },
+            { baseRNG: 1000000, name: "Million", rarity: 1000000000 },
+            { baseRNG: 1000001, name: "The Unhonored", rarity: 1e15 },
+            { baseRNG: 3.141592653589793, name: "π", rarity: 314159265 }
+        ];
+        const TOTAL_RANKS = 106;
+        const TOTAL_VARIANT_SECRETS = 4; 
+        
+        const UNLOCK_SHAPES_COST = 5000000;
+        const SHAPE_SPAWN_INTERVAL_MS = 2750;
+        const MAX_SHAPE_LUCK_LEVEL = 5;
+        const SHAPE_LUCK_BONUS = 0.2;
+        const SHAPE_LUCK_COST_MULTIPLIER = 1.75;
+        const LUCK_MULTI_COST_MULTIPLIER = 1000;
+        const BULK_SHAPE_COST_MULTIPLIER = 5;
+        const MAX_BULK_SHAPE_LEVEL = 4;
+        const SHAPE_COOLDOWN_DECREASE_MS = 333.3333;
+        const SHAPE_DESPAWN_TIME_MS = 2000;
+        
+        const SHAPES = [
+            { name: "Triangle", chance: 1/2, rarity: 2, color: "#FFFF00" },
+            { name: "Square", chance: 1/5, rarity: 5, color: "#00FF00" },
+            { name: "Pentagon", chance: 1/10, rarity: 10, color: "#00FFFF" },
+            { name: "Hexagon", chance: 1/25, rarity: 25, color: "#FF00FF" }, 
+            { name: "7 Sided Polygon", chance: 1/50, rarity: 50, color: "#FFA500" },
+            { name: "Octagon", chance: 1/100, rarity: 100, color: "#800080" },
+            { name: "Circle", chance: 1/500, rarity: 500, color: "#FF0000" }
+        ];
+
+        const UNLOCK_CLICKER_COST = 33333.33;
+        const MAX_CLICKER_LUCK_LEVEL = 4;
+
+        const COMPLEX_CHANCE = 1/50000;
+
+        const HARDCORE_MODE_ENABLED = true;
+
+        const DEFAULT_SCI_THRESHOLD = 1e12;
+        
+        const BOOSTER_BASE_LUCK = 50;
+        const BOOSTER_LUCK_FORMULA = (rand) => Math.pow(rand, -1.65);
+        const BOOSTER_COST_FORMULA = (multi) => Math.pow(multi, 1.5);
+        
+        // NEW: Booster special types
+        const BOOSTER_SPECIAL_MULTIPLIER_CHANCE = 1/1000; // *
+        const BOOSTER_SPECIAL_POWER_CHANCE = 1/2e5; // ^
+        
+        // Truncated password
+        const DEBUG_PASSWORD = "c";
+
+        // NEW: Destroy System Constants
+        const DESTROY_BASE_COST = 1e8;
+        const DESTROY_COST_MULTIPLIER = 7.5;
+        const DESTROY_LUCK_MULTI_PER_DESTROY = 1.0;
+        const DESTROY_CURRENCY_MULTI_PER_DESTROY = 0.5;
+
+        // --- GAME STATE VARIABLES ---
+        let currency = 0;
+        let totalUpgrades = 0;
+        let upgradeCost = 50;
+        let highestBaseRoll = 0; 
+        let highestFinalRoll = { 
+            value: 0,
+            baseValue: 0,
+            rank: 'None yet',
+            variants: [],
+            isSecret: false
+        };
+        let autoRollInterval = null;
+        let maxInventory = 10;
+        let inventory = [];
+        let rollIndex = 1;
+        let acceptedRolls = new Set();
+        let discoveredRanks = new Set();
+        
+        // NEW: Pending rolls system
+        let pendingRolls = [];
         let maxPendingRolls = maxInventory * 3;
         
         // NEW: Secrets toggle
@@ -2707,4 +2781,3560 @@
 
         // --- MODIFIED ROLL FUNCTION WITH ALL FIXES ---
         
-function showSection(id) { document.querySelectorAll(".game-section").forEach(s => s.style.display = "none"); document.getElementById(id).style.display = "block"; }
+        async function roll() {
+            if (calisrng2.ruin) {
+                addToTerminal('Lol Lol Lol', true);
+                return;
+            }
+            
+            if (isCutscenePlaying) {
+                addToTerminal('Wait for the cutscene to finish!', true);
+                return;
+            }
+            
+            let boosterVariant = null;
+            let boosterSpecialMultiplier = 1;
+            let boosterPowerEffect = null;
+            
+            if (activeBooster) {
+                const boosterLuck = activeBooster.luck;
+                currentLuck += boosterLuck;
+                boosterVariant = activeBooster.variant || null;
+                
+                // NEW: Apply booster special effects
+                if (activeBooster.specialType === '*') {
+                    boosterSpecialMultiplier = activeBooster.specialValue;
+                    addToTerminal(`Booster applied! +${boosterLuck.toFixed(2)} luck + ${boosterSpecialMultiplier}x multiplier`, true);
+                } else if (activeBooster.specialType === '^') {
+                    boosterPowerEffect = activeBooster.specialValue;
+                    addToTerminal(`Booster applied! +${boosterLuck.toFixed(2)} luck + Power ${boosterPowerEffect}`, true);
+                } else {
+                    addToTerminal(`Booster applied! +${boosterLuck.toFixed(2)} luck`, true);
+                }
+                
+                if (boosterVariant) {
+                    addToTerminal(`+ ${boosterVariant.name} variant`, true);
+                }
+                activeBooster = null;
+            }
+            
+            const rollResults = [];
+            let maxRollValueInBulk = 0;
+            let isMaxRollSecret = false;
+            let newRankDiscoveredInBulk = false;
+            
+            const bulkAmount = hardcoreMode ? 1 : (bulkRollLevel + 1);
+            
+            for (let i = 0; i < bulkAmount; i++) {
+                const complexResult = generateComplexRank();
+                
+                if (complexResult) {
+                    const baseValue = complexResult.realPart;
+                    const variantResult = getVariants(baseValue);
+                    
+                    const displayValue = {
+                        real: complexResult.realPart,
+                        imag: complexResult.imagPart
+                    };
+                    
+                    const variants = variantResult ? variantResult.variants : [];
+                    
+                    const displayName = complexResult.displayName;
+                    const isSecret = false;
+                    
+                    rollResults.push({ 
+                        baseValue: baseValue, 
+                        displayValue: displayValue, 
+                        complexValue: true,
+                        variants, 
+                        displayName, 
+                        isSecret, 
+                        secretRarityMultiplier: 1,
+                        rankInfo: { name: displayName, rankNum: 999, isUnobtainable: false },
+                        isComplex: true,
+                        complexData: complexResult
+                    });
+                    
+                    const magnitude = Math.sqrt(complexResult.realPart**2 + complexResult.imagPart**2);
+                    if (magnitude > maxRollValueInBulk) {
+                        maxRollValueInBulk = magnitude;
+                        isMaxRollSecret = isSecret;
+                    }
+                    
+                    continue;
+                }
+                
+                const rollResult = generateRoll();
+                let baseValue = rollResult.value;
+                
+                // FIXED: Check for perfect base RNG secrets FIRST
+                let perfectBaseSecret = null;
+                for (const secret of PERFECT_BASE_RNG_SECRETS) {
+                    if (Math.abs(baseValue - secret.baseRNG) < 0.0001) {
+                        perfectBaseSecret = secret;
+                        break;
+                    }
+                }
+                
+                // Apply booster power effect if present
+                if (boosterPowerEffect) {
+                    baseValue = Math.pow(baseValue, boosterPowerEffect);
+                }
+                
+                let isGrandRoll = baseValue >= 1e6 && baseValue < 1e7;
+                let shouldCheck7GrandDad = isGrandRoll && Math.random() < (1/777.777);
+
+                if (shouldCheck7GrandDad && currentEvent && currentEvent.name === "Lol") {
+                    shouldCheck7GrandDad = Math.random() < (1/777.777) * currentEvent.multiplier;
+                }
+                
+                const variantResult = getVariants(baseValue);
+                let displayValue = variantResult ? variantResult.modifiedValue : baseValue;
+                let variants = variantResult ? variantResult.variants : [];
+                
+                // Apply booster variant if present
+                if (boosterVariant && !variants.some(v => v.name === boosterVariant.name)) {
+                    variants.push(boosterVariant);
+                    displayValue *= boosterVariant.multiplier;
+                }
+                
+                // Apply booster special multiplier
+                if (boosterSpecialMultiplier !== 1) {
+                    displayValue *= boosterSpecialMultiplier;
+                }
+                
+                // CHECK FOR VARIANT SECRET HERE
+                let variantSecretResult = null;
+                
+                // Check for variant secrets
+                if (variants.length > 0) {
+                    const rankInfoTemp = getRankInfo(baseValue);
+                    variantSecretResult = getVariantSecret(rankInfoTemp.name, variants);
+                    
+                    // Check for perfect base secret + variant combinations
+                    if (!variantSecretResult && perfectBaseSecret) {
+                        const variantNames = variants.map(v => v.name).join('+');
+                        variantSecretResult = {
+                            name: `${perfectBaseSecret.name}/${variantNames}`,
+                            rarity: perfectBaseSecret.rarity,
+                            multipliesRNG: perfectBaseSecret.rarity
+                        };
+                    }
+                }
+                
+                // Handle perfect base RNG secret
+                if (perfectBaseSecret && !variantSecretResult) {
+                    displayName = perfectBaseSecret.name;
+                    displayValue *= perfectBaseSecret.rarity;
+                    
+                    rollResults.push({ 
+                        baseValue, 
+                        displayValue, 
+                        variants, 
+                        displayName, 
+                        isSecret: true, 
+                        secretRarityMultiplier: perfectBaseSecret.rarity,
+                        rankInfo: { name: perfectBaseSecret.name, rankNum: 999, isUnobtainable: false },
+                        isComplex: false,
+                        variantSecret: variantSecretResult,
+                        isPerfectBase: true
+                    });
+                    
+                    if (displayValue > maxRollValueInBulk) {
+                        maxRollValueInBulk = displayValue;
+                        isMaxRollSecret = true;
+                    }
+                    
+                    const baseRankName = perfectBaseSecret.name;
+                    if (!discoveredRanks.has(baseRankName)) {
+                        newRankDiscoveredInBulk = true;
+                    }
+                    
+                    continue;
+                }
+                
+                if (shouldCheck7GrandDad) {
+                    const sevenGrandDad = {
+                        name: "7 GRAND DAD",
+                        chance: 1/777.777,
+                        rarity: 777.777,
+                        multiplier: 7777777
+                    };
+                    
+                    displayValue *= sevenGrandDad.multiplier;
+                    
+                    rollResults.push({ 
+                        baseValue, 
+                        displayValue, 
+                        variants, 
+                        displayName: "7 GRAND DAD", 
+                        isSecret: true, 
+                        secretRarityMultiplier: sevenGrandDad.multiplier,
+                        rankInfo: { name: "7 GRAND DAD", rankNum: 999, isUnobtainable: false },
+                        isComplex: false,
+                        variantSecret: variantSecretResult
+                    });
+                    
+                    if (displayValue > maxRollValueInBulk) {
+                        maxRollValueInBulk = displayValue;
+                        isMaxRollSecret = true;
+                    }
+                    
+                    const baseRankName = "7 GRAND DAD";
+                    if (!discoveredRanks.has(baseRankName)) {
+                        newRankDiscoveredInBulk = true;
+                    }
+                    
+                    continue;
+                }
+                
+                const secretResult = getSecretRank(); 
+                let rankInfo = getRankInfo(baseValue);
+                let displayName = secretResult ? secretResult.name : rankInfo.name;
+                const isSecret = !!secretResult;
+                
+                if (displayName === "CATASTROPHIC" && secretResult.multiplier) {
+                    displayValue *= secretResult.multiplier;
+                }
+                
+                if (rankInfo.isUnobtainable) {
+                    displayName = hardcoreMode ? "Unobtainable [HC]" : "Unobtainable";
+                    displayValue = rankInfo.value;
+                }
+                
+                if (displayName === "LEGACY In im table ?!?!?" && secretResult.multiplier) {
+                    displayValue *= secretResult.multiplier;
+                }
+                
+                let secretRarityMultiplier = 1;
+                if (isSecret) {
+                    if (secretResult.rarity) {
+                        secretRarityMultiplier = secretResult.rarity;
+                        displayValue *= secretRarityMultiplier;
+                    } else {
+                        secretRarityMultiplier = 1;
+                    }
+                    if (secretRarityMultiplier >= 1000000000) {
+                        new Audio("assets/100t.wav").play();
+                    } else if (secretRarityMultiplier >= 50000000) {
+                        new Audio("assets/cowm.wav").play();
+                    }
+                }
+                        secretRarityMultiplier = 1;
+                    }
+                    
+                    // SFX for secret rolls
+                    if (secretRarityMultiplier >= 1000000000) {
+                        new Audio('assets/100t.wav').play();
+                    } else if (secretRarityMultiplier >= 50000000) {
+                        new Audio('assets/cowm.wav').play();
+                    }
+                }
+                        displayValue = 0; 
+                    }
+                }
+                
+                if (displayName === "CORRUPTED") {
+                    displayValue *= -1;
+                }
+                
+                if (displayName === "Destroyed") {
+                    displayValue = 0;
+                }
+                
+                // Apply variant secret multiplier if found
+                if (variantSecretResult && variantSecretResult.multipliesRNG) {
+                    displayValue *= variantSecretResult.multipliesRNG;
+                }
+                
+                const isDiscovered = discoveredRanks.has(displayName);
+                
+                rollResults.push({ 
+                    baseValue, 
+                    displayValue, 
+                    variants, 
+                    displayName, 
+                    isSecret, 
+                    secretRarityMultiplier,
+                    rankInfo,
+                    isComplex: false,
+                    variantSecret: variantSecretResult,
+                    isPerfectBase: false
+                };
+                });
+                
+                if (displayValue > maxRollValueInBulk) {
+                    maxRollValueInBulk = displayValue;
+                    isMaxRollSecret = isSecret;
+                }
+                
+                const baseRankName = displayName.replace(" [HC]", "");
+                if (!discoveredRanks.has(baseRankName)) {
+                    newRankDiscoveredInBulk = true;
+                }
+            }
+            
+            if (cutscenesEnabled && maxRollValueInBulk >= 1e9 && !hardcoreMode) {
+                await playCutscene(maxRollValueInBulk, isMaxRollSecret);
+            }
+            
+            for (const rollData of rollResults) {
+                let { baseValue, displayValue, complexValue, variants, displayName, isSecret, secretRarityMultiplier, rankInfo, isComplex, complexData, variantSecret, isPerfectBase } = rollData;
+                
+                // Apply destroy currency multiplier
+                const currencyGain = (Math.pow(baseValue / 75, 0.75)) / 1.5 * destroyCurrencyMultiplier;
+                
+                const { className: rankClassBase, color: rollColorBase } = getRankClassAndColor(
+                    typeof displayValue === 'object' ? Math.sqrt(displayValue.real**2 + displayValue.imag**2) : displayValue, 
+                    variants, 
+                    displayName
+                );
+
+                let rankClass = rankClassBase;
+                let rollColor = rollColorBase;
+
+                if (displayName === "BOOTLEG") {
+                    rankClass = "bootleg-title";
+                }
+
+                if (displayName === "CORRUPTED") {
+                    rankClass += " secret-corrupted";
+                    rollColor = "#FFFFFF"; 
+                }
+                
+                if (displayName === "Feimienation") {
+                    rankClass += " feimienation-wrapper";
+                }
+                
+                if (isComplex) {
+                    rankClass = "rank-complex";
+                }
+
+                let suffix = "";
+                let finalDisplayValue = displayValue;
+                
+                if (displayName === "100") suffix = ` * 💯`;
+                if (displayName === ":[{(absolute zero)}]:") suffix = ` * 0`;
+                
+                if (displayName === "⛧Satanic⛧") {
+                    suffix = ` (Actual: ${formatNumber(displayValue)})`;
+                    finalDisplayValue = -666.66;
+                    rankClass = "rank-1000000-100000000";
+                    rollColor = "#ff0000";
+                }
+                if (displayName === "Finale.. wait, how'd this get here?") {
+                    suffix = ` (Actual: ${formatNumber(displayValue)})`;
+                    finalDisplayValue = 1e10; 
+                    rankClass = getRankClass(1e10);
+                    rollColor = getRankClassAndColor(1e10).color;
+                }
+                
+                const secretMultiplierText = (isSecret && secretRarityMultiplier > 1) ? ` (x${formatNumber(secretRarityMultiplier)})` : '';
+
+                if (displayName === "~Nonavacious~") {
+                    rankClass += " secret-nonavacious";
+                }
+                
+                if (displayName === "Poly") {
+                    rankClass = `poly-dodecahedron-wrapper ${rankClass}`;
+                }
+                
+                const currentIndex = rollIndex++;
+                
+                let newRankDiscovered = false;
+                const baseRankName = displayName.replace(" [HC]", "");
+                if (!discoveredRanks.has(baseRankName)) {
+                    discoveredRanks.add(baseRankName);
+                    addToTerminal(`🎉 NEW RANK DISCOVERED: ${displayName}!`, true);
+                    updateIndexDisplay();
+                    newRankDiscovered = true;
+                }
+                
+                // Handle variant secret discovery
+                if (variantSecret && !discoveredVariantSecrets.has(variantSecret.name)) {
+                    discoveredVariantSecrets.add(variantSecret.name);
+                    addToTerminal(`🎉 NEW VARIANT SECRET DISCOVERED: ${variantSecret.name}! (${variantSecret.needsRank} + ${variantSecret.needsVariant})`, true, 'rank-10000-100000');
+                    updateIndexDisplay();
+                    updateStats();
+                }
+                
+                currency += currencyGain;
+                
+                if (baseValue > highestBaseRoll) {
+                    highestBaseRoll = baseValue;
+                }
+
+                if ((displayName !== "CORRUPTED" && displayValue > highestFinalRoll.value) || 
+                    (displayName === "CORRUPTED" && (highestFinalRoll.rank !== "CORRUPTED" || displayValue < highestFinalRoll.value))) {
+                    highestFinalRoll = {
+                        value: displayValue,
+                        baseValue: baseValue,
+                        rank: displayName,
+                        variants: variants,
+                        isSecret: isSecret,
+                        variantSecret: variantSecret,
+                        isPerfectBase: isPerfectBase
+                    };
+                }
+                
+                // AUTO-ACCEPT LOGIC
+                const shouldAcceptOnValue = autoAcceptThreshold > 0 && displayValue >= autoAcceptThreshold;
+                const shouldAcceptOnSecret = autoAcceptSecretThresholdValue > 0 && isSecret && secretRarityMultiplier >= autoAcceptSecretThresholdValue;
+                const shouldAcceptOnNew = autoAcceptOnNewRank && newRankDiscovered;
+                const shouldAcceptOnTrueRNG = autoAcceptTrueRNGValue > 0 && baseValue >= autoAcceptTrueRNGValue;
+                const shouldAcceptCorrupted = displayName === "CORRUPTED" && (autoAcceptSecretThresholdValue > 0 || autoAcceptThreshold > 0);
+                
+                // AUTO-STOP LOGIC
+                const shouldStopOnValue = autoStopThreshold > 0 && displayValue >= autoStopThreshold;
+                const shouldStopOnSecret = autoStopSecretThresholdValue > 0 && isSecret && secretRarityMultiplier >= autoStopSecretThresholdValue;
+                const shouldStopOnNew = autoStopOnNewRank && newRankDiscovered;
+                const shouldStopOnTrueRNG = autoStopTrueRNGValue > 0 && baseValue >= autoStopTrueRNGValue;
+                const shouldStopCorrupted = displayName === "CORRUPTED" && (autoStopSecretThresholdValue > 0 || autoStopThreshold > 0);
+                
+                let variantText = '';
+                if (variants.length > 0) {
+                    variantText = variants.map(v => {
+                        let variantClass = '';
+                        if (v.name === "GIANT") variantClass = 'variant-GIANT';
+                        else if (v.name === "Mega") variantClass = 'variant-Mega';
+                        else if (v.name === "Small") variantClass = 'variant-Small';
+                        
+                        return `<span class="${variantClass}" style="color: ${v.color}; font-weight: bold;">[${v.name}]</span>`;
+                    }).join('') + ' ';
+                }
+                
+                const variantDataAttr = variants.length > 0 ? `data-variants='${JSON.stringify(variants)}'` : '';
+                const baseValueAttr = `data-basevalue='${baseValue}'`;
+                const dataTextAttr = `data-text='${escapeHTML(displayName)}'`;
+                
+                let content = '';
+                
+                if (isComplex) {
+                    const realFormatted = formatNumber(complexData.realPart);
+                    const imagFormatted = formatNumber(complexData.imagPart);
+                    content = `<span class="clickable-roll ${rankClass}" style="color: ${rollColor};" onclick="tryAddToInventory(${displayValue}, '${escapeHTML(displayName)}', ${currentIndex}, this)" id="roll-${currentIndex}" ${variantDataAttr} ${baseValueAttr} ${dataTextAttr}>${realFormatted} + ${imagFormatted}i [${displayName}]${secretMultiplierText}${suffix}</span>`;
+                } else {
+                    let variantSecretBadge = '';
+                    if (variantSecret) {
+                        variantSecretBadge = ` <span class="variant-secret-badge" title="${variantSecret.needsRank} + ${variantSecret.needsVariant}">${variantSecret.name}</span>`;
+                    }
+                    
+                    content = `<span class="clickable-roll ${rankClass}" style="color: ${rollColor};" onclick="tryAddToInventory(${displayValue}, '${escapeHTML(displayName)}', ${currentIndex}, this)" id="roll-${currentIndex}" ${variantDataAttr} ${baseValueAttr} ${dataTextAttr}>${formatNumber(finalDisplayValue)} [${displayName}]${secretMultiplierText}${suffix}${variantSecretBadge}</span>`;
+                }
+                
+                if (displayName === "⛧Satanic⛧") {
+                    content = `<span class="satanic-wrapper">${content}</span>`;
+                }
+                
+                if (displayName === "Feimienation") {
+                    content = `<span class="feimienation-wrapper">${content}</span>`;
+                }
+
+                addToTerminal(
+                    `#${formatInteger(currentIndex)}: ${variantText}${content} (+${currencyGain.toFixed(2)} currency)`
+                );
+
+                if (displayName === "?!? bewilderment ?!?") {
+                    setTimeout(() => initBewildermentAnimation(`roll-${currentIndex}`), 100);
+                }
+                
+                if (displayName === "!! EUPHORIA !!") {
+                    initEuphoriaAnimation(`roll-${currentIndex}`, "!! EUPHORIA !!");
+                }
+                if (displayName === "!!! S E R O T O N I N !!!" || displayName === "Feimienation") {
+                    initSerotoninAnimation(`roll-${currentIndex}`, displayName);
+                }
+                
+                if (isComplex) {
+                    activeAnimationElements.add(`roll-${currentIndex}`);
+                }
+
+                // AUTO-ACCEPT Logic
+                if (autoRollInterval && (shouldAcceptOnValue || shouldAcceptOnSecret || shouldAcceptOnNew || shouldAcceptOnTrueRNG || shouldAcceptCorrupted)) {
+                    
+                    const rollElement = document.getElementById(`roll-${currentIndex}`);
+                    
+                    if (!acceptedRolls.has(currentIndex)) {
+                        if (inventory.length >= maxInventory) {
+                            if (addToPendingRolls(displayValue, displayName, currentIndex, variants, baseValue)) {
+                                acceptedRolls.add(currentIndex);
+                                
+                                if (activeEuphoriaIntervals[currentIndex]) {
+                                    clearInterval(activeEuphoriaIntervals[currentIndex]);
+                                    delete activeEuphoriaIntervals[currentIndex];
+                                }
+                                
+                                if (activeBewildermentIntervals[`roll-${currentIndex}`]) {
+                                    clearInterval(activeBewildermentIntervals[`roll-${currentIndex}`]);
+                                    delete activeBewildermentIntervals[`roll-${currentIndex}`];
+                                }
+                                
+                                let acceptSuffix = "";
+                                if (displayName === "⛧Satanic⛧") acceptSuffix = ` (Actual: ${formatNumber(displayValue)})`;
+                                if (displayName === "Finale.. wait, how'd this get here?") acceptSuffix = ` (Actual: ${formatNumber(displayValue)})`;
+                                
+                                addToTerminal(`Auto-Accepted to pending: #${formatInteger(currentIndex)} ${variantText}${formatNumber(finalDisplayValue)} [${displayName}]${acceptSuffix}`, true, 'rank-1000-10000');
+                                
+                                if (rollElement) {
+                                    rollElement.style.opacity = '0.5';
+                                    rollElement.style.cursor = 'not-allowed';
+                                    rollElement.onclick = null;
+                                }
+                                
+                                saveGame();
+                            }
+                        } else {
+                            if (addToInventory(displayValue, displayName, currentIndex, variants, baseValue)) {
+                                acceptedRolls.add(currentIndex);
+                                
+                                if (activeEuphoriaIntervals[currentIndex]) {
+                                    clearInterval(activeEuphoriaIntervals[currentIndex]);
+                                    delete activeEuphoriaIntervals[currentIndex];
+                                }
+                                
+                                if (activeBewildermentIntervals[`roll-${currentIndex}`]) {
+                                    clearInterval(activeBewildermentIntervals[`roll-${currentIndex}`]);
+                                    delete activeBewildermentIntervals[`roll-${currentIndex}`];
+                                }
+                                
+                                let acceptSuffix = "";
+                                if (displayName === "⛧Satanic⛧") acceptSuffix = ` (Actual: ${formatNumber(displayValue)})`;
+                                if (displayName === "Finale.. wait, how'd this get here?") acceptSuffix = ` (Actual: ${formatNumber(displayValue)})`;
+                                
+                                addToTerminal(`Auto-Accepted: #${formatInteger(currentIndex)} ${variantText}${formatNumber(finalDisplayValue)} [${displayName}]${acceptSuffix}`, true, 'rank-1000-10000');
+                                
+                                if (rollElement) {
+                                    rollElement.style.opacity = '0.5';
+                                    rollElement.style.cursor = 'not-allowed';
+                                    rollElement.onclick = null;
+                                }
+                                
+                                saveGame();
+                            }
+                        }
+                    }
+                }
+                
+                // AUTO-STOP Logic
+                if (autoRollInterval && (shouldStopOnValue || shouldStopOnSecret || shouldStopOnNew || shouldStopOnTrueRNG || shouldStopCorrupted)) {
+                    toggleAutoRoll();
+                    addToTerminal(`Auto-roll STOPPED by stop condition: #${formatInteger(currentIndex)} ${variantText}${formatNumber(finalDisplayValue)} [${displayName}]`, true, 'rank-1000000-100000000');
+                    break;
+                }
+            }
+            
+            updateStats();
+            preserveAnimations();
+            saveGame();
+        }
+
+        // --- MODIFIED INDEX DISPLAY ---
+        
+        function updateIndexDisplay() {
+            const indexContent = document.getElementById('indexContent');
+            
+            const sortedNormalRanks = [...RANK_TIERS].sort((a, b) => a.min - b.min);
+            const sortedSecretRanks = [...SECRET_RANKS_CHANCES].sort((a, b) => a.chance - b.chance);
+            
+            let html = '<div style="margin-bottom: 15px;"><strong>Normal Ranks:</strong></div>';
+            
+            sortedNormalRanks.forEach(tier => {
+                const discovered = discoveredRanks.has(tier.name) || discoveredRanks.has(tier.name + " [HC]");
+                let rankClass = getRankClass((tier.min + tier.max) / 2); 
+                if (tier.name === "Improbable") {
+                    rankClass = "rank-improbable";
+                }
+                html += `<div class="index-item ${discovered ? 'discovered' : 'locked'}">
+                    ${discovered ? `<span class="${rankClass}">${tier.name}</span>` : '???'}
+                </div>`;
+            });
+            
+            const unobtainableDiscovered = discoveredRanks.has("Unobtainable") || discoveredRanks.has("Unobtainable [HC]");
+            html += `<div class="index-item ${unobtainableDiscovered ? 'discovered' : 'locked'}">
+                ${unobtainableDiscovered ? `<span class="rank-unobtainable">Unobtainable</span>` : '???'}
+            </div>`;
+            
+            html += '<div style="margin: 15px 0;"><strong>Secret Ranks:</strong></div>';
+            
+            sortedSecretRanks.forEach(rankInfo => {
+                const rankName = rankInfo.name;
+                if (rankInfo.timeBased) return;
+                
+                const discovered = discoveredRanks.has(rankName);
+                let rankStyle = `color: #ff69b4;`;
+                
+                if (rankName === "CORRUPTED") {
+                    rankStyle = `color: #ffffff; filter: invert(100%); display: inline-block;`;
+                }
+                
+                if (rankName === "Feimienation") {
+                    rankStyle = `color: #FF69B4; display: inline-block;`;
+                }
+                
+                html += `<div class="index-item ${discovered ? 'discovered' : 'locked'}">
+                    ${discovered ? `<span style="${rankStyle}">${rankName}</span>` : '???'}
+                </div>`;
+            });
+            
+            const breaktimeDiscovered = discoveredRanks.has("breaktime");
+            html += `<div class="index-item ${breaktimeDiscovered ? 'discovered' : 'locked'}">
+                ${breaktimeDiscovered ? `<span style="color: #ff69b4;">breaktime</span>` : '???'}
+            </div>`;
+
+            const mortsLuckDiscovered = discoveredRanks.has("morts luck");
+            const mortsLuckStyle = `color: #ff0000; font-weight: bold;`;
+            html += `<div class="index-item ${mortsLuckDiscovered ? 'discovered' : 'locked'}">
+                ${mortsLuckDiscovered ? `<span style="${mortsLuckStyle}">morts luck</span>` : '???'}
+            </div>`;
+            
+            // Perfect Base RNG Secrets Section
+            html += '<div class="variant-secrets-section">';
+            html += '<div style="margin: 15px 0;"><strong>Perfect Base RNG Secrets:</strong></div>';
+            
+            PERFECT_BASE_RNG_SECRETS.forEach(secret => {
+                const discovered = discoveredRanks.has(secret.name);
+                html += `<div class="variant-secret-item ${discovered ? 'discovered' : 'locked'}">
+                    ${discovered ? 
+                        `<span style="color: #00ff00;">${secret.name}</span> (Base: ${secret.baseRNG})` : 
+                        '???'
+                    }
+                </div>`;
+            });
+            
+            html += '</div>';
+            
+            // Variant Secrets Section
+            html += '<div class="variant-secrets-section">';
+            html += '<div style="margin: 15px 0;"><strong>Variant Secrets:</strong></div>';
+            
+            const sortedVariantSecrets = [...VARIANT_SECRETS].sort((a, b) => a.rarity - b.rarity);
+            
+            sortedVariantSecrets.forEach(secret => {
+                const discovered = discoveredVariantSecrets.has(secret.name);
+                html += `<div class="variant-secret-item ${discovered ? 'discovered' : 'locked'}">
+                    ${discovered ? 
+                        `<span style="color: #00ffff;">${secret.name}</span> (${secret.needsRank} + ${secret.needsVariant})` : 
+                        '???'
+                    }
+                </div>`;
+            });
+            
+            html += '</div>';
+            
+            indexContent.innerHTML = html;
+        }
+
+        // --- MODIFIED SAVE/LOAD FUNCTIONS ---
+        
+        function saveGame() {
+            if (calisrng2.ruin) return;
+            
+            const gameState = {
+                currency,
+                totalUpgrades,
+                upgradeCost,
+                highestBaseRoll, 
+                highestFinalRoll: highestFinalRoll || { 
+                    value: 0, 
+                    baseValue: 0, 
+                    rank: 'None yet', 
+                    variants: [], 
+                    isSecret: false 
+                },
+                maxInventory,
+                inventory,
+                rollIndex,
+                acceptedRolls: Array.from(acceptedRolls),
+                discoveredRanks: Array.from(discoveredRanks),
+                bulkRollLevel,
+                bulkRollCost,
+                
+                pendingRolls,
+                maxPendingRolls,
+                
+                secretsEnabled,
+
+                hardcoreMode,
+                originalBulkRollLevel,
+                originalLuck,
+                originalVariantChance,
+                originalSecretLuck,
+
+                sciNotationThreshold,
+                sciNotationEnabled,
+
+                cutscenesEnabled,
+
+                currentEvent: currentEvent ? { name: currentEvent.name, duration: currentEvent.duration, description: currentEvent.description, targets: currentEvent.targets, multiplier: currentEvent.multiplier, eventChanceBoost: currentEvent.eventChanceBoost } : null,
+                eventEndTime,
+                eventCheckChance,
+
+                autoAcceptThreshold,
+                autoAcceptTrueRNGValue,
+                autoAcceptSecretThresholdValue,
+                autoAcceptOnNewRank,
+                autoStopThreshold,
+                autoStopTrueRNGValue,
+                autoStopSecretThresholdValue,
+                autoStopOnNewRank,
+
+                geometrix,
+                shapesUnlocked,
+                shapeLuckLevel,
+                shapeLuckCost,
+                luckMultiLevel,
+                luckMultiCost,
+                bulkShapeLevel,
+                bulkShapeCost,
+                activeShapes: activeShapes.map(shape => ({
+                    id: shape.id,
+                    name: shape.name,
+                    gain: shape.gain,
+                    color: shape.color,
+                    posX: shape.posX,
+                    posY: shape.posY,
+                    spawnTime: shape.spawnTime
+                })),
+                
+                clickerUnlocked,
+                fortunium,
+                fortuniumLuck,
+                gmxMultiLevel,
+                gmxMultiCost,
+                fortuniumLuckLevel,
+                fortuniumLuckCost,
+                clickerLuckLevel,
+                clickerLuckCost,
+                
+                boosters,
+                activeBooster,
+                
+                shopBoosters,
+                shopLastRefresh: Date.now(),
+                discoveredVariantSecrets: Array.from(discoveredVariantSecrets),
+                
+                // NEW: Destroy system data
+                destroyCount,
+                destroyCost,
+                currentDimension,
+                dimensions,
+                destroyLuckMultiplier,
+                destroyCurrencyMultiplier,
+                
+                // NEW: Debug unlock state
+                debugUnlocked
+            };
+            localStorage.setItem('calisRNGGame', JSON.stringify(gameState));
+            
+            setTimeout(refreshAllUI, 50);
+        }
+
+        function loadGame() {
+            const saved = localStorage.getItem('calisRNGGame');
+            if (saved) {
+                try {
+                    const gameState = JSON.parse(saved);
+                    currency = gameState.currency || 0;
+                    totalUpgrades = gameState.totalUpgrades || 0;
+                    upgradeCost = gameState.upgradeCost || 50;
+                    
+                    if (gameState.highestFinalRoll) {
+                        highestFinalRoll = gameState.highestFinalRoll;
+                        if (typeof highestFinalRoll.isSecret === 'undefined') {
+                             highestFinalRoll.isSecret = SECRET_RANKS_CHANCES.map(r => r.name).includes(highestFinalRoll.rank) || highestFinalRoll.rank === "morts luck" || highestFinalRoll.rank === "Unobtainable";
+                        }
+                    } else {
+                        const baseRoll = gameState.highestRoll || 0;
+                        const rankInfo = getRankInfo(baseRoll);
+                         highestFinalRoll = {
+                            value: baseRoll,
+                            baseValue: baseRoll,
+                            rank: rankInfo.name,
+                            variants: [],
+                            isSecret: false
+                        };
+                    }
+                    
+                    highestBaseRoll = gameState.highestBaseRoll || (highestFinalRoll ? highestFinalRoll.baseValue : 0);
+                    maxInventory = gameState.maxInventory || 10;
+                    
+                    inventory = (gameState.inventory || []).map(item => {
+                        if (item.variant && !item.variants) {
+                            item.variants = [item.variant];
+                            delete item.variant;
+                        } else if (!item.variants) {
+                            item.variants = [];
+                        }
+                         if (typeof item.isSecret === 'undefined') {
+                            item.isSecret = SECRET_RANKS_CHANCES.map(r => r.name).includes(item.rank.replace(" [HC]", "")) || item.rank === "morts luck" || item.rank === "breaktime" || item.rank.includes("Unobtainable");
+                        }
+                        return item;
+                    });
+
+                    rollIndex = gameState.rollIndex || 1;
+                    acceptedRolls = new Set(gameState.acceptedRolls || []);
+                    discoveredRanks = new Set(gameState.discoveredRanks || []);
+                    bulkRollLevel = gameState.bulkRollLevel || 0;
+                    bulkRollCost = gameState.bulkRollCost || 50000;
+                    
+                    pendingRolls = gameState.pendingRolls || [];
+                    maxPendingRolls = gameState.maxPendingRolls || maxInventory * 3;
+                    
+                    secretsEnabled = typeof gameState.secretsEnabled !== 'undefined' ? gameState.secretsEnabled : true;
+                    
+                    hardcoreMode = gameState.hardcoreMode || false;
+                    originalBulkRollLevel = gameState.originalBulkRollLevel || 0;
+                    originalLuck = gameState.originalLuck || 0;
+                    originalVariantChance = gameState.originalVariantChance || 1;
+                    originalSecretLuck = gameState.originalSecretLuck || 1;
+                    
+                    sciNotationThreshold = gameState.sciNotationThreshold || DEFAULT_SCI_THRESHOLD;
+                    sciNotationEnabled = typeof gameState.sciNotationEnabled !== 'undefined' ? gameState.sciNotationEnabled : true;
+                    
+                    cutscenesEnabled = typeof gameState.cutscenesEnabled === 'boolean' ? gameState.cutscenesEnabled : true;
+
+                    currentEvent = gameState.currentEvent || null;
+                    eventEndTime = gameState.eventEndTime || 0;
+                    eventCheckChance = gameState.eventCheckChance || 1;
+
+                    autoAcceptThreshold = gameState.autoAcceptThreshold || 0;
+                    autoAcceptTrueRNGValue = gameState.autoAcceptTrueRNGValue || 0;
+                    autoAcceptSecretThresholdValue = gameState.autoAcceptSecretThresholdValue || 0;
+                    autoAcceptOnNewRank = gameState.autoAcceptOnNewRank || false;
+                    
+                    autoStopThreshold = gameState.autoStopThreshold || 0;
+                    autoStopTrueRNGValue = gameState.autoStopTrueRNGValue || 0;
+                    autoStopSecretThresholdValue = gameState.autoStopSecretThresholdValue || 0;
+                    autoStopOnNewRank = gameState.autoStopOnNewRank || false;
+
+                    geometrix = gameState.geometrix || 0;
+                    shapesUnlocked = gameState.shapesUnlocked || false;
+                    shapeLuckLevel = gameState.shapeLuckLevel || 0;
+                    shapeLuckCost = gameState.shapeLuckCost || 5;
+                    luckMultiLevel = gameState.luckMultiLevel || 0;
+                    luckMultiCost = gameState.luckMultiCost || 100;
+                    bulkShapeLevel = gameState.bulkShapeLevel || 0;
+                    bulkShapeCost = gameState.bulkShapeCost || 50;
+                    
+                    activeShapes = gameState.activeShapes || [];
+
+                    clickerUnlocked = gameState.clickerUnlocked || false;
+                    fortunium = gameState.fortunium || 0;
+                    fortuniumLuck = gameState.fortuniumLuck || 0;
+                    gmxMultiLevel = gameState.gmxMultiLevel || 0;
+                    gmxMultiCost = gameState.gmxMultiCost || 75;
+                    fortuniumLuckLevel = gameState.fortuniumLuckLevel || 0;
+                    fortuniumLuckCost = gameState.fortuniumLuckCost || 125;
+                    clickerLuckLevel = gameState.clickerLuckLevel || 0;
+                    clickerLuckCost = gameState.clickerLuckCost || 1000;
+                    
+                    boosters = gameState.boosters || [];
+                    activeBooster = gameState.activeBooster || null;
+                    updateBoosterDisplay();
+                    
+                    // NEW: Load shop data with validation
+                    try {
+                        shopBoosters = (gameState.shopBoosters || []).filter(b => 
+                            b && isFinite(b.cost) && b.cost > 0 && b.luck && b.shape
+                        );
+                        const shopLastRefresh = gameState.shopLastRefresh || 0;
+                        if (Date.now() - shopLastRefresh > 20000 || shopBoosters.length === 0) {
+                            shopBoosters = [];
+                        }
+                    } catch (e) {
+                        console.error('Error loading shop boosters:', e);
+                        shopBoosters = [];
+                    }
+                    
+                    // NEW: Load variant secrets
+                    discoveredVariantSecrets = new Set(gameState.discoveredVariantSecrets || []);
+                    
+                    // NEW: Load destroy system data
+                    destroyCount = gameState.destroyCount || 0;
+                    destroyCost = gameState.destroyCost || DESTROY_BASE_COST;
+                    currentDimension = gameState.currentDimension || 1;
+                    dimensions = gameState.dimensions || [];
+                    destroyLuckMultiplier = gameState.destroyLuckMultiplier || 1;
+                    destroyCurrencyMultiplier = gameState.destroyCurrencyMultiplier || 1;
+
+                    // NEW: Load debug unlock state
+                    debugUnlocked = gameState.debugUnlocked || false;
+                    if (debugUnlocked) {
+                        unlockDebugPanel();
+                    }
+
+                    updateCalculatedStats();
+                    
+                    if (hardcoreMode) {
+                        bulkRollLevel = 0;
+                        currentLuck = 0;
+                        variantChanceMultiplier = 1;
+                        secretLuckMultiplier = 1;
+                        luckMultiValue = 1;
+                        
+                        document.getElementById('hardcoreToggleBtn').textContent = 'Hardcore Mode: ON';
+                        document.getElementById('hardcoreToggleBtn').classList.add('active');
+                        document.getElementById('hardcoreStatus').textContent = 'ON';
+                        document.getElementById('hardcore-warning').style.display = 'block';
+                        document.body.classList.add('hardcore-mode-active');
+                    }
+                    
+                    document.getElementById('sciNotationThreshold').value = sciNotationThreshold;
+                    document.getElementById('sciNotationStatus').textContent = sciNotationEnabled ? 'ON' : 'OFF';
+                    document.getElementById('sciNotationStatus').style.color = sciNotationEnabled ? '#00ff00' : '#ff0000';
+                    
+                    document.getElementById('autoAcceptThreshold').value = autoAcceptThreshold;
+                    document.getElementById('autoAcceptTrueRNG').value = autoAcceptTrueRNGValue;
+                    document.getElementById('autoAcceptSecretThreshold').value = autoAcceptSecretThresholdValue;
+                    document.getElementById('autoAcceptNewRank').checked = autoAcceptOnNewRank;
+                    
+                    document.getElementById('autoStopThreshold').value = autoStopThreshold;
+                    document.getElementById('autoStopTrueRNG').value = autoStopTrueRNGValue;
+                    document.getElementById('autoStopSecretThreshold').value = autoStopSecretThresholdValue;
+                    document.getElementById('autoStopNewRank').checked = autoStopOnNewRank;
+                    
+                    refreshAllUI();
+                    
+                    if (shapesUnlocked) {
+                        renderActiveShapes();
+                        startShapeInterval();
+                    }
+                    
+                    if (currentEvent && eventEndTime > Date.now() && !hardcoreMode) {
+                        const durationRemaining = eventEndTime - Date.now();
+                        resumeEvent(currentEvent, durationRemaining);
+                    } else if (currentEvent && eventEndTime <= Date.now()) {
+                        endEvent({ name: currentEvent.name, eventChanceBoost: currentEvent.eventChanceBoost });
+                    }
+                    
+                    addToTerminal('Game loaded!', true);
+                } catch (e) {
+                    console.error('Error loading game:', e);
+                    updateCalculatedStats();
+                    refreshAllUI();
+                }
+            } else {
+                 updateCalculatedStats();
+                refreshAllUI();
+            }
+        }
+
+        // --- MODIFIED EXPORT/IMPORT WITH SHOP DATA ---
+        
+        function exportSave() {
+            try {
+                saveGame();
+                const saveData = localStorage.getItem('calisRNGGame');
+                if (!saveData) {
+                    addToTerminal('No save data found!', true);
+                    return;
+                }
+                
+                const compressedData = LZString.compressToBase64(saveData);
+                document.getElementById('saveDataTextarea').value = compressedData;
+                
+                addToTerminal('✅ Save data exported (includes shop and variant secrets)!', true);
+            } catch (e) {
+                console.error('Error exporting save:', e);
+                addToTerminal('Error exporting save data. Check console.', true, 'rank-1000000-100000000');
+            }
+        }
+        
+        function importSave() {
+            if (!confirm("Are you sure you want to import this save? This will OVERWRITE your current progress and reload the page.")) {
+                return;
+            }
+            
+            try {
+                const compressedData = document.getElementById('saveDataTextarea').value;
+                if (!compressedData) {
+                    addToTerminal('Paste save data into the text box first!', true);
+                    return;
+                }
+                
+                let decodedData;
+                try {
+                    decodedData = LZString.decompressFromBase64(compressedData);
+                } catch (e) {
+                    decodedData = compressedData;
+                }
+                
+                if (!decodedData) {
+                    addToTerminal('Invalid save data format!', true);
+                    return;
+                }
+                
+                JSON.parse(decodedData);
+                
+                localStorage.setItem('calisRNGGame', decodedData);
+                
+                if (autoRollInterval) clearInterval(autoRollInterval);
+                if (eventInterval) clearInterval(eventInterval);
+                if (shapeInterval) clearInterval(shapeInterval);
+                if (currentEvent && currentEvent.timeoutId) clearTimeout(currentEvent.timeoutId);
+                if (shopAutoRefreshInterval) clearInterval(shopAutoRefreshInterval);
+                for (const id in activeEuphoriaIntervals) {
+                    clearInterval(activeEuphoriaIntervals[id]);
+                }
+                for (const id in activeBewildermentIntervals) {
+                    clearInterval(activeBewildermentIntervals[id]);
+                }
+                
+                addToTerminal('✅ Import successful (including shop data)! Reloading game...', true, 'rank-1000000000-10000000000');
+                
+                setTimeout(() => {
+                    location.reload();
+                }, 1000);
+                
+            } catch (e) {
+                console.error('Error importing save:', e);
+                addToTerminal('Error importing save data. Data might be corrupt or invalid. Check console.', true, 'rank-1000000-100000000');
+            }
+        }
+
+        // --- MODIFIED UPDATE STATS ---
+        
+        function updateStats() {
+            document.getElementById('currency').textContent = formatNumber(currency);
+            document.getElementById('geometrix').textContent = formatGeometrix(geometrix);
+            document.getElementById('upgrades').textContent = totalUpgrades;
+            
+            document.getElementById('luck').textContent = currentLuck.toFixed(3);
+            document.getElementById('luckMulti').textContent = luckMultiValue.toFixed(2);
+            document.getElementById('secretLuck').textContent = secretLuckMultiplier.toFixed(2);
+            document.getElementById('variantChance').textContent = variantChanceMultiplier.toFixed(2);
+            
+            document.getElementById('upgradeCost').textContent = formatNumber(upgradeCost);
+            document.getElementById('inventoryCount').textContent = inventory.length;
+            document.getElementById('inventoryMax').textContent = maxInventory;
+            document.getElementById('pendingCount').textContent = pendingRolls.length;
+            document.getElementById('pendingMax').textContent = maxPendingRolls;
+            
+            let visibleDiscoveredCount = 0;
+            for (const rankName of discoveredRanks) {
+                if (rankName.includes("DEV EXCLUSIVE")) {
+                    continue;
+                }
+                visibleDiscoveredCount++;
+            }
+            document.getElementById('ranksDiscovered').textContent = visibleDiscoveredCount;
+            document.getElementById('totalRanks').textContent = TOTAL_RANKS;
+            document.getElementById('secretsEnabled').textContent = secretsEnabled ? 'Yes' : 'No';
+            document.getElementById('hardcoreStatus').textContent = hardcoreMode ? 'ON' : 'OFF';
+            
+            // NEW: Variant secrets count
+            document.getElementById('variantSecretsDiscovered').textContent = discoveredVariantSecrets.size;
+            document.getElementById('totalVariantSecrets').textContent = TOTAL_VARIANT_SECRETS;
+            
+            document.getElementById('sciNotationStatus').textContent = sciNotationEnabled ? 'ON' : 'OFF';
+            document.getElementById('sciNotationStatus').style.color = sciNotationEnabled ? '#00ff00' : '#ff0000';
+            document.getElementById('sciNotationStat').textContent = `${sciNotationEnabled ? 'ON' : 'OFF'} (≥${formatNumber(sciNotationThreshold)})`;
+            
+            document.getElementById('bulkRollLevel').textContent = bulkRollLevel;
+            document.getElementById('bulkRollAmount').textContent = bulkRollLevel + 1;
+            
+            // NEW: Destroy system stats
+            document.getElementById('dimension').textContent = currentDimension;
+            document.getElementById('destroyCount').textContent = destroyCount;
+            document.getElementById('destroyMulti').textContent = destroyLuckMultiplier.toFixed(2);
+            document.getElementById('currencyMulti').textContent = destroyCurrencyMultiplier.toFixed(2);
+            document.getElementById('destroyCost').textContent = formatNumber(destroyCost);
+            document.getElementById('destroyCostBtn').textContent = formatNumber(destroyCost);
+            
+            const destroyBtn = document.getElementById('destroyBtn');
+            if (destroyBtn) {
+                destroyBtn.disabled = currency < destroyCost;
+                destroyBtn.innerHTML = `DESTROY (Cost: <span id="destroyCostBtn">${formatNumber(destroyCost)}</span>)`;
+            }
+            
+            // Update dimension list display
+            updateDimensionList();
+            
+            const bulkCostEl = document.getElementById('bulkRollCost');
+            const bulkBtnEl = document.getElementById('buyBulkRollBtn');
+            
+            if (bulkRollLevel >= MAX_BULK_ROLL_LEVEL) {
+                bulkCostEl.textContent = "MAXED";
+                if (bulkBtnEl) {
+                    bulkBtnEl.disabled = true;
+                    bulkBtnEl.textContent = "Bulk Roll (MAXED)";
+                }
+            } else {
+                bulkCostEl.textContent = formatNumber(bulkRollCost);
+                if (bulkBtnEl) {
+                    bulkBtnEl.disabled = currency < bulkRollCost;
+                    bulkBtnEl.textContent = "Buy Bulk Roll";
+                }
+            }
+            
+            const statsContainer = document.querySelector('.stats');
+            let eventStat = document.getElementById('eventStat');
+            if (!eventStat) {
+                eventStat = document.createElement('div');
+                eventStat.className = 'stat-item';
+                eventStat.id = 'eventStat';
+                statsContainer.appendChild(eventStat);
+            }
+            const eventName = currentEvent ? currentEvent.name : "None";
+            const timeLeft = currentEvent ? Math.max(0, eventEndTime - Date.now()) : 0;
+            const timeLeftFormatted = (timeLeft / 1000).toFixed(1);
+            eventStat.innerHTML = `Active Event: <span style="color: ${currentEvent ? '#00FFFF' : '#ffffff'};">${eventName}</span> (${timeLeftFormatted}s)`;
+            
+            if (highestFinalRoll.value > 0 || highestFinalRoll.rank === "CORRUPTED") {
+                const { className, color } = getRankClassAndColor(highestFinalRoll.value, highestFinalRoll.variants, highestFinalRoll.rank);
+                let rankClass = className;
+                let rollColor = color;
+                let displayName = highestFinalRoll.rank;
+                let displayValue = highestFinalRoll.value;
+                let suffix = "";
+
+                if (displayName === "~Nonavacious~") {
+                    rankClass += " secret-nonavacious";
+                }
+                
+                if (displayName === "CORRUPTED") {
+                    rankClass += " secret-corrupted";
+                    rollColor = "#FFFFFF";
+                }
+                
+                if (displayName === "⛧Satanic⛧") {
+                    suffix = ` (Actual: ${formatNumber(highestFinalRoll.value)})`;
+                    displayValue = -666.66;
+                }
+                if (displayName === "Finale.. wait, how'd this get here?") {
+                    suffix = ` (Actual: ${formatNumber(highestFinalRoll.value)})`;
+                    displayValue = 1e10;
+                }
+                
+                document.getElementById('rarest').innerHTML = 
+                    `<span class="satanic-wrapper"><span class="${rankClass}" style="color: ${rollColor};">${formatNumber(displayValue)} [${displayName}]${suffix}</span></span>`;
+            }
+
+            const cutsceneBtn = document.getElementById('cutsceneToggleBtn');
+            if (cutsceneBtn) {
+                cutsceneBtn.textContent = `Cutscenes: ${cutscenesEnabled ? 'ON' : 'OFF'}`;
+            }
+
+            const secretBtn = document.getElementById('secretToggleBtn');
+            if (secretBtn) {
+                secretBtn.textContent = `Secrets: ${secretsEnabled ? 'ON' : 'OFF'}`;
+            }
+
+            const hardcoreBtn = document.getElementById('hardcoreToggleBtn');
+            if (hardcoreBtn) {
+                hardcoreBtn.textContent = `Hardcore Mode: ${hardcoreMode ? 'ON' : 'OFF'}`;
+                if (hardcoreMode) {
+                    hardcoreBtn.classList.add('active');
+                } else {
+                    hardcoreBtn.classList.remove('active');
+                }
+            }
+
+            const shapesGui = document.getElementById('shapes-gui');
+            if (shapesGui) {
+                shapesGui.style.display = shapesUnlocked ? 'block' : 'none';
+                shapesGui.offsetHeight;
+            }
+            
+            const shapesUnlockControls = document.getElementById('shapes-unlock-controls');
+            if (shapesUnlockControls) {
+                shapesUnlockControls.style.display = shapesUnlocked ? 'none' : 'grid';
+            }
+            
+            document.getElementById('unlockShapesBtn').disabled = currency < UNLOCK_SHAPES_COST;
+
+            if (shapesUnlocked) {
+                document.getElementById('shapeLuckBonus').textContent = shapeLuckBonus.toFixed(1);
+                document.getElementById('bulkShapeAmount').textContent = bulkShapeLevel + 1;
+                document.getElementById('bulkShapeLevel').textContent = bulkShapeLevel;
+                document.getElementById('shapeCooldown').textContent = formatCooldown(currentShapeCooldown);
+                
+                const shapeLuckBtn = document.getElementById('buyShapeLuckBtn');
+                document.getElementById('shapeLuckCost').textContent = formatGeometrix(shapeLuckCost);
+                if (shapeLuckLevel >= MAX_SHAPE_LUCK_LEVEL) {
+                    shapeLuckBtn.disabled = true;
+                    shapeLuckBtn.innerHTML = `Shape Luck (MAXED)`;
+                } else {
+                    shapeLuckBtn.disabled = geometrix < shapeLuckCost;
+                    shapeLuckBtn.innerHTML = `Shape Luck (+0.1x) - Cost: <span id="shapeLuckCost">${formatGeometrix(shapeLuckCost)}</span> GMX`;
+                }
+                
+                const luckMultiBtn = document.getElementById('buyLuckMultiBtn');
+                document.getElementById('luckMultiCost').textContent = formatGeometrix(luckMultiCost);
+                luckMultiBtn.disabled = geometrix < luckMultiCost;
+
+                const bulkShapeBtn = document.getElementById('buyBulkShapeBtn');
+                document.getElementById('bulkShapeCost').textContent = formatGeometrix(bulkShapeCost);
+                if (bulkShapeLevel >= MAX_BULK_SHAPE_LEVEL) {
+                    bulkShapeBtn.disabled = true;
+                    bulkShapeBtn.innerHTML = `Bulk/Cooldown (MAXED)`;
+                } else {
+                    bulkShapeBtn.disabled = geometrix < bulkShapeCost;
+                    bulkShapeBtn.innerHTML = `Bulk/Cooldown Lvl <span id="bulkShapeLevelBtn">${bulkShapeLevel + 1}</span> - Cost: <span id="bulkShapeCost">${formatGeometrix(bulkShapeCost)}</span> GMX`;
+                }
+
+                const clickerUnlockBtn = document.getElementById('buyClickerUnlockBtn');
+                if (clickerUnlockBtn) {
+                     if (clickerUnlocked) {
+                        clickerUnlockBtn.disabled = true;
+                        clickerUnlockBtn.textContent = "Clicker Unlocked";
+                    } else {
+                        clickerUnlockBtn.disabled = geometrix < UNLOCK_CLICKER_COST;
+                        clickerUnlockBtn.textContent = `Unlock Clicker - Cost: ${formatGeometrix(UNLOCK_CLICKER_COST)} GMX`;
+                    }
+                }
+            }
+
+            const clickerGui = document.getElementById('clicker-gui');
+            if (clickerGui) {
+                clickerGui.style.display = clickerUnlocked ? 'block' : 'none';
+                clickerGui.offsetHeight;
+            }
+            
+            if (clickerUnlocked) {
+                document.getElementById('fortunium').textContent = formatNumber(fortunium);
+                document.getElementById('fortuniumLuck').textContent = fortuniumLuck.toFixed(2);
+                
+                const gmxMultiBtn = document.getElementById('buyGmxMultiBtn');
+                document.getElementById('gmxMultiCost').textContent = formatNumber(gmxMultiCost);
+                gmxMultiBtn.disabled = fortunium < gmxMultiCost;
+                gmxMultiBtn.innerHTML = `GMX Multi (+0.5x) - Cost: <span id="gmxMultiCost">${formatNumber(gmxMultiCost)}</span> FOR`;
+
+                const fortuniumLuckBtn = document.getElementById('buyFortuniumLuckBtn');
+                document.getElementById('fortuniumLuckCost').textContent = formatNumber(fortuniumLuckCost);
+                fortuniumLuckBtn.disabled = fortunium < fortuniumLuckCost;
+
+                const clickerLuckBtn = document.getElementById('buyClickerLuckBtn');
+                document.getElementById('clickerLuckCost').textContent = formatNumber(clickerLuckCost);
+                if (clickerLuckLevel >= MAX_CLICKER_LUCK_LEVEL) {
+                    clickerLuckBtn.disabled = true;
+                    clickerLuckBtn.innerHTML = `Luck Multi (MAXED)`;
+                } else {
+                    clickerLuckBtn.disabled = fortunium < clickerLuckCost;
+                    clickerLuckBtn.innerHTML = `Luck Multi (+0.5x) - Cost: <span id="clickerLuckCost">${formatNumber(clickerLuckCost)}</span> FOR`;
+                }
+            }
+            
+            preserveAnimations();
+        }
+
+        // --- THE REST OF THE ORIGINAL FUNCTIONS (truncated for brevity) ---
+        // Note: These functions remain largely unchanged from the original
+        // but are included here for completeness in the full file
+
+        function toggleScientificNotation() {
+            sciNotationEnabled = !sciNotationEnabled;
+            const statusEl = document.getElementById('sciNotationStatus');
+            statusEl.textContent = sciNotationEnabled ? 'ON' : 'OFF';
+            statusEl.style.color = sciNotationEnabled ? '#00ff00' : '#ff0000';
+            
+            updateStats();
+            preserveAnimations();
+            saveGame();
+            
+            addToTerminal(`Scientific notation ${sciNotationEnabled ? 'enabled' : 'disabled'} for numbers ≥ ${formatNumber(sciNotationThreshold)}`, true);
+        }
+
+        function toggleHardcoreMode() {
+            if (!HARDCORE_MODE_ENABLED) {
+                addToTerminal('Hardcore mode is not available in this version.', true);
+                return;
+            }
+            
+            hardcoreMode = !hardcoreMode;
+            
+            if (hardcoreMode) {
+                originalBulkRollLevel = bulkRollLevel;
+                originalLuck = currentLuck;
+                originalVariantChance = variantChanceMultiplier;
+                originalSecretLuck = secretLuckMultiplier;
+                
+                bulkRollLevel = 0;
+                updateCalculatedStats();
+                currentLuck = 0;
+                variantChanceMultiplier = 1;
+                secretLuckMultiplier = 1;
+                luckMultiValue = 1;
+                
+                addToTerminal('⚠️ HARDCORE MODE ACTIVATED! Bulk=1, Luck=0, Variant=1, Secret=1, Events disabled', true, 'rank-1000000-100000000');
+                
+                document.getElementById('hardcoreToggleBtn').textContent = 'Hardcore Mode: ON';
+                document.getElementById('hardcoreToggleBtn').classList.add('active');
+                document.getElementById('hardcoreStatus').textContent = 'ON';
+                document.getElementById('hardcore-warning').style.display = 'block';
+                document.body.classList.add('hardcore-mode-active');
+            } else {
+                bulkRollLevel = originalBulkRollLevel;
+                updateCalculatedStats();
+                currentLuck = originalLuck;
+                variantChanceMultiplier = originalVariantChance;
+                secretLuckMultiplier = originalSecretLuck;
+                
+                addToTerminal('Hardcore mode deactivated. Stats restored.', true);
+                
+                document.getElementById('hardcoreToggleBtn').textContent = 'Hardcore Mode: OFF';
+                document.getElementById('hardcoreToggleBtn').classList.remove('active');
+                document.getElementById('hardcoreStatus').textContent = 'OFF';
+                document.getElementById('hardcore-warning').style.display = 'none';
+                document.body.classList.remove('hardcore-mode-active');
+            }
+            
+            updateStats();
+            saveGame();
+        }
+
+        function getEventMultiplier(target) {
+            if (hardcoreMode || !currentEvent) return 1;
+            
+            if (currentEvent.targets.includes("ALL_SECRETS")) {
+                return currentEvent.multiplier;
+            }
+            
+            if (currentEvent.targets.includes(target)) {
+                return currentEvent.multiplier;
+            }
+            
+            return 1;
+        }
+
+        function preserveAnimations() {
+            inventory.forEach((item, idx) => {
+                const elementId = `inv-item-${idx}`;
+                const element = document.getElementById(elementId);
+                if (element && (item.rank === "!! EUPHORIA !!" || item.rank === "!!! S E R O T O N I N !!!" || item.rank === "?!? bewilderment ?!?" || item.rank.includes("Complex"))) {
+                    if (!activeAnimationElements.has(elementId)) {
+                        activeAnimationElements.add(elementId);
+                        if (item.rank === "!! EUPHORIA !!" || item.rank === "!!! S E R O T O N I N !!!") {
+                            setTimeout(() => initEuphoriaAnimation(elementId, "!! EUPHORIA !!"), 10);
+                        }
+                        if (item.rank === "?!? bewilderment ?!?") {
+                            setTimeout(() => initBewildermentAnimation(elementId), 10);
+                        }
+                    }
+                }
+            });
+            
+            document.querySelectorAll('.clickable-roll').forEach(el => {
+                if (el.id && (el.textContent.includes("!! EUPHORIA !!") || el.textContent.includes("?!? bewilderment ?!?"))) {
+                    if (!activeAnimationElements.has(el.id)) {
+                        activeAnimationElements.add(el.id);
+                    }
+                }
+            });
+        }
+
+        function updateCalculatedStats() {
+            currentLuck = hardcoreMode ? 0 : totalUpgrades * LUCK_PER_UPGRADE;
+            
+            shapeLuckBonus = shapeLuckLevel * SHAPE_LUCK_BONUS;
+            
+            const clickerLuckBonus = clickerLuckLevel * 0.5;
+            
+            // Apply destroy luck multiplier
+            luckMultiValue = hardcoreMode ? 1 : (Math.pow(2, luckMultiLevel) + clickerLuckBonus) * destroyLuckMultiplier;
+            
+            secretLuckMultiplier = hardcoreMode ? 1 : Math.min(1 + (totalUpgrades * SECRET_LUCK_PER_UPGRADE), MAX_SECRET_LUCK) * luckMultiValue;
+            variantChanceMultiplier = hardcoreMode ? 1 : Math.min(1 + (totalUpgrades * VARIANT_CHANCE_PER_UPGRADE), MAX_VARIANT_CHANCE_MULTIPLIER) * luckMultiValue;
+            
+            currentShapeCooldown = Math.max(
+                SHAPE_SPAWN_INTERVAL_MS - (bulkShapeLevel * SHAPE_COOLDOWN_DECREASE_MS), 
+                SHAPE_SPAWN_INTERVAL_MS - (MAX_BULK_SHAPE_LEVEL * SHAPE_COOLDOWN_DECREASE_MS)
+            );
+            
+            maxPendingRolls = maxInventory * 3;
+        }
+
+        function getVariants(baseValue) {
+            let selectedVariants = [];
+            let totalMultiplier = 1;
+            let hasNegative = false;
+            let hasDull = false;
+
+            let eventVariantMultiplier = hardcoreMode ? 1 : (currentEvent && currentEvent.name === "Modified" ? currentEvent.multiplier : 1);
+            
+            for (let i = VARIANTS.length - 1; i >= 0; i--) {
+                const variant = VARIANTS[i];
+                
+                if (!variant.bypassCap) continue;
+                
+                const adjustedChance = variant.chance * variantChanceMultiplier * eventVariantMultiplier;
+                
+                if (Math.random() < adjustedChance) {
+                    selectedVariants.push(variant);
+                    
+                    if (variant.isNegative) {
+                        hasNegative = true;
+                        totalMultiplier *= -1;
+                    }
+                    
+                    if (variant.isDull) {
+                        hasDull = true;
+                    }
+                }
+            }
+            
+            for (let i = VARIANTS.length - 1; i >= 0; i--) {
+                const variant = VARIANTS[i];
+                if (variant.bypassCap) continue;
+                
+                const adjustedChance = variant.chance * variantChanceMultiplier * eventVariantMultiplier;
+                
+                while (selectedVariants.length < MAX_VARIANTS_PER_ROLL && Math.random() < adjustedChance) {
+                    selectedVariants.push(variant);
+                    totalMultiplier *= variant.multiplier;
+                }
+            }
+            
+            let modifiedValue = baseValue * totalMultiplier;
+            
+            if (hasDull) {
+                if (modifiedValue !== 0) {
+                    modifiedValue = Math.pow(modifiedValue, -1);
+                }
+            }
+            
+            if (selectedVariants.length > 0) {
+                selectedVariants.sort((a, b) => {
+                    if (a.bypassCap && !b.bypassCap) return -1;
+                    if (!a.bypassCap && b.bypassCap) return 1;
+                    return (b.multiplier || 0) - (a.multiplier || 0);
+                });
+                return { 
+                    variants: selectedVariants, 
+                    modifiedValue: modifiedValue 
+                };
+            }
+            return null;
+        }
+
+        function generateRoll() {
+            const totalLuck = currentLuck * luckMultiValue;
+            const baseRoll = Math.pow(Math.random(), 3 / POWER_EXPONENT) * (1 + totalLuck);
+            return { value: baseRoll, variant: null };
+        }
+        
+        function getSecretRank() {
+            if (!secretsEnabled) return null;
+            
+            const rand = Math.random();
+            
+            let hiddenEventMultiplier = hardcoreMode ? 1 : (currentEvent && currentEvent.targets.includes("ALL_SECRETS") ? currentEvent.multiplier : 1);
+            
+            const availableSecrets = SECRET_RANKS_CHANCES;
+            
+            for (const secret of availableSecrets) {
+                let chanceMultiplier = 1;
+                let adjustedChance = secret.chance;
+
+                if (secret.eventOnly) {
+                    if (hardcoreMode) {
+                        continue;
+                    }
+                    if (!currentEvent || currentEvent.name !== secret.eventOnly) {
+                        continue;
+                    }
+                    if (secret.name === "Destroyed" && currentEvent.name === "Hidden" && secret.eventChance) {
+                        adjustedChance = secret.eventChance;
+                    }
+                }
+
+                if (secret.timeBased && secret.name === "breaktime") {
+                    const now = new Date();
+                    const utc3OffsetMs = -3 * 60 * 60 * 1000;
+                    const utc3Time = new Date(now.getTime() + utc3OffsetMs);
+                    const dayOfWeek = utc3Time.getUTCDay();
+
+                    if (dayOfWeek >= 1 && dayOfWeek <= 5) {
+                        adjustedChance = 0;
+                    } else {
+                        adjustedChance = 1 / 705372;
+                    }
+                }
+
+                if (!hardcoreMode && currentEvent && currentEvent.targets.includes(secret.name)) {
+                    chanceMultiplier = currentEvent.multiplier;
+                }
+                
+                if (secret.name === "7 GRAND DAD" && secret.requiresGrand) {
+                    continue;
+                }
+                
+                if (rand < adjustedChance * secretLuckMultiplier * chanceMultiplier * hiddenEventMultiplier) {
+                    if (secret.name === 'cali^2') {
+                        if (Math.random() < 1/1e6) {
+                            return { name: "morts luck", chance: 1/1e18, rarity: 1e18 };
+                        }
+                    }
+                    return secret;
+                }
+            }
+            return null;
+        }
+
+        function checkRoundingIssue(value) {
+            const rounded = Math.round(value);
+            const diff = Math.abs(value - rounded);
+            
+            if (diff < 1e-6 && diff > 0) {
+                return true;
+            }
+            
+            const strValue = value.toString();
+            if (strValue.includes('9999999999') || strValue.includes('0000000001')) {
+                return true;
+            }
+            
+            return false;
+        }
+
+        function getRankInfo(value) {
+            if (checkRoundingIssue(value)) {
+                return { 
+                    name: "Improbable", 
+                    value: value, 
+                    rankNum: RANK_TIERS.length,
+                    isUnobtainable: false
+                };
+            }
+            
+            for (let i = 0; i < RANK_TIERS.length; i++) {
+                const tier = RANK_TIERS[i];
+                if (value >= tier.min && value < tier.max) {
+                    let rankName = tier.name;
+                    let isUnobtainable = false;
+                    
+                    if (tier.name === "Unattainable" && Math.random() < 1/200) {
+                        rankName = "Unobtainable";
+                        value *= 250000;
+                        isUnobtainable = true;
+                    }
+                    
+                    if (hardcoreMode && !rankName.includes("[HC]")) {
+                        rankName = rankName + " [HC]";
+                    }
+                    
+                    return { 
+                        name: rankName, 
+                        value: value, 
+                        rankNum: i + 1,
+                        isUnobtainable: isUnobtainable
+                    };
+                }
+            }
+            
+            let finalRankName = RANK_TIERS[RANK_TIERS.length - 1].name;
+            if (hardcoreMode && !finalRankName.includes("[HC]")) {
+                finalRankName = finalRankName + " [HC]";
+            }
+            
+            return { 
+                name: finalRankName, 
+                value: value, 
+                rankNum: RANK_TIERS.length,
+                isUnobtainable: false
+            };
+        }
+
+        function getRankClassAndColor(value, variants = [], rankName = "") {
+            let color = "#ffffff";
+            let className = "rank-1-1000";
+            
+            if (rankName.includes("Unobtainable")) {
+                className = "rank-unobtainable";
+                color = "#000000";
+            }
+            else if (rankName && rankName.includes("Complex")) {
+                className = "rank-complex";
+                color = "#ffffff";
+            }
+            else if (value >= 1e30) { className = "rank-improbable"; color = "#008080"; }
+            else if (value >= 1e21) { className = "rank-1e21-1e30"; color = "#000000"; }
+            else if (value >= 1e15) { className = "rank-rainbow"; color = "#ff7f00"; }
+            else if (value >= 1e12) { className = "rank-1000000000000-100000000000000"; color = "#ff69b4"; }
+            else if (value >= 1e11) { className = "rank-100000000000-1000000000000"; color = "#a9a9a9"; } 
+            else if (value >= 1e10) { className = "rank-10000000000-100000000000"; color = "#ffc0cb"; } 
+            else if (value >= 1e9) { className = "rank-1000000000-10000000000"; color = "#00ff00"; }
+            else if (value >= 1e8) { className = "rank-100000000-1000000000"; color = "#8b0000"; }
+            else if (value >= 1e6) { className = "rank-1000000-100000000"; color = "#ff0000"; }
+            else if (value >= 1e5) { className = "rank-100000-1000000"; color = "#0000cd"; }
+            else if (value >= 10000) { className = "rank-10000-100000"; color = "#00ffff"; }
+            else if (value >= 1000) { className = "rank-1000-10000"; color = "#ffff00"; }
+            
+            if (hardcoreMode && rankName.includes("[HC]")) {
+                className += " hardcore-rank";
+            }
+            
+            return { className, color };
+        }
+
+        function getRankClass(value, variants = []) {
+            return getRankClassAndColor(value, variants).className;
+        }
+
+        function addToTerminal(text, isCommand = false, className = "") {
+            if (calisrng2.ruin) text = "Lol";
+            
+            const terminal = document.getElementById('terminal');
+            const line = document.createElement('div');
+            line.className = 'output-line';
+            if (isCommand) line.classList.add('command');
+            if (className) line.classList.add(className);
+            line.innerHTML = text;
+
+            if (terminal.children.length > 100) {
+                terminal.removeChild(terminal.firstChild);
+            }
+
+            terminal.appendChild(line);
+            terminal.scrollTop = terminal.scrollHeight;
+            
+            setTimeout(preserveAnimations, 50);
+        }
+        
+        function toggleSecrets() {
+            secretsEnabled = !secretsEnabled;
+            const btn = document.getElementById('secretToggleBtn');
+            const state = secretsEnabled ? 'ON' : 'OFF';
+            btn.textContent = `Secrets: ${state}`;
+            document.getElementById('secretsEnabled').textContent = secretsEnabled ? 'Yes' : 'No';
+            addToTerminal(`Secrets turned ${state}.`, true);
+            saveGame();
+        }
+
+        function toggleCutscenes() {
+            cutscenesEnabled = !cutscenesEnabled;
+            const btn = document.getElementById('cutsceneToggleBtn');
+            const state = cutscenesEnabled ? 'ON' : 'OFF';
+            btn.textContent = `Cutscenes: ${state}`;
+            addToTerminal(`Cutscenes turned ${state}.`, true);
+            saveGame();
+        }
+
+        function updateInventoryDisplay() {
+            const inventoryContent = document.getElementById('inventoryContent');
+            if (inventory.length === 0) {
+                inventoryContent.innerHTML = 'Empty';
+            } else {
+                inventoryContent.innerHTML = inventory.map((item, idx) => {
+                    const { className: rankClass, color: rollColor } = getRankClassAndColor(item.value, item.variants, item.rank);
+                    let displayClass = rankClass;
+                    if (item.rank === "~Nonavacious~") {
+                        displayClass += " secret-nonavacious";
+                    }
+                    if (item.rank === "CORRUPTED") {
+                        displayClass += " secret-corrupted";
+                    }
+                    if (item.rank === "Feimienation") {
+                        displayClass += " feimienation-wrapper";
+                    }
+                    
+                    let variantText = '';
+                    if (item.variants && item.variants.length > 0) {
+                        variantText = item.variants.map(v => {
+                            let variantClass = '';
+                            if (v.name === "GIANT") variantClass = 'variant-GIANT';
+                            else if (v.name === "Mega") variantClass = 'variant-Mega';
+                            else if (v.name === "Small") variantClass = 'variant-Small';
+                            
+                            return `<span class="${variantClass}" style="color: ${v.color}; font-weight: bold;">[${v.name}]</span>`;
+                        }).join('') + ' ';
+                    }
+                    let suffix = "";
+                    let displayValue = item.value;
+                    if (item.rank === "100") suffix = " * 💯";
+                    if (item.rank === ":[{(absolute zero)}]:") suffix = " * 0";
+                    
+                    if (item.rank === "⛧Satanic⛧") {
+                        suffix = ` (Actual: ${formatNumber(item.value)})`;
+                        displayValue = -666.66;
+                    }
+                    if (item.rank === "Finale.. wait, how'd this get here?") {
+                        suffix = ` (Actual: ${formatNumber(item.value)})`;
+                        displayValue = 1e10;
+                    }
+                    
+                    let content = `<span class="${displayClass}" style="color: ${rollColor};" data-text="${escapeHTML(item.rank)}">${formatNumber(displayValue)} [${item.rank}]${suffix}</span>`;
+                    if (item.rank === "⛧Satanic⛧") {
+                        content = `<span class="satanic-wrapper">${content}</span>`;
+                    }
+                    if (item.rank === "Feimienation") {
+                        content = `<span class="feimienation-wrapper">${content}</span>`;
+                    }
+                    
+                    return `<div class="inventory-item" onclick="removeFromInventory(${idx})" id="inv-item-${idx}">
+                        #${formatInteger(item.index)}: ${variantText}${content}
+                    </div>`; 
+                }).join('');
+            }
+            
+            inventory.forEach((item, idx) => {
+                const elementId = `inv-item-${idx}`;
+                if (item.rank === "!! EUPHORIA !!" || item.rank === "!!! S E R O T O N I N !!!" && !activeEuphoriaIntervals[elementId]) {
+                    initEuphoriaAnimation(elementId, "!! EUPHORIA !!");
+                }
+                if (item.rank === "?!? bewilderment ?!?" && !activeBewildermentIntervals[elementId]) {
+                    initBewildermentAnimation(elementId);
+                }
+            });
+        }
+
+        function updatePendingDisplay() {
+            const pendingContent = document.getElementById('pendingContent');
+            
+            if (pendingRolls.length === 0) {
+                pendingContent.innerHTML = 'Empty';
+            } else {
+                pendingContent.innerHTML = pendingRolls.map((item, idx) => {
+                    const { className: rankClass, color: rollColor } = getRankClassAndColor(item.value, item.variants, item.rank);
+                    let displayClass = rankClass;
+                    
+                    if (item.rank === "~Nonavacious~") displayClass += " secret-nonavacious";
+                    if (item.rank === "CORRUPTED") displayClass += " secret-corrupted";
+                    
+                    let variantText = '';
+                    if (item.variants && item.variants.length > 0) {
+                        variantText = item.variants.map(v => {
+                            let variantClass = '';
+                            if (v.name === "GIANT") variantClass = 'variant-GIANT';
+                            else if (v.name === "Mega") variantClass = 'variant-Mega';
+                            else if (v.name === "Small") variantClass = 'variant-Small';
+                            
+                            return `<span class="${variantClass}" style="color: ${v.color}; font-weight: bold;">[${v.name}]</span>`;
+                        }).join('') + ' ';
+                    }
+                    
+                    return `<div class="pending-roll-item">
+                        <div>
+                            #${formatInteger(item.index)}: ${variantText}<span class="${displayClass}" style="color: ${rollColor};" data-text="${escapeHTML(item.rank)}">${formatNumber(item.value)} [${item.rank}]</span>
+                        </div>
+                        <div class="pending-roll-buttons">
+                            <button class="pending-accept-btn" onclick="acceptPendingRoll(${idx})">Accept</button>
+                            <button class="pending-decline-btn" onclick="declinePendingRoll(${idx})">Decline</button>
+                        </div>
+                    </div>`;
+                }).join('');
+            }
+        }
+
+        function acceptPendingRoll(idx) {
+            const pending = pendingRolls[idx];
+            if (addToInventory(pending.value, pending.rank, pending.index, pending.variants, pending.baseValue)) {
+                pendingRolls.splice(idx, 1);
+                updatePendingDisplay();
+                addToTerminal(`Accepted pending roll #${formatInteger(pending.index)} (${pending.rank})`, true);
+                updateStats();
+                saveGame();
+            } else {
+                addToTerminal('Cannot accept: inventory full!', true);
+            }
+        }
+
+        function declinePendingRoll(idx) {
+            const pending = pendingRolls[idx];
+            pendingRolls.splice(idx, 1);
+            updatePendingDisplay();
+            addToTerminal(`Declined pending roll #${formatInteger(pending.index)} (${pending.rank})`, true);
+            updateStats();
+            saveGame();
+        }
+
+        function addToInventory(value, rank, index, variants = [], baseValue = null) {
+            if (inventory.length >= maxInventory) {
+                return false;
+            }
+            const isSecret = SECRET_RANKS_CHANCES.map(r => r.name).includes(rank.replace(" [HC]", "")) || 
+                            rank === "morts luck" || 
+                            rank === "breaktime" || 
+                            rank.includes("Unobtainable");
+            inventory.push({ value, rank, index, variants, baseValue: baseValue || value, isSecret });
+            updateInventoryDisplay();
+            updateStats();
+            saveGame();
+            return true;
+        }
+
+        function addToPendingRolls(value, rank, index, variants = [], baseValue = null) {
+            if (pendingRolls.length >= maxPendingRolls) {
+                return false;
+            }
+            
+            const isSecret = SECRET_RANKS_CHANCES.map(r => r.name).includes(rank.replace(" [HC]", "")) || 
+                            rank === "morts luck" || 
+                            rank === "breaktime" || 
+                            rank.includes("Unobtainable");
+            pendingRolls.push({ value, rank, index, variants, baseValue: baseValue || value, isSecret });
+            updatePendingDisplay();
+            updateStats();
+            return true;
+        }
+
+        function removeFromInventory(idx) {
+            const item = inventory[idx];
+            
+            let variantText = '';
+            if (item.variants && item.variants.length > 0) {
+                variantText = item.variants.map(v => {
+                    let variantClass = '';
+                    if (v.name === "GIANT") variantClass = 'variant-GIANT';
+                    else if (v.name === "Mega") variantClass = 'variant-Mega';
+                    else if (v.name === "Small") variantClass = 'variant-Small';
+                    
+                    return `[${v.name}]`;
+                }).join('') + ' ';
+            }
+            
+            let suffix = "";
+            let displayValue = item.value;
+            if (item.rank === "💯") suffix = " * 💯";
+            if (item.rank === ":[{(absolute zero)}]:") suffix = " * 0";
+            
+            if (item.rank === "⛧Satanic⛧") {
+                suffix = ` (Actual: ${formatNumber(item.value)})`;
+                displayValue = -666.66;
+            }
+            if (item.rank === "Finale.. wait, how'd this get here?") {
+                suffix = ` (Actual: ${formatNumber(item.value)})`;
+                displayValue = 1e10;
+            }
+            
+            addToTerminal(`Removed from inventory: #${formatInteger(item.index)} ${variantText}${formatNumber(displayValue)} [${item.rank}]${suffix}`, true); 
+            
+            acceptedRolls.delete(item.index);
+            
+            const rollElement = document.getElementById(`roll-${item.index}`);
+            if (rollElement) {
+                rollElement.style.opacity = '1';
+                rollElement.style.cursor = 'pointer';
+                
+                rollElement.onclick = function() { 
+                    tryAddToInventory(item.value, item.rank, item.index, rollElement); 
+                };
+
+                if (item.rank === "!! EUPHORIA !!" || item.rank === "!!! S E R O T O N I N !!!") {
+                    setTimeout(() => initEuphoriaAnimation(`roll-${item.index}`, "!! EUPHORIA !!"), 10);
+                }
+                if (item.rank === "?!? bewilderment ?!?") {
+                    setTimeout(() => initBewildermentAnimation(`roll-${item.index}`), 10);
+                }
+            }
+            
+            inventory.splice(idx, 1);
+            updateInventoryDisplay();
+            updateStats();
+            saveGame();
+        }
+
+        function playCutscene(rollValue, isSecret = false) {
+            if (!cutscenesEnabled || hardcoreMode) {
+                return Promise.resolve();
+            }
+
+            return new Promise(resolve => {
+                const wasAutoRolling = autoRollInterval !== null;
+                if (wasAutoRolling) {
+                    toggleAutoRoll();
+                }
+                
+                isCutscenePlaying = true;
+                const body = document.body;
+                const overlay = document.getElementById('cutscene-overlay');
+                const starElement = document.getElementById('star-element');
+                
+                body.classList.add('cutscene-active');
+                
+                const { color } = getRankClassAndColor(rollValue);
+                starElement.style.color = color;
+                
+                let starShapeClass = 'star-4'; 
+                if (rollValue >= 1e12 && isSecret) {
+                    starShapeClass = 'star-12';
+                } else if (rollValue >= 1e9 && isSecret) {
+                    starShapeClass = 'star-6';
+                } else if (rollValue >= 1e12) {
+                    starShapeClass = 'star-8';
+                }
+                
+                starElement.className = starShapeClass;
+                starElement.style.transform = 'translate(-50%, -50%) rotate(0deg) scale(1)'; 
+                let currentScale = 1;
+                let currentRotation = 0;
+                let rotationSpeed = 3; 
+                let sizeInterval = null;
+                
+                setTimeout(() => {
+                    starElement.style.opacity = 1;
+                }, STAR_FADE_IN_MS);
+                
+                const spinUpdate = () => {
+                    currentRotation += rotationSpeed;
+                    starElement.style.transform = `translate(-50%, -50%) rotate(${currentRotation}deg) scale(${currentScale})`; 
+                    if (isCutscenePlaying) {
+                        requestAnimationFrame(spinUpdate);
+                    }
+                };
+
+                requestAnimationFrame(spinUpdate);
+
+                setTimeout(() => {
+                    rotationSpeed = 15; 
+                    
+                    sizeInterval = setInterval(() => {
+                        currentScale *= SIZE_MULTIPLIER_PER_UPDATE;
+                    }, SIZE_UPDATE_INTERVAL_MS);
+
+                }, SPIN_ACCEL_MS);
+                
+                setTimeout(() => {
+                    starElement.style.opacity = 0;
+                    body.classList.add('cutscene-flash');
+                    
+                    setTimeout(() => {
+                        isCutscenePlaying = false;
+                        clearInterval(sizeInterval);
+                        
+                        body.classList.remove('cutscene-flash');
+                        body.classList.remove('cutscene-active');
+                        
+                        setTimeout(() => {
+                            starElement.style.transform = 'translate(-50%, -50%) rotate(0deg) scale(1)';
+                            starElement.style.color = '';
+                            starElement.className = '';
+                            if (wasAutoRolling) {
+                                toggleAutoRoll();
+                            }
+                            resolve();
+                        }, 500);
+                        
+                    }, WHITE_FLASH_DURATION_MS);
+                    
+                }, CUTSCENE_DURATION_MS - WHITE_FLASH_DURATION_MS);
+            });
+        }
+
+        function initBewildermentAnimation(elementId) {
+            const element = document.getElementById(elementId);
+            if (!element) return;
+            
+            const originalText = element.textContent || element.innerText;
+            if (!originalText.includes("?!? bewilderment ?!?")) return;
+            
+            let isQuestionMark = true;
+            const intervalId = setInterval(() => {
+                if (!document.getElementById(elementId)) {
+                    clearInterval(intervalId);
+                    delete activeBewildermentIntervals[elementId];
+                    return;
+                }
+                
+                if (isQuestionMark) {
+                    element.textContent = originalText.replace("?!? bewilderment ?!?", "!?! bewilderment !?!");
+                    element.innerHTML = element.innerHTML.replace("?!? bewilderment ?!?", "!?! bewilderment !?!");
+                } else {
+                    element.textContent = originalText;
+                    element.innerHTML = originalText;
+                }
+                isQuestionMark = !isQuestionMark;
+            }, 10);
+            
+            activeBewildermentIntervals[elementId] = intervalId;
+            activeAnimationElements.add(elementId);
+        }
+
+        function generateComplexRank() {
+            if (Math.random() < COMPLEX_CHANCE) {
+                const totalLuck = currentLuck * luckMultiValue;
+                const realPart = Math.pow(Math.random(), 3 / POWER_EXPONENT) * (1 + totalLuck);
+                const imagPart = Math.pow(Math.random(), 3 / POWER_EXPONENT) * (1 + totalLuck);
+                
+                const rankInfoReal = getRankInfo(realPart);
+                const rankInfoImag = getRankInfo(imagPart);
+                
+                let displayName = `Complex: ${rankInfoReal.name.replace(" [HC]", "")} + ${rankInfoImag.name.replace(" [HC]", "")}i`;
+                if (hardcoreMode) {
+                    displayName += " [HC]";
+                }
+                
+                return {
+                    isComplex: true,
+                    realPart: realPart,
+                    imagPart: imagPart,
+                    realRankName: rankInfoReal.name,
+                    imagRankName: rankInfoImag.name,
+                    displayName: displayName
+                };
+            }
+            return null;
+        }
+
+        const BOOSTER_SHAPES = ['circle', 'triangle', 'square', 'pentagon', 'hexagon', 'heptagon'];
+        const BOOSTER_COLORS = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8', '#F7DC6F'];
+        
+        // NEW: Modified booster generation with special types
+        function generateBooster() {
+            const rand = Math.random();
+            const luck = BOOSTER_BASE_LUCK * BOOSTER_LUCK_FORMULA(rand);
+            let cost = BOOSTER_COST_FORMULA(luck);
+            const shape = BOOSTER_SHAPES[Math.floor(Math.random() * BOOSTER_SHAPES.length)];
+            let color = '#FFFFFF';
+            
+            let variant = null;
+            for (const v of VARIANTS) {
+                const variantChance = (2.5 * v.chance);
+                if (Math.random() < variantChance) {
+                    variant = { name: v.name, multiplier: v.multiplier, color: v.color };
+                    color = v.color;
+                    cost *= Math.pow(v.multiplier, 1.25);
+                    break;
+                }
+            }
+            
+            // NEW: Add special booster types
+            let specialType = null;
+            let specialValue = null;
+            
+            if (Math.random() < BOOSTER_SPECIAL_MULTIPLIER_CHANCE) {
+                specialType = '*';
+                specialValue = 1 + Math.random() * 4; // 1x to 5x multiplier
+                cost *= Math.pow(specialValue, 2);
+            } else if (Math.random() < BOOSTER_SPECIAL_POWER_CHANCE) {
+                specialType = '^';
+                specialValue = 1 + Math.random() * 2; // 1x to 3x power
+                cost *= Math.pow(specialValue, 3);
+            }
+            
+            // Validate cost is finite and positive
+            if (!isFinite(cost) || cost < 0) {
+                cost = 100;
+            }
+            
+            return { luck, cost, shape, color, variant, specialType, specialValue };
+        }
+        
+        function refreshBoosterShop() {
+            try {
+                const count = Math.floor(Math.random() * (15 - 5 + 1)) + 5;
+                shopBoosters = [];
+                for (let i = 0; i < count; i++) {
+                    try {
+                        shopBoosters.push(generateBooster());
+                    } catch (err) {
+                        console.error('Error generating booster:', err);
+                    }
+                }
+                updateShopDisplay();
+                saveGame();
+            } catch (e) {
+                console.error('Shop refresh error:', e);
+                addToTerminal('Error refreshing shop: ' + e.message, true);
+            }
+        }
+        
+        function openBoosterShop() {
+            try {
+                if (shopAutoRefreshInterval) {
+                    clearInterval(shopAutoRefreshInterval);
+                }
+                
+                refreshBoosterShop();
+                const shopPanel = document.getElementById('shop-panel');
+                if (shopPanel) {
+                    shopPanel.style.display = 'block';
+                    addToTerminal('Shop opened! Boosters refresh every 20 seconds.', true);
+                    
+                    shopAutoRefreshInterval = setInterval(() => {
+                        refreshBoosterShop();
+                        addToTerminal('Shop refreshed with new boosters!', true);
+                    }, 20000);
+                } else {
+                    addToTerminal('Error: Shop panel not found', true);
+                }
+            } catch (e) {
+                addToTerminal('Error opening shop: ' + e.message, true);
+                console.error('Shop error:', e);
+            }
+        }
+        
+        function closeBoosterShop() {
+            try {
+                if (shopAutoRefreshInterval) {
+                    clearInterval(shopAutoRefreshInterval);
+                    shopAutoRefreshInterval = null;
+                }
+                const shopPanel = document.getElementById('shop-panel');
+                if (shopPanel) {
+                    shopPanel.style.display = 'none';
+                    addToTerminal('Shop closed.', true);
+                }
+            } catch (e) {
+                console.error('Error closing shop:', e);
+            }
+        }
+        
+        function updateShopDisplay() {
+            try {
+                const shopContent = document.getElementById('shop-content');
+                if (!shopContent) {
+                    console.error('Shop content element not found');
+                    return;
+                }
+                
+                if (shopBoosters.length === 0) {
+                    shopContent.innerHTML = '<div style="color: #FFD700; padding: 10px;">Generating boosters...</div>';
+                    return;
+                }
+                
+                shopContent.innerHTML = shopBoosters.map((b, idx) => {
+                    let specialBadge = '';
+                    if (b.specialType === '*') {
+                        specialBadge = `<div style="font-size: 10px; color: #00FF00; margin-top: 3px;">${b.specialValue.toFixed(1)}x Multi</div>`;
+                    } else if (b.specialType === '^') {
+                        specialBadge = `<div style="font-size: 10px; color: #FF00FF; margin-top: 3px;">Power ${b.specialValue.toFixed(1)}</div>`;
+                    }
+                    
+                    return `
+                    <div style="display: inline-block; text-align: center; margin: 10px; cursor: pointer; padding: 8px; border: 1px solid #FFD700; border-radius: 5px; background-color: #3a0d6e; transition: all 0.2s;" onclick="buyBoosterFromShop(${idx})" onmouseover="this.style.boxShadow='0 0 10px #FFD700';" onmouseout="this.style.boxShadow='none';">
+                        <div style="margin-bottom: 5px; font-size: 12px; color: #FFD700;">Cost: ${formatNumber(b.cost.toFixed(0))}</div>
+                        ${generateShapeHTML(b.shape, b.color, b.luck, b.variant)}
+                        ${specialBadge}
+                    </div>
+                `}).join('');
+            } catch (e) {
+                console.error('Error updating shop display:', e);
+                const shopContent = document.getElementById('shop-content');
+                if (shopContent) {
+                    shopContent.innerHTML = '<div style="color: #ff0000;">Error loading shop</div>';
+                }
+            }
+        }
+        
+        function buyBoosterFromShop(idx) {
+            const booster = shopBoosters[idx];
+            if (!booster) {
+                addToTerminal('Error: Booster not found', true);
+                return;
+            }
+            if (!isFinite(booster.cost) || booster.cost < 0) {
+                addToTerminal('Error: Invalid booster cost', true);
+                console.error('Invalid booster cost:', booster.cost);
+                refreshBoosterShop();
+                return;
+            }
+            if (currency < booster.cost) {
+                addToTerminal(`Cannot afford booster (cost: ${formatNumber(booster.cost)})`, true);
+                return;
+            }
+            currency -= booster.cost;
+            if (!isFinite(currency) || currency < 0) {
+                currency = Math.max(0, currency);
+                console.error('Currency became invalid, reset to:', currency);
+            }
+            boosters.push(booster);
+            shopBoosters.splice(idx, 1);
+            
+            let boosterDesc = `Booster purchased! x${booster.luck.toFixed(2)} luck`;
+            if (booster.specialType === '*') {
+                boosterDesc += ` + ${booster.specialValue.toFixed(1)}x multiplier`;
+            } else if (booster.specialType === '^') {
+                boosterDesc += ` + Power ${booster.specialValue.toFixed(1)}`;
+            }
+            if (booster.variant) {
+                boosterDesc += ` + ${booster.variant.name}`;
+            }
+            
+            addToTerminal(boosterDesc, true);
+            updateBoosterDisplay();
+            updateShopDisplay();
+            updateStats();
+            saveGame();
+        }
+        
+        function useBooster(idx) {
+            activeBooster = boosters[idx];
+            boosters.splice(idx, 1);
+            
+            let boosterDesc = `Booster activated! Next roll gets x${activeBooster.luck.toFixed(2)} luck`;
+            if (activeBooster.specialType === '*') {
+                boosterDesc += ` + ${activeBooster.specialValue.toFixed(1)}x multiplier`;
+            } else if (activeBooster.specialType === '^') {
+                boosterDesc += ` + Power ${activeBooster.specialValue.toFixed(1)}`;
+            }
+            
+            addToTerminal(boosterDesc, true);
+            updateBoosterDisplay();
+            updateStats();
+        }
+        
+        function updateBoosterDisplay() {
+            const boosterContent = document.getElementById('boosterContent');
+            if (boosters.length === 0) {
+                boosterContent.innerHTML = '<div style="color: #888; padding: 10px;">No boosters owned</div>';
+            } else {
+                boosterContent.innerHTML = boosters.map((b, idx) => {
+                    let specialBadge = '';
+                    if (b.specialType === '*') {
+                        specialBadge = `<div style="font-size: 8px; color: #00FF00; margin-top: 2px;">${b.specialValue.toFixed(1)}x</div>`;
+                    } else if (b.specialType === '^') {
+                        specialBadge = `<div style="font-size: 8px; color: #FF00FF; margin-top: 2px;">Power ${b.specialValue.toFixed(1)}</div>`;
+                    }
+                    
+                    return `
+                    <div style="display: inline-block; text-align: center; margin: 8px; padding: 8px; cursor: pointer; border: 1px solid #FFD700; border-radius: 5px; background-color: #3a0d6e; transition: all 0.2s;" onclick="useBooster(${idx})" onmouseover="this.style.boxShadow='0 0 10px #FFD700';" onmouseout="this.style.boxShadow='none';">
+                        ${generateShapeHTML(b.shape, b.color, b.luck, b.variant)}
+                        ${specialBadge}
+                        <div style="font-size: 10px; color: #FFD700; margin-top: 5px;">Click to use</div>
+                    </div>
+                `}).join('');
+            }
+        }
+        
+        function tryAddToInventory(value, rank, index, element) {
+            if (acceptedRolls.has(index)) {
+                addToTerminal(`Roll #${formatInteger(index)} has already been accepted!`, true);
+                return;
+            }
+            
+            let variants = [];
+            let baseValue = value;
+            
+            if (element && element.dataset) {
+                if (element.dataset.variants) {
+                    try {
+                        variants = JSON.parse(element.dataset.variants);
+                    } catch (e) {
+                        console.error('Error parsing variants:', e);
+                    }
+                }
+                if (element.dataset.basevalue) {
+                    baseValue = parseFloat(element.dataset.basevalue);
+                }
+            }
+            
+            if (inventory.length >= maxInventory) {
+                if (addToPendingRolls(value, rank, index, variants, baseValue)) {
+                    acceptedRolls.add(index);
+
+                    if (activeEuphoriaIntervals[index]) {
+                        clearInterval(activeEuphoriaIntervals[index]);
+                        delete activeEuphoriaIntervals[index];
+                    }
+                    
+                    if (activeBewildermentIntervals[`roll-${index}`]) {
+                        clearInterval(activeBewildermentIntervals[`roll-${index}`]);
+                        delete activeBewildermentIntervals[`roll-${index}`];
+                    }
+                    
+                    const variantText = variants.map(v => `[${v.name}]`).join('') + ' ';
+                    
+                    let suffix = "";
+                    let displayValue = value;
+                    if (rank === "100") suffix = " * 💯";
+                    if (rank === ":[{(absolute zero)}]:") suffix = " * 0";
+                    
+                    if (rank === "⛧Satanic⛧") {
+                        suffix = ` (Actual: ${formatNumber(value)})`;
+                        displayValue = -666.66;
+                    }
+                    if (rank === "Finale.. wait, how'd this get here?") {
+                        suffix = ` (Actual: ${formatNumber(value)})`;
+                        displayValue = 1e10;
+                    }
+                    
+                    addToTerminal(`Added to pending rolls: #${formatInteger(index)} ${variantText}${formatNumber(displayValue)} [${rank}]${suffix}`, true); 
+                    
+                    const rollElement = document.getElementById(`roll-${index}`);
+                    if (rollElement) {
+                        rollElement.style.opacity = '0.5';
+                        rollElement.style.cursor = 'not-allowed';
+                        rollElement.onclick = null;
+                    }
+                    
+                    saveGame();
+                } else {
+                    addToTerminal(`Cannot add to inventory or pending rolls: both are full!`, true);
+                }
+            } else {
+                if (addToInventory(value, rank, index, variants, baseValue)) {
+                    acceptedRolls.add(index);
+
+                    if (activeEuphoriaIntervals[index]) {
+                        clearInterval(activeEuphoriaIntervals[index]);
+                        delete activeEuphoriaIntervals[index];
+                    }
+                    
+                    if (activeBewildermentIntervals[`roll-${index}`]) {
+                        clearInterval(activeBewildermentIntervals[`roll-${index}`]);
+                        delete activeBewildermentIntervals[`roll-${index}`];
+                    }
+                    
+                    const variantText = variants.map(v => `[${v.name}]`).join('') + ' ';
+                    
+                    let suffix = "";
+                    let displayValue = value;
+                    if (rank === "100") suffix = " * 💯";
+                    if (rank === ":[{(absolute zero)}]:") suffix = " * 0";
+                    
+                    if (rank === "⛧Satanic⛧") {
+                        suffix = ` (Actual: ${formatNumber(value)})`;
+                        displayValue = -666.66;
+                    }
+                    if (rank === "Finale.. wait, how'd this get here?") {
+                        suffix = ` (Actual: ${formatNumber(value)})`;
+                        displayValue = 1e10;
+                    }
+                    
+                    addToTerminal(`Added to inventory: #${formatInteger(index)} ${variantText}${formatNumber(displayValue)} [${rank}]${suffix}`, true); 
+                    
+                    const rollElement = document.getElementById(`roll-${index}`);
+                    if (rollElement) {
+                        rollElement.style.opacity = '0.5';
+                        rollElement.style.cursor = 'not-allowed';
+                        rollElement.onclick = null;
+                    }
+                    
+                    saveGame();
+                }
+            }
+        }
+
+        function toggleAutoRoll() {
+            if (isCutscenePlaying) {
+                addToTerminal('Cannot toggle auto-roll during a cutscene!', true);
+                return;
+            }
+            
+            const btn = document.getElementById('autoRollBtn');
+            if (autoRollInterval) {
+                clearInterval(autoRollInterval);
+                autoRollInterval = null;
+                btn.textContent = 'Auto Roll';
+                btn.classList.remove('active');
+                addToTerminal('Auto-rolling stopped.', true);
+            } else {
+                autoAcceptThreshold = parseFloat(document.getElementById('autoAcceptThreshold').value) || 0;
+                autoAcceptTrueRNGValue = parseFloat(document.getElementById('autoAcceptTrueRNG').value) || 0;
+                autoAcceptSecretThresholdValue = parseFloat(document.getElementById('autoAcceptSecretThreshold').value) || 0;
+                autoAcceptOnNewRank = document.getElementById('autoAcceptNewRank').checked;
+                
+                autoStopThreshold = parseFloat(document.getElementById('autoStopThreshold').value) || 0;
+                autoStopTrueRNGValue = parseFloat(document.getElementById('autoStopTrueRNG').value) || 0;
+                autoStopSecretThresholdValue = parseFloat(document.getElementById('autoStopSecretThreshold').value) || 0;
+                autoStopOnNewRank = document.getElementById('autoStopNewRank').checked;
+                
+                autoRollInterval = setInterval(roll, AUTO_ROLL_DELAY_MS);
+                btn.textContent = 'Stop Auto Roll';
+                btn.classList.add('active');
+                
+                let message = 'Auto-rolling started...';
+                const acceptConditions = [];
+                const stopConditions = [];
+                
+                if (autoAcceptThreshold > 0) acceptConditions.push(`value ≥ ${autoAcceptThreshold}`);
+                if (autoAcceptTrueRNGValue > 0) acceptConditions.push(`base ≥ ${autoAcceptTrueRNGValue}`);
+                if (autoAcceptSecretThresholdValue > 0) acceptConditions.push(`secret ≥ ${autoAcceptSecretThresholdValue}`);
+                if (autoAcceptOnNewRank) acceptConditions.push('new rank');
+                
+                if (autoStopThreshold > 0) stopConditions.push(`value ≥ ${autoStopThreshold}`);
+                if (autoStopTrueRNGValue > 0) stopConditions.push(`base ≥ ${autoStopTrueRNGValue}`);
+                if (autoStopSecretThresholdValue > 0) stopConditions.push(`secret ≥ ${autoStopSecretThresholdValue}`);
+                if (autoStopOnNewRank) stopConditions.push('new rank');
+                
+                if (acceptConditions.length > 0) {
+                    message += ` (Auto-Accept: ${acceptConditions.join(', ')})`;
+                }
+                
+                if (stopConditions.length > 0) {
+                    message += ` (Auto-Stop: ${stopConditions.join(', ')})`;
+                }
+                
+                addToTerminal(message, true);
+            }
+        }
+
+        function buyUpgrade() {
+            if (currency >= upgradeCost) {
+                currency -= upgradeCost;
+                totalUpgrades++;
+                maxInventory += INVENTORY_PER_UPGRADE;
+                
+                updateCalculatedStats();
+                
+                addToTerminal(
+                    `Upgrade purchased! Total upgrades: ${totalUpgrades} | Luck: +${currentLuck.toFixed(3)} | Secret Luck: ${secretLuckMultiplier.toFixed(2)}x | Inventory space: ${maxInventory} | Currency: ${currency.toFixed(2)}`,
+                    true
+                );
+                
+                upgradeCost *= UPGRADE_COST_MULTIPLIER;
+                addToTerminal(`Next upgrade cost: ${upgradeCost.toFixed(2)}`);
+                
+                updateStats();
+                saveGame();
+            } else {
+                addToTerminal(
+                    `Not enough currency! You have ${currency.toFixed(2)} but need ${upgradeCost.toFixed(2)}`,
+                    true
+                );
+            }
+        }
+
+        function buyBulkRoll() {
+            if (hardcoreMode) {
+                addToTerminal('Cannot buy bulk roll in hardcore mode!', true);
+                return;
+            }
+            
+            if (bulkRollLevel >= MAX_BULK_ROLL_LEVEL) {
+                addToTerminal('Bulk Roll is already maxed out!', true);
+                return;
+            }
+            
+            if (currency >= bulkRollCost) {
+                currency -= bulkRollCost;
+                bulkRollLevel++;
+                
+                addToTerminal(
+                    `Bulk Roll purchased! Level: ${bulkRollLevel} | Rolls per click: ${bulkRollLevel + 1} | Currency: ${currency.toFixed(2)}`,
+                    true
+                );
+                
+                if (bulkRollLevel < MAX_BULK_ROLL_LEVEL) {
+                    bulkRollCost *= BULK_ROLL_COST_MULTIPLIER;
+                    addToTerminal(`Next Bulk Roll cost: ${bulkRollCost.toFixed(2)}`);
+                } else {
+                    addToTerminal('Bulk Roll is now MAXED!');
+                }
+                
+                updateStats();
+                saveGame();
+            } else {
+                addToTerminal(
+                    `Not enough currency! You have ${currency.toFixed(2)} but need ${bulkRollCost.toFixed(2)}`,
+                    true
+                );
+            }
+        }
+
+        function showRarest() {
+            if (highestFinalRoll.value === 0 && highestFinalRoll.rank !== "CORRUPTED") {
+                addToTerminal('No rolls yet!', true);
+            } else {
+                const { className, color } = getRankClassAndColor(highestFinalRoll.value, highestFinalRoll.variants, highestFinalRoll.rank);
+                let rankClass = className;
+                let rollColor = color;
+                const displayName = highestFinalRoll.rank;
+                let displayValue = highestFinalRoll.value;
+                let suffix = "";
+
+                if (displayName === "~Nonavacious~") {
+                    rankClass += " secret-nonavacious";
+                }
+                
+                if (displayName === "CORRUPTED") {
+                    rankClass += " secret-corrupted";
+                    rollColor = "#FFFFFF";
+                }
+                
+                if (displayName === "⛧Satanic⛧") {
+                    suffix = ` (Actual: ${formatNumber(highestFinalRoll.value)})`;
+                    displayValue = -666.66;
+                }
+                if (displayName === "Finale.. wait, how'd this get here?") {
+                    suffix = ` (Actual: ${formatNumber(highestFinalRoll.value)})`;
+                    displayValue = 1e10;
+                }
+
+                let variantText = '';
+                if (highestFinalRoll.variants && highestFinalRoll.variants.length > 0) {
+                    variantText = highestFinalRoll.variants.map(v => {
+                        let variantClass = '';
+                        if (v.name === "GIANT") variantClass = 'variant-GIANT';
+                        else if (v.name === "Mega") variantClass = 'variant-Mega';
+                        else if (v.name === "Small") variantClass = 'variant-Small';
+                        
+                        return `[${v.name}]`;
+                    }).join('') + ' ';
+                }
+                
+                addToTerminal(
+                    `Rarest roll: ${variantText}<span class="satanic-wrapper"><span class="${rankClass}" style="color: ${rollColor};" data-text="${escapeHTML(displayName)}">${formatNumber(displayValue)} [${displayName}]${suffix}</span></span>`,
+                    true
+                );
+            }
+        }
+
+        function clearTerminal() {
+            const terminal = document.getElementById('terminal');
+            const welcomeMsg = terminal.querySelector('.welcome-message');
+            terminal.innerHTML = '';
+            if (welcomeMsg) {
+                terminal.appendChild(welcomeMsg);
+            }
+        }
+
+        function addToShapeTerminal(text) {
+            const terminal = document.getElementById('shape-spawn-output');
+            const line = document.createElement('div');
+            line.className = 'shape-spawn-line';
+            line.innerHTML = text; 
+            
+            if (terminal.children.length > 20) {
+                terminal.removeChild(terminal.firstChild);
+            }
+            
+            terminal.appendChild(line);
+            terminal.scrollTop = terminal.scrollHeight;
+        }
+
+        function calculateGeometrixGain(shape) {
+            let baseGain = 0;
+            if (shape.name === "Circle") {
+                const base = Math.pow(Math.random(), -1.5);
+                baseGain = base * 250;
+            } else {
+                baseGain = shape.rarity / 2;
+            }
+            
+            const gmxMultiplier = 1 + (gmxMultiLevel * 0.5);
+            return baseGain * gmxMultiplier;
+        }
+        
+        function despawnShape(shapeId, isCollected = false) {
+            const shapeIndex = activeShapes.findIndex(s => s.id === shapeId);
+            
+            if (shapeIndex === -1) {
+                return;
+            }
+
+            const shapeData = activeShapes[shapeIndex];
+            
+            if (shapeData.timerId) {
+                clearTimeout(shapeData.timerId);
+            }
+            
+            activeShapes.splice(shapeIndex, 1);
+            
+            const element = document.getElementById(`shape-${shapeId}`);
+            if (element) {
+                 if (isCollected) {
+                    element.style.transform = 'scale(1.5)';
+                    element.style.opacity = '0';
+                    setTimeout(() => element.remove(), 200);
+                 } else {
+                    element.remove();
+                 }
+            }
+            
+            if (!isCollected) {
+                addToShapeTerminal(`A **${shapeData.name}** despawned (not collected)!`);
+            }
+            
+            saveGame();
+        }
+
+        function renderActiveShapes() {
+            const shapesField = document.getElementById('shapes-field');
+            shapesField.innerHTML = ''; 
+            
+            activeShapes = activeShapes.filter(shapeData => {
+                const timeElapsed = Date.now() - shapeData.spawnTime;
+                
+                if (timeElapsed >= SHAPE_DESPAWN_TIME_MS) {
+                    addToShapeTerminal(`A **${shapeData.name}** despawned while you were away!`);
+                    return false;
+                }
+
+                const shapeElement = document.createElement('div');
+                shapeElement.id = `shape-${shapeData.id}`;
+                shapeElement.className = `clickable-shape shape-${shapeData.name.replace(/\s/g, '-')}`;
+                shapeElement.style.backgroundColor = shapeData.color;
+                shapeElement.style.left = `${shapeData.posX}px`;
+                shapeElement.style.top = `${shapeData.posY}px`;
+                shapeElement.textContent = shapeData.name[0];
+                shapeElement.onclick = () => collectShape(shapeData.id);
+                
+                shapesField.appendChild(shapeElement);
+
+                const remainingTime = SHAPE_DESPAWN_TIME_MS - timeElapsed;
+                shapeData.timerId = setTimeout(() => {
+                    despawnShape(shapeData.id, false); 
+                }, remainingTime);
+
+                return true;
+            });
+            
+            saveGame();
+        }
+
+        function spawnShape() {
+            if (!shapesUnlocked) return;
+            
+            let totalPossibleGain = 0;
+            let spawnedCount = 0;
+            const spawnCount = bulkShapeLevel + 1; 
+
+            const shapesField = document.getElementById('shapes-field');
+            const fieldWidth = shapesField.clientWidth;
+            const fieldHeight = shapesField.clientHeight;
+
+            for (let j = 0; j < spawnCount; j++) {
+                const cumulativeChances = [];
+                let cumulativeSum = 0;
+
+                for (const shape of SHAPES) {
+                    const adjustedChance = shape.chance * (1 + shapeLuckBonus);
+                    cumulativeSum += adjustedChance;
+                    cumulativeChances.push({ maxChance: cumulativeSum, shape: shape });
+                }
+                
+                let rand = Math.random() * cumulativeSum; 
+                let selectedShape = null;
+
+                for (const item of cumulativeChances) {
+                    if (rand < item.maxChance) { 
+                        selectedShape = item.shape;
+                        break;
+                    }
+                }
+                
+                if (!selectedShape) {
+                    selectedShape = SHAPES[0]; 
+                }
+
+                const gain = calculateGeometrixGain(selectedShape);
+                totalPossibleGain += gain;
+                spawnedCount++;
+                
+                const shapeId = Date.now().toString() + Math.random().toString(36).substring(2, 9);
+                const shapeSize = 30;
+                const posX = Math.random() * (fieldWidth - shapeSize); 
+                const posY = Math.random() * (fieldHeight - shapeSize); 
+
+                const shapeElement = document.createElement('div');
+                shapeElement.id = `shape-${shapeId}`;
+                shapeElement.className = `clickable-shape shape-${selectedShape.name.replace(/\s/g, '-')}`;
+                shapeElement.style.backgroundColor = selectedShape.color;
+                shapeElement.style.left = `${posX}px`;
+                shapeElement.style.top = `${posY}px`;
+                shapeElement.textContent = selectedShape.name[0];
+
+                const shapeData = {
+                    id: shapeId,
+                    name: selectedShape.name,
+                    gain: gain,
+                    color: selectedShape.color,
+                    posX: posX,
+                    posY: posY,
+                    spawnTime: Date.now(),
+                    timerId: null
+                };
+                
+                shapeData.timerId = setTimeout(() => {
+                    despawnShape(shapeId, false);
+                }, SHAPE_DESPAWN_TIME_MS);
+
+                activeShapes.push(shapeData);
+                
+                shapeElement.onclick = () => collectShape(shapeData.id);
+                
+                shapesField.appendChild(shapeElement);
+            }
+            
+            if (spawnedCount > 0) {
+                addToShapeTerminal(`Spawned ${spawnedCount} shapes. Max collection: ${formatGeometrix(totalPossibleGain)} GMX.`);
+            }
+        }
+        
+        function collectShape(shapeId) {
+            const shapeIndex = activeShapes.findIndex(s => s.id === shapeId);
+            
+            if (shapeIndex === -1) {
+                return; 
+            }
+
+            const shapeData = activeShapes[shapeIndex];
+            geometrix += shapeData.gain;
+            
+            addToTerminal(`Collected **${shapeData.name}** (+${formatGeometrix(shapeData.gain)} GMX)!`, true, 'command');
+
+            despawnShape(shapeId, true); 
+            
+            updateStats();
+        }
+
+        function startShapeInterval() {
+            if (shapeInterval) clearInterval(shapeInterval);
+            if (!shapesUnlocked) return;
+            
+            shapeInterval = setInterval(spawnShape, currentShapeCooldown);
+            
+            addToTerminal(`Shape spawning interval set to ${formatCooldown(currentShapeCooldown)}s.`, true, '#00FF00');
+        }
+
+        function unlockShapes() {
+            if (hardcoreMode) {
+                addToTerminal('Cannot unlock shapes in hardcore mode!', true);
+                return;
+            }
+            
+            if (currency >= UNLOCK_SHAPES_COST) {
+                currency -= UNLOCK_SHAPES_COST;
+                shapesUnlocked = true;
+                addToTerminal(`**Shapes GUI unlocked!** Start collecting the clickable polygons.`, true, '#00FF00');
+                updateCalculatedStats();
+                startShapeInterval();
+                updateStats();
+                saveGame();
+            } else {
+                addToTerminal(`Not enough currency! Need ${formatNumber(UNLOCK_SHAPES_COST)} to unlock.`, true);
+            }
+        }
+
+        function buyShapeLuckUpgrade() {
+            if (hardcoreMode) {
+                addToTerminal('Cannot buy upgrades in hardcore mode!', true);
+                return;
+            }
+            
+            if (shapeLuckLevel >= MAX_SHAPE_LUCK_LEVEL) {
+                addToTerminal('Shape Luck is maxed out!', true, '#FF00FF');
+                return;
+            }
+            if (geometrix >= shapeLuckCost) {
+                geometrix -= shapeLuckCost;
+                shapeLuckLevel++;
+                
+                addToTerminal(
+                    `Shape Luck purchased! Level: ${shapeLuckLevel}/${MAX_SHAPE_LUCK_LEVEL}`,
+                    true, '#00FF00'
+                );
+                
+                shapeLuckCost *= SHAPE_LUCK_COST_MULTIPLIER;
+                updateCalculatedStats();
+                updateStats();
+                saveGame();
+            } else {
+                addToTerminal(`Not enough Geometrix! Need ${formatGeometrix(shapeLuckCost)} GMX.`, true);
+            }
+        }
+        
+        function buyLuckMultiUpgrade() {
+            if (hardcoreMode) {
+                addToTerminal('Cannot buy upgrades in hardcore mode!', true);
+                return;
+            }
+            
+            if (geometrix >= luckMultiCost) {
+                geometrix -= luckMultiCost;
+                luckMultiLevel++;
+                
+                updateCalculatedStats();
+
+                addToTerminal(
+                    `Luck Multiplier purchased! Level: ${luckMultiLevel} | New Multi: x${luckMultiValue.toFixed(2)}`,
+                    true, '#00FF00'
+                );
+                
+                luckMultiCost *= LUCK_MULTI_COST_MULTIPLIER;
+                updateStats();
+                saveGame();
+            } else {
+                addToTerminal(`Not enough Geometrix! Need ${formatGeometrix(luckMultiCost)} GMX.`, true);
+            }
+        }
+
+        function buyBulkShapeUpgrade() {
+            if (hardcoreMode) {
+                addToTerminal('Cannot buy upgrades in hardcore mode!', true);
+                return;
+            }
+            
+            if (bulkShapeLevel >= MAX_BULK_SHAPE_LEVEL) {
+                addToTerminal('Bulk/Cooldown is maxed out!', true, '#FF00FF');
+                return;
+            }
+            if (geometrix >= bulkShapeCost) {
+                geometrix -= bulkShapeCost;
+                bulkShapeLevel++;
+                
+                updateCalculatedStats();
+                
+                addToTerminal(
+                    `Bulk/Cooldown purchased! Level: ${bulkShapeLevel}/${MAX_BULK_SHAPE_LEVEL} | Spawns: ${bulkShapeLevel + 1} | Cooldown: ${formatCooldown(currentShapeCooldown)}s`,
+                    true, '#00FF00'
+                );
+                
+                if (bulkShapeLevel < MAX_BULK_SHAPE_LEVEL) {
+                    bulkShapeCost *= BULK_SHAPE_COST_MULTIPLIER;
+                }
+                
+                startShapeInterval();
+                updateStats();
+                saveGame();
+            } else {
+                addToTerminal(`Not enough Geometrix! Need ${formatGeometrix(bulkShapeCost)} GMX.`, true);
+            }
+        }
+
+        function unlockClicker() {
+            if (hardcoreMode) {
+                addToTerminal('Cannot unlock clicker in hardcore mode!', true);
+                return;
+            }
+            
+            if (clickerUnlocked) {
+                addToTerminal('Clicker is already unlocked!', true);
+                return;
+            }
+            if (geometrix >= UNLOCK_CLICKER_COST) {
+                geometrix -= UNLOCK_CLICKER_COST;
+                clickerUnlocked = true;
+                addToTerminal(`**Clicker GUI unlocked!** Click the clover!`, true, '#FFD700');
+                updateStats();
+                saveGame();
+            } else {
+                addToTerminal(`Not enough Geometrix! Need ${formatGeometrix(UNLOCK_CLICKER_COST)} GMX.`, true);
+            }
+        }
+        
+        function clickClover() {
+            const baseGain = Math.pow(Math.random(), -1.5);
+            const finalGain = baseGain * (1 + fortuniumLuck);
+            fortunium += finalGain;
+            
+            updateStats();
+        }
+        
+        function buyFortuniumUpgrade(type) {
+            if (!clickerUnlocked) return;
+            
+            if (hardcoreMode) {
+                addToTerminal('Cannot buy upgrades in hardcore mode!', true);
+                return;
+            }
+            
+            if (type === 'gmx') {
+                if (fortunium >= gmxMultiCost) {
+                    fortunium -= gmxMultiCost;
+                    gmxMultiLevel++;
+                    gmxMultiCost *= 1.5;
+                    addToTerminal(`GMX Multi upgrade purchased! GMX gain is now +${(gmxMultiLevel * 0.5).toFixed(1)}x`, true, '#FFD700');
+                    updateStats();
+                    saveGame();
+                } else {
+                    addToTerminal(`Not enough Fortunium! Need ${formatNumber(gmxMultiCost)} FOR.`, true);
+                    return;
+                }
+            } 
+            else if (type === 'fortuniumLuck') {
+                if (fortunium >= fortuniumLuckCost) {
+                    fortunium -= fortuniumLuckCost;
+                    fortuniumLuckLevel++;
+                    fortuniumLuck += 0.5;
+                    fortuniumLuckCost *= 1.25;
+                    addToTerminal(`Fortunium Luck upgrade purchased! Fortunium Luck is now +${fortuniumLuck.toFixed(1)}x`, true, '#FFD700');
+                    updateStats();
+                    saveGame();
+                } else {
+                    addToTerminal(`Not enough Fortunium! Need ${formatNumber(fortuniumLuckCost)} FOR.`, true);
+                    return;
+                }
+            }
+            else if (type === 'luck') {
+                if (clickerLuckLevel >= MAX_CLICKER_LUCK_LEVEL) {
+                    addToTerminal('Clicker Luck upgrade is MAXED!', true, '#FF00FF');
+                    return;
+                }
+                if (fortunium >= clickerLuckCost) {
+                    fortunium -= clickerLuckCost;
+                    clickerLuckLevel++;
+                    clickerLuckCost *= 50;
+                    addToTerminal(`Clicker Luck upgrade purchased! Level ${clickerLuckLevel}/${MAX_CLICKER_LUCK_LEVEL}.`, true, '#FFD700');
+                    updateCalculatedStats();
+                    updateStats();
+                    saveGame();
+                } else {
+                    addToTerminal(`Not enough Fortunium! Need ${formatNumber(clickerLuckCost)} FOR.`, true);
+                    return;
+                }
+            }
+        }
+
+        // FIXED: Serotonin animation
+        function initSerotoninAnimation(elementId, rankName) {
+            if (!elementId || !document.getElementById(elementId)) return;
+            
+            if (activeSerotoninIntervals[elementId]) {
+                clearInterval(activeSerotoninIntervals[elementId]);
+            }
+            
+            const currentElement = document.getElementById(elementId);
+            const originalHtml = currentElement.innerHTML;
+            
+            // Store original text for Feimienation
+            let originalText = '';
+            if (rankName === "Feimienation") {
+                const match = originalHtml.match(/\[Feimienation\]/);
+                if (match) originalText = match[0];
+            }
+            
+            const intervalId = setInterval(() => {
+                if (!document.getElementById(elementId)) {
+                    clearInterval(intervalId);
+                    delete activeSerotoninIntervals[elementId];
+                    return;
+                }
+                
+                const currentElement = document.getElementById(elementId);
+                
+                if (rankName === "Feimienation") {
+                    // Feimienation uses wild rotation like CORRUPTED
+                    const rotation = Math.random() * 360;
+                    const scale = 0.8 + Math.random() * 0.4;
+                    currentElement.style.transform = `rotate(${rotation}deg) scale(${scale})`;
+                    
+                    // Also flicker like serotonin
+                    if (Math.random() > 0.5) {
+                        currentElement.style.opacity = '0.3';
+                    } else {
+                        currentElement.style.opacity = '1';
+                    }
+                } else {
+                    // Original serotonin animation for !!! S E R O T O N I N !!!
+                    const prefix = rankName + ': <span style="opacity: 0.4; margin: 0 2px;">[';
+                    const suffix = ']</span>';
+                    const chars = originalHtml.substring(prefix.length, originalHtml.length - suffix.length);
+                    
+                    if (chars.length === 0) return;
+                    
+                    const newChars = chars.split('');
+                    const numSymbols = Math.floor(Math.random() * 3) + 2;
+                    
+                    for (let i = 0; i < numSymbols; i++) {
+                        const idx = Math.floor(Math.random() * newChars.length);
+                        const sym = SEROTONIN_SYMBOLS[Math.floor(Math.random() * SEROTONIN_SYMBOLS.length)];
+                        newChars[idx] = `<span style="opacity: 1; display: inline-block; transform: rotate(${Math.random() * 360}deg) scale(${0.8 + Math.random() * 0.6});">${sym}</span>`;
+                    }
+                    
+                    currentElement.innerHTML = prefix + newChars.join('') + suffix;
+                    
+                    setTimeout(() => {
+                        const stillExists = document.getElementById(elementId);
+                        if (stillExists && activeSerotoninIntervals[elementId]) {
+                            stillExists.innerHTML = originalHtml;
+                        }
+                    }, 12);
+                }
+                
+            }, rankName === "Feimienation" ? 5 : 15);
+            
+            activeSerotoninIntervals[elementId] = intervalId;
+            activeAnimationElements.add(elementId);
+        }
+
+        function initEuphoriaAnimation(elementId, baseText) {
+            const element = document.getElementById(elementId);
+            if (!element) return;
+            
+            if (activeEuphoriaIntervals[elementId]) {
+                clearInterval(activeEuphoriaIntervals[elementId]);
+            }
+            
+            const originalHtml = element.innerHTML;
+            const textChars = baseText.split('');
+            
+            const intervalId = setInterval(() => {
+                const currentElement = document.getElementById(elementId);
+                if (!currentElement) {
+                    clearInterval(activeEuphoriaIntervals[elementId]);
+                    delete activeEuphoriaIntervals[elementId];
+                    return;
+                }
+                
+                const textIndex = currentElement.innerHTML.indexOf(baseText);
+                if (textIndex === -1) {
+                    currentElement.innerHTML = originalHtml;
+                    return;
+                }
+                
+                const prefix = currentElement.innerHTML.substring(0, textIndex);
+                const suffix = currentElement.innerHTML.substring(textIndex + baseText.length);
+
+                const newChars = [...textChars];
+                
+                let idx1 = Math.floor(Math.random() * newChars.length);
+                let idx2 = Math.floor(Math.random() * newChars.length);
+                while (idx1 === idx2) {
+                    idx2 = Math.floor(Math.random() * newChars.length);
+                }
+
+                const sym1 = EUPHORIA_SYMBOLS[Math.floor(Math.random() * EUPHORIA_SYMBOLS.length)];
+                const sym2 = EUPHORIA_SYMBOLS[Math.floor(Math.random() * EUPHORIA_SYMBOLS.length)];
+                newChars[idx1] = `<span style="opacity: 0.7; display: inline-block; transform: scale(1.1);">${sym1}</span>`;
+                newChars[idx2] = `<span style="opacity: 0.7; display: inline-block; transform: scale(1.1);">${sym2}</span>`;
+                
+                currentElement.innerHTML = prefix + newChars.join('') + suffix;
+
+                setTimeout(() => {
+                    const stillExists = document.getElementById(elementId);
+                    if (stillExists && activeEuphoriaIntervals[elementId]) {
+                        stillExists.innerHTML = originalHtml;
+                    }
+                }, 25);
+
+            }, 100);
+            
+            activeEuphoriaIntervals[elementId] = intervalId;
+            activeAnimationElements.add(elementId);
+        }
+
+        function applyUICustomization() {
+            const bgColor = document.getElementById('ui-bg-color').value;
+            const buttonBg = document.getElementById('ui-button-bg').value;
+            const buttonOutline = document.getElementById('ui-button-outline').value;
+            const hcColor = document.getElementById('ui-hc-color').value;
+            const textColor = document.getElementById('ui-text-color').value;
+            
+            document.body.style.backgroundColor = bgColor;
+            document.body.style.color = textColor;
+            
+            const buttons = document.querySelectorAll('button:not([style*="background-color"])');
+            buttons.forEach(btn => {
+                btn.style.backgroundColor = buttonBg;
+                btn.style.borderColor = buttonOutline;
+                btn.style.color = textColor;
+            });
+            
+            const hcElements = document.querySelectorAll('.hardcore-mode-active, .hardcore-rank');
+            hcElements.forEach(el => {
+                el.style.borderColor = hcColor;
+            });
+            
+            const uiSettings = {
+                bg: bgColor,
+                buttonBg: buttonBg,
+                buttonOutline: buttonOutline,
+                hcColor: hcColor,
+                textColor: textColor
+            };
+            localStorage.setItem('calisRNG_UI', JSON.stringify(uiSettings));
+            
+            addToTerminal('UI customization applied!', true);
+        }
+
+        function resetUICustomization() {
+            document.getElementById('ui-bg-color').value = '#4a148c';
+            document.getElementById('ui-button-bg').value = '#808080';
+            document.getElementById('ui-button-outline').value = '#ff69b4';
+            document.getElementById('ui-hc-color').value = '#ff0000';
+            document.getElementById('ui-text-color').value = '#ffffff';
+            
+            applyUICustomization();
+            
+            addToTerminal('UI reset to defaults!', true);
+        }
+
+        function loadUICustomization() {
+            const saved = localStorage.getItem('calisRNG_UI');
+            if (saved) {
+                try {
+                    const uiSettings = JSON.parse(saved);
+                    document.getElementById('ui-bg-color').value = uiSettings.bg;
+                    document.getElementById('ui-button-bg').value = uiSettings.buttonBg;
+                    document.getElementById('ui-button-outline').value = uiSettings.buttonOutline;
+                    document.getElementById('ui-hc-color').value = uiSettings.hcColor;
+                    document.getElementById('ui-text-color').value = uiSettings.textColor;
+                    
+                    setTimeout(() => applyUICustomization(), 100);
+                } catch(e) {
+                    console.error('Error loading UI settings:', e);
+                }
+            }
+        }
+
+        function refreshAllUI() {
+            updateStats();
+            updateInventoryDisplay();
+            updateIndexDisplay();
+            updatePendingDisplay();
+            
+            if (shapesUnlocked) {
+                const shapesGui = document.getElementById('shapes-gui');
+                if (shapesGui) {
+                    shapesGui.style.display = 'block';
+                    shapesGui.offsetHeight;
+                }
+                renderActiveShapes();
+            }
+            
+            if (clickerUnlocked) {
+                const clickerGui = document.getElementById('clicker-gui');
+                if (clickerGui) {
+                    clickerGui.style.display = 'block';
+                    clickerGui.offsetHeight;
+                }
+            }
+            
+            preserveAnimations();
+        }
+
+        function startEvent(event) {
+            if (hardcoreMode) return;
+            
+            if (currentEvent) {
+                clearTimeout(currentEvent.timeoutId);
+                endEvent(currentEvent);
+            }
+            
+            currentEvent = { 
+                name: event.name, 
+                duration: event.duration, 
+                description: event.description, 
+                targets: event.targets, 
+                multiplier: event.multiplier, 
+                eventChanceBoost: event.eventChanceBoost 
+            };
+            eventEndTime = Date.now() + event.duration;
+
+            addToTerminal(`🚨 EVENT STARTED: **${event.name}**! ${event.description} for ${event.duration / 1000} seconds!`, true, 'rank-1000-10000'); 
+
+            if (event.name === "Lol") {
+                eventCheckChance = event.eventChanceBoost; 
+            } else {
+                eventCheckChance = 1;
+            }
+
+            currentEvent.timeoutId = setTimeout(() => {
+                endEvent(event);
+            }, event.duration);
+
+            updateStats();
+        }
+
+        function endEvent(event) {
+            addToTerminal(`✅ EVENT ENDED: **${event.name}** is over.`, true);
+
+            if (event.name === "Lol") {
+                eventCheckChance = 1;
+            }
+
+            if (currentEvent && currentEvent.name === event.name) {
+                currentEvent = null;
+                eventEndTime = 0;
+            }
+
+            updateStats();
+        }
+        
+        function resumeEvent(event, remainingDuration) {
+            if (hardcoreMode) return;
+            
+            currentEvent = event;
+            if (event.name === "Lol") {
+                eventCheckChance = event.eventChanceBoost; 
+            } else {
+                eventCheckChance = 1;
+            }
+            
+            currentEvent.timeoutId = setTimeout(() => {
+                endEvent(event);
+            }, remainingDuration);
+            
+            addToTerminal(`Resuming active event: **${event.name}** (${(remainingDuration / 1000).toFixed(1)}s left).`, true, 'rank-1000-10000');
+        }
+
+        function checkEvent() {
+            if (hardcoreMode || currentEvent) return; 
+
+            for (const event of EVENTS) {
+                const adjustedChance = event.chance / eventCheckChance;
+
+                if (Math.random() < adjustedChance) {
+                    startEvent(event);
+                    return; 
+                }
+            }
+        }
+
+        function startEventLoop() {
+            if (eventInterval) clearInterval(eventInterval);
+            eventInterval = setInterval(checkEvent, EVENT_CHECK_INTERVAL_MS);
+        }
+
+        // NEW: DESTROY SYSTEM FUNCTIONS
+        function saveCurrentDimension() {
+            const dimensionState = {
+                dimensionNumber: currentDimension,
+                currency,
+                totalUpgrades,
+                upgradeCost,
+                highestBaseRoll,
+                highestFinalRoll,
+                maxInventory,
+                inventory: [...inventory],
+                rollIndex,
+                acceptedRolls: Array.from(acceptedRolls),
+                pendingRolls: [...pendingRolls],
+                bulkRollLevel,
+                bulkRollCost,
+                geometrix,
+                shapesUnlocked,
+                shapeLuckLevel,
+                shapeLuckCost,
+                luckMultiLevel,
+                luckMultiCost,
+                bulkShapeLevel,
+                bulkShapeCost,
+                clickerUnlocked,
+                fortunium,
+                fortuniumLuck,
+                gmxMultiLevel,
+                gmxMultiCost,
+                fortuniumLuckLevel,
+                fortuniumLuckCost,
+                clickerLuckLevel,
+                clickerLuckCost,
+                boosters: [...boosters],
+                shopBoosters: [...shopBoosters],
+                activeShapes: [...activeShapes.map(s => ({...s}))],
+                discoveredRanks: Array.from(discoveredRanks),
+                discoveredVariantSecrets: Array.from(discoveredVariantSecrets),
+                destroyCount,
+                destroyCost,
+                destroyLuckMultiplier,
+                destroyCurrencyMultiplier
+            };
+            
+            // Save or update in dimensions array
+            const existingIndex = dimensions.findIndex(d => d.dimensionNumber === currentDimension);
+            if (existingIndex !== -1) {
+                dimensions[existingIndex] = dimensionState;
+            } else {
+                dimensions.push(dimensionState);
+            }
+        }
+        
+        function loadDimension(dimensionNum) {
+            const dimensionState = dimensions.find(d => d.dimensionNumber === dimensionNum);
+            if (!dimensionState) {
+                addToTerminal(`Dimension ${dimensionNum} not found!`, true);
+                return false;
+            }
+            
+            // Save current dimension first
+            saveCurrentDimension();
+            
+            // Load the new dimension
+            currency = dimensionState.currency || 0;
+            totalUpgrades = dimensionState.totalUpgrades || 0;
+            upgradeCost = dimensionState.upgradeCost || 50;
+            highestBaseRoll = dimensionState.highestBaseRoll || 0;
+            highestFinalRoll = dimensionState.highestFinalRoll || { 
+                value: 0, baseValue: 0, rank: 'None yet', variants: [], isSecret: false 
+            };
+            maxInventory = dimensionState.maxInventory || 10;
+            inventory = dimensionState.inventory || [];
+            rollIndex = dimensionState.rollIndex || 1;
+            acceptedRolls = new Set(dimensionState.acceptedRolls || []);
+            pendingRolls = dimensionState.pendingRolls || [];
+            bulkRollLevel = dimensionState.bulkRollLevel || 0;
+            bulkRollCost = dimensionState.bulkRollCost || 50000;
+            
+            geometrix = dimensionState.geometrix || 0;
+            shapesUnlocked = dimensionState.shapesUnlocked || false;
+            shapeLuckLevel = dimensionState.shapeLuckLevel || 0;
+            shapeLuckCost = dimensionState.shapeLuckCost || 5;
+            luckMultiLevel = dimensionState.luckMultiLevel || 0;
+            luckMultiCost = dimensionState.luckMultiCost || 100;
+            bulkShapeLevel = dimensionState.bulkShapeLevel || 0;
+            bulkShapeCost = dimensionState.bulkShapeCost || 50;
+            
+            clickerUnlocked = dimensionState.clickerUnlocked || false;
+            fortunium = dimensionState.fortunium || 0;
+            fortuniumLuck = dimensionState.fortuniumLuck || 0;
+            gmxMultiLevel = dimensionState.gmxMultiLevel || 0;
+            gmxMultiCost = dimensionState.gmxMultiCost || 75;
+            fortuniumLuckLevel = dimensionState.fortuniumLuckLevel || 0;
+            fortuniumLuckCost = dimensionState.fortuniumLuckCost || 125;
+            clickerLuckLevel = dimensionState.clickerLuckLevel || 0;
+            clickerLuckCost = dimensionState.clickerLuckCost || 1000;
+            
+            boosters = dimensionState.boosters || [];
+            shopBoosters = dimensionState.shopBoosters || [];
+            activeShapes = dimensionState.activeShapes || [];
+            
+            discoveredRanks = new Set(dimensionState.discoveredRanks || []);
+            discoveredVariantSecrets = new Set(dimensionState.discoveredVariantSecrets || []);
+            
+            // Update current dimension
+            currentDimension = dimensionNum;
+            
+            addToTerminal(`Switched to Dimension ${dimensionNum}!`, true, 'rank-1000000-100000000');
+            updateCalculatedStats();
+            refreshAllUI();
+            saveGame();
+            
+            return true;
+        }
+        
+        function initiateDestroy() {
+            if (currency < destroyCost) {
+                addToTerminal(`Not enough currency to Destroy! Need ${formatNumber(destroyCost)}`, true);
+                return;
+            }
+            
+            if (!confirm(`⚠️ DESTROY WARNING ⚠️\n\nThis will reset ALL progress (except ranks) for permanent multipliers!\n\nYou will lose all currency, upgrades, inventory, and progress.\n\nGain: +${DESTROY_LUCK_MULTI_PER_DESTROY}x Luck Multiplier, +${DESTROY_CURRENCY_MULTI_PER_DESTROY}x Currency Gain\n\nCost: ${formatNumber(destroyCost)} currency\n\nAre you SURE?`)) {
+                return;
+            }
+            
+            // Save current dimension state
+            saveCurrentDimension();
+            
+            // Increment destroy count and update multipliers
+            destroyCount++;
+            destroyLuckMultiplier += DESTROY_LUCK_MULTI_PER_DESTROY;
+            destroyCurrencyMultiplier += DESTROY_CURRENCY_MULTI_PER_DESTROY;
+            
+            // Update dimension number
+            currentDimension = destroyCount + 1;
+            
+            // Reset all progress (except discovered ranks and variant secrets)
+            currency = 0;
+            totalUpgrades = 0;
+            upgradeCost = 50;
+            highestBaseRoll = 0;
+            highestFinalRoll = { 
+                value: 0, baseValue: 0, rank: 'None yet', variants: [], isSecret: false 
+            };
+            maxInventory = 10;
+            inventory = [];
+            rollIndex = 1;
+            acceptedRolls = new Set();
+            pendingRolls = [];
+            bulkRollLevel = 0;
+            bulkRollCost = 50000;
+            
+            geometrix = 0;
+            shapesUnlocked = false;
+            shapeLuckLevel = 0;
+            shapeLuckCost = 5;
+            luckMultiLevel = 0;
+            luckMultiCost = 100;
+            bulkShapeLevel = 0;
+            bulkShapeCost = 50;
+            
+            clickerUnlocked = false;
+            fortunium = 0;
+            fortuniumLuck = 0;
+            gmxMultiLevel = 0;
+            gmxMultiCost = 75;
+            fortuniumLuckLevel = 0;
+            fortuniumLuckCost = 125;
+            clickerLuckLevel = 0;
+            clickerLuckCost = 1000;
+            
+            boosters = [];
+            shopBoosters = [];
+            activeShapes = [];
+            
+            // Reset events
+            if (currentEvent && currentEvent.timeoutId) {
+                clearTimeout(currentEvent.timeoutId);
+            }
+            currentEvent = null;
+            eventEndTime = 0;
+            
+            // Update destroy cost
+            destroyCost *= DESTROY_COST_MULTIPLIER;
+            
+            addToTerminal(`🔥 DIMENSION ${currentDimension} ACHIEVED! 🔥\n+${DESTROY_LUCK_MULTI_PER_DESTROY}x Luck Multiplier (Total: ${destroyLuckMultiplier.toFixed(1)}x)\n+${DESTROY_CURRENCY_MULTI_PER_DESTROY}x Currency Gain (Total: ${destroyCurrencyMultiplier.toFixed(1)}x)`, true, 'rank-1000000000-10000000000');
+            
+            updateCalculatedStats();
+            refreshAllUI();
+            saveGame();
+        }
+
+        function resetEventsDebug() {
+            if (!confirm("This will reset all events. Are you sure?")) return;
+            
+            if (currentEvent && currentEvent.timeoutId) {
+                clearTimeout(currentEvent.timeoutId);
+            }
+            
+            currentEvent = null;
+            eventEndTime = 0;
+            eventCheckChance = 1;
+            
+            if (eventInterval) {
+                clearInterval(eventInterval);
+            }
+            
+            startEventLoop();
+            addToTerminal('Events have been reset. Event system restarted.', true, 'rank-1000-10000');
+        }
+
+        function resetSaveDebug() {
+            let confirmCount = 0;
+            const confirmMessages = [
+                "Are you REALLY sure? This will delete ALL your progress!",
+                "This is your second warning! Are you sure?",
+                "Third warning! This cannot be undone!",
+                "Fourth warning! You will lose everything!",
+                "FINAL WARNING! Type 'I am sure' to reset your save."
+            ];
+
+            function askConfirmation() {
+                if (confirmCount < 4) {
+                    if (confirm(confirmMessages[confirmCount])) {
+                        confirmCount++;
+                        askConfirmation();
+                    }
+                } else {
+                    const userInput = prompt(confirmMessages[4]);
+                    if (userInput === 'I am sure') {
+                        localStorage.removeItem('calisRNGGame');
+                        localStorage.removeItem('calisRNG_UI');
+                        localStorage.removeItem('calisRNG_debugUnlocked');
+                        
+                        if (autoRollInterval) clearInterval(autoRollInterval);
+                        if (eventInterval) clearInterval(eventInterval);
+                        if (shapeInterval) clearInterval(shapeInterval);
+                        if (currentEvent && currentEvent.timeoutId) clearTimeout(currentEvent.timeoutId);
+                        for (const id in activeEuphoriaIntervals) {
+                            clearInterval(activeEuphoriaIntervals[id]);
+                        }
+                        for (const id in activeBewildermentIntervals) {
+                            clearInterval(activeBewildermentIntervals[id]);
+                        }
+                        
+                        addToTerminal('Save completely reset! Reloading game...', true, 'rank-1000000000-10000000000');
+                        
+                        setTimeout(() => {
+                            location.reload();
+                        }, 1000);
+                    } else {
+                        alert('Save reset cancelled.');
+                    }
+                }
+            }
+
+            askConfirmation();
+        }
+
+        const LZString = {
+            compressToBase64: function(input) {
+                try {
+                    if (!input) return '';
+                    const base64 = btoa(unescape(encodeURIComponent(input)));
+                    return base64
+                        .replace(/\+/g, '-')
+                        .replace(/\//g, '_')
+                        .replace(/=+$/g, '');
+                } catch (e) {
+                    console.error('Compression error:', e);
+                    return '';
+                }
+            },
+            decompressFromBase64: function(input) {
+                try {
+                    if (!input) return '';
+                    let base64 = input
+                        .replace(/-/g, '+')
+                        .replace(/_/g, '/');
+                    while (base64.length % 4) {
+                        base64 += '=';
+                    }
+                    return decodeURIComponent(escape(atob(base64)));
+                } catch (e) {
+                    console.error('Decompression error:', e);
+                    return '';
+                }
+            }
+        };
+
+        // Initialize the game
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'r' && e.target.tagName !== 'INPUT') {
+                e.preventDefault();
+                roll();
+            }
+        });
+        
+        document.getElementById('autoAcceptThreshold').addEventListener('change', (e) => {
+            autoAcceptThreshold = parseFloat(e.target.value) || 0;
+        });
+        document.getElementById('autoAcceptSecretThreshold').addEventListener('change', (e) => {
+            autoAcceptSecretThresholdValue = parseFloat(e.target.value) || 0;
+        });
+        document.getElementById('autoAcceptNewRank').addEventListener('change', (e) => {
+            autoAcceptOnNewRank = e.target.checked;
+        });
+        document.getElementById('autoAcceptTrueRNG').addEventListener('change', (e) => {
+            autoAcceptTrueRNGValue = parseFloat(e.target.value) || 0;
+        });
+        
+        document.getElementById('autoStopThreshold').addEventListener('change', (e) => {
+            autoStopThreshold = parseFloat(e.target.value) || 0;
+        });
+        document.getElementById('autoStopSecretThreshold').addEventListener('change', (e) => {
+            autoStopSecretThresholdValue = parseFloat(e.target.value) || 0;
+        });
+        document.getElementById('autoStopNewRank').addEventListener('change', (e) => {
+            autoStopOnNewRank = e.target.checked;
+        });
+        document.getElementById('autoStopTrueRNG').addEventListener('change', (e) => {
+            autoStopTrueRNGValue = parseFloat(e.target.value) || 0;
+        });
+
+        document.getElementById('clover-clicker').addEventListener('click', () => {
+            if (!clickerUnlocked) return;
+            clickClover();
+            
+            const clover = document.getElementById('clover-clicker');
+            clover.style.transform = 'scale(0.9)';
+            setTimeout(() => {
+                clover.style.transform = 'scale(1)';
+            }, 100);
+        });
+
+        document.getElementById('sciNotationThreshold').addEventListener('change', (e) => {
+            const value = parseFloat(e.target.value);
+            if (!isNaN(value) && value > 0) {
+                sciNotationThreshold = value;
+                addToTerminal(`Scientific notation threshold set to ${formatNumber(value)}`, true);
+                updateStats();
+                preserveAnimations();
+                saveGame();
+            }
+        });
+
+        const welcomeLine = document.createElement('div');
+        welcomeLine.className = 'output-line welcome-message';
+        welcomeLine.textContent = 'Welcome to calis RNG game!';
+        document.getElementById('terminal').appendChild(welcomeLine);
+        addToTerminal('Click rolls to add them to your inventory!');
+        
+        // Initialize title click sequence
+        initTitleClickSequence();
+        
+        loadGame();
+        loadUICustomization();
+        refreshAllUI();
+        startEventLoop();
+        
+        setTimeout(refreshAllUI, 500);
+    </script>
+    
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(registration => {
+                        console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                    })
+                    .catch(error => {
+                        console.log('ServiceWorker registration failed: ', error);
+                    });
+            });
+        }
+    </script>
+</body>
+</html>
