@@ -3014,26 +3014,15 @@
                     } else {
                         secretRarityMultiplier = 1;
                     }
+                    
+                    // SFX for secret rolls
                     if (secretRarityMultiplier >= 1000000000) {
                         new Audio("assets/100t.wav").play();
                     } else if (secretRarityMultiplier >= 50000000) {
                         new Audio("assets/cowm.wav").play();
                     }
                 }
-                        secretRarityMultiplier = 1;
-                    }
-                    
-                    // SFX for secret rolls
-                    if (secretRarityMultiplier >= 1000000000) {
-                        new Audio('assets/100t.wav').play();
-                    } else if (secretRarityMultiplier >= 50000000) {
-                        new Audio('assets/cowm.wav').play();
-                    }
-                }
-                        displayValue = 0; 
-                    }
-                }
-                
+
                 if (displayName === "CORRUPTED") {
                     displayValue *= -1;
                 }
@@ -3046,39 +3035,24 @@
                 if (variantSecretResult && variantSecretResult.multipliesRNG) {
                     displayValue *= variantSecretResult.multipliesRNG;
                 }
-                
-                const isDiscovered = discoveredRanks.has(displayName);
-                
-                rollResults.push({ 
-                    baseValue, 
-                    displayValue, 
-                    variants, 
-                    displayName, 
-                    isSecret, 
-                    secretRarityMultiplier,
                     rankInfo,
                     isComplex: false,
                     variantSecret: variantSecretResult,
                     isPerfectBase: false
                 };
                 });
-                
-                if (displayValue > maxRollValueInBulk) {
-                    maxRollValueInBulk = displayValue;
-                    isMaxRollSecret = isSecret;
-                }
-                
-                const baseRankName = displayName.replace(" [HC]", "");
-                if (!discoveredRanks.has(baseRankName)) {
-                    newRankDiscoveredInBulk = true;
-                }
-            }
-            
-            if (cutscenesEnabled && maxRollValueInBulk >= 1e9 && !hardcoreMode) {
-                await playCutscene(maxRollValueInBulk, isMaxRollSecret);
-            }
-            
-            for (const rollData of rollResults) {
+                rollResults.push({
+                    baseValue,
+                    displayValue,
+                    variants,
+                    displayName,
+                    isSecret,
+                    secretRarityMultiplier,
+                    rankInfo,
+                    isComplex: false,
+                    variantSecret: variantSecretResult,
+                    isPerfectBase: false
+                });
                 let { baseValue, displayValue, complexValue, variants, displayName, isSecret, secretRarityMultiplier, rankInfo, isComplex, complexData, variantSecret, isPerfectBase } = rollData;
                 
                 // Apply destroy currency multiplier
