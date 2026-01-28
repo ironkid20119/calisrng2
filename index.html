@@ -428,6 +428,16 @@
         }
         
         /* --- POLY DODECAHEDRON STYLE --- */
+        .yosho-rank {
+            background-image: url('assets/yosho.jpeg');
+            background-size: cover;
+            background-position: center;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: bold;
+            display: inline-block;
+        }
+        
         .bootleg-title {
             display: inline-block;
             animation: bootleg-oval 2s linear infinite;
@@ -1673,6 +1683,7 @@
 
         // FIXED: Added Feimienation secret with serotonin animation
         const SECRET_RANKS_CHANCES = [
+            { name: "Yosho har har har", chance: 1/123123123123, rarity: 123123123123, color: "#FFFFFF", animation: "yosho-rank" },
             { name: "BOOTLEG", chance: 1/200000000000, rarity: 200000000000, color: "#c0c0c0", animation: "bootleg-title" },
             { name: "nil_secret", chance: 1/17500, rarity: 17500 }, 
             { name: "Title Label Missing", chance: 1/4040.404, rarity: 4040.404 },
@@ -3031,16 +3042,10 @@
                     displayValue = 0;
                 }
                 
-                // Apply variant secret multiplier if found
                 if (variantSecretResult && variantSecretResult.multipliesRNG) {
                     displayValue *= variantSecretResult.multipliesRNG;
                 }
-                    rankInfo,
-                    isComplex: false,
-                    variantSecret: variantSecretResult,
-                    isPerfectBase: false
-                };
-                });
+
                 rollResults.push({
                     baseValue,
                     displayValue,
@@ -3053,6 +3058,23 @@
                     variantSecret: variantSecretResult,
                     isPerfectBase: false
                 });
+
+                if (displayValue > maxRollValueInBulk) {
+                    maxRollValueInBulk = displayValue;
+                    isMaxRollSecret = isSecret;
+                }
+
+                const baseRankName = displayName.replace(" [HC]", "");
+                if (!discoveredRanks.has(baseRankName)) {
+                    newRankDiscoveredInBulk = true;
+                }
+            }
+            
+            if (cutscenesEnabled && maxRollValueInBulk >= 1e9 && !hardcoreMode) {
+                await playCutscene(maxRollValueInBulk, isMaxRollSecret);
+            }
+            
+            for (const rollData of rollResults) {
                 let { baseValue, displayValue, complexValue, variants, displayName, isSecret, secretRarityMultiplier, rankInfo, isComplex, complexData, variantSecret, isPerfectBase } = rollData;
                 
                 // Apply destroy currency multiplier
@@ -3069,6 +3091,10 @@
 
                 if (displayName === "BOOTLEG") {
                     rankClass = "bootleg-title";
+                }
+
+                if (displayName === "Yosho har har har") {
+                    rankClass = "yosho-rank";
                 }
 
                 if (displayName === "CORRUPTED") {
