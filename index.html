@@ -428,6 +428,70 @@
         }
         
         /* --- POLY DODECAHEDRON STYLE --- */
+        .painfrown-rank {
+            display: inline-block;
+            width: 32px;
+            height: 32px;
+            background-image: url('assets/painfrown.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            vertical-align: middle;
+            color: transparent !important;
+            overflow: hidden;
+            text-indent: -9999px;
+        }
+        
+        /* --- MOBILE FRIENDLY UI --- */
+        @media (max-width: 600px) {
+            .game-container {
+                flex-direction: column;
+                height: 100vh;
+                padding: 10px;
+                gap: 10px;
+            }
+            #sidebar {
+                width: 100%;
+                min-width: unset;
+                max-height: 200px;
+                overflow-y: auto;
+                flex-direction: row;
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 5px;
+                padding: 10px;
+            }
+            #sidebar button {
+                padding: 8px 12px;
+                font-size: 12px;
+                width: auto;
+                flex: 1 1 auto;
+            }
+            #terminal {
+                height: auto;
+                flex: 1;
+                font-size: 12px;
+                padding: 10px;
+            }
+            #controls {
+                padding: 15px;
+            }
+            #roll-button {
+                font-size: 20px;
+                padding: 12px 24px;
+            }
+            .money-display {
+                font-size: 16px;
+            }
+            .stat-box {
+                font-size: 11px;
+            }
+            /* Adjust inventory/shop for mobile */
+            #booster-inventory, #booster-shop {
+                grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+            }
+        }
+        
         .yosho-rank {
             background-image: url('assets/yosho.jpeg');
             background-size: cover;
@@ -1683,6 +1747,7 @@
 
         // FIXED: Added Feimienation secret with serotonin animation
         const SECRET_RANKS_CHANCES = [
+            { name: "painfrown", chance: 1/150000000000, rarity: 150000000000, color: "#FFFFFF", animation: "painfrown-rank" },
             { name: "Yosho har har har", chance: 1/123123123123, rarity: 123123123123, color: "#FFFFFF", animation: "yosho-rank" },
             { name: "BOOTLEG", chance: 1/200000000000, rarity: 200000000000, color: "#c0c0c0", animation: "bootleg-title" },
             { name: "nil_secret", chance: 1/17500, rarity: 17500 }, 
@@ -2757,12 +2822,10 @@
                 }).join('') + ' ';
             }
             
-            const debugTag = '<span style="color: #ffaa00; font-weight: bold;">[CUSTOM]</span>';
-            
-            const content = `<span class="${rankClass} illegitimate-roll" style="color: ${rollColor};">${formatNumber(displayValue)} [${displayName}] ${debugTag}</span>`;
+            const content = `<span class="${rankClass}" style="color: ${rollColor};">${formatNumber(displayValue)} [${displayName}]</span>`;
             
             addToTerminal(
-                `#${formatInteger(rollIndex++)} (CUSTOM): L${luck} VL${variantLuck} SL${secretLuck} | ${variantText}${content} (No currency, no discovery)`
+                `#${formatInteger(rollIndex++)} (FORCED): ${variantText}${content}`
             );
             
             toggleForceRollUI();
@@ -3095,6 +3158,10 @@
 
                 if (displayName === "Yosho har har har") {
                     rankClass = "yosho-rank";
+                }
+
+                if (displayName === "painfrown") {
+                    rankClass = "painfrown-rank";
                 }
 
                 if (displayName === "CORRUPTED") {
